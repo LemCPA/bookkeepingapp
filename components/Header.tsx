@@ -5,7 +5,11 @@ import Link from 'next/link'
 import UserMenu from './UserMenu'
 import { getStoredUser } from '@/lib/auth'
 
-const authenticatedNavItems = [
+type NavItem =
+  | { href: string; label: string; icon?: string }
+  | { label: string; icon: string; submenu: Array<{ href: string; label: string }> }
+
+const authenticatedNavItems: NavItem[] = [
   { href: '/transactions', label: 'Transactions', icon: '📊' },
   { href: '/invoicing', label: 'Invoicing', icon: '📄' },
   { href: '/documents', label: 'Documents', icon: '📎' },
@@ -23,7 +27,9 @@ const authenticatedNavItems = [
   { href: '/settings/backup', label: 'Settings', icon: '⚙️' },
 ]
 
-const unauthenticatedNavItems = [
+type SimpleNavItem = { href: string; label: string; icon?: string }
+
+const unauthenticatedNavItems: SimpleNavItem[] = [
   { href: '/', label: 'Home' },
   { href: '/#features', label: 'Features' },
   { href: '/#pricing', label: 'Pricing' },
@@ -67,7 +73,7 @@ export default function Header() {
         <div className="hidden md:flex flex-1 justify-center items-center gap-1">
           {isAuthenticated ? (
             // Desktop menu for authenticated users
-            navItems.map((item) => (
+            authenticatedNavItems.map((item) => (
               'submenu' in item ? (
                 <div key={item.label} className="relative group">
                   <button className="text-white hover:bg-blue-700 transition px-3 py-2 text-sm font-medium rounded flex items-center gap-1">
@@ -101,7 +107,7 @@ export default function Header() {
             ))
           ) : (
             // Desktop menu for unauthenticated users
-            navItems.map((item) => (
+            unauthenticatedNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -125,7 +131,7 @@ export default function Header() {
           </div>
         ) : (
           <div className="md:hidden flex-1 flex gap-1 justify-center">
-            {navItems.map((item) => (
+            {unauthenticatedNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -165,7 +171,7 @@ export default function Header() {
         <div className="md:hidden bg-blue-700 border-t border-blue-500">
           <div className="max-w-7xl mx-auto px-4 py-2 space-y-0">
             {isAuthenticated ? (
-              navItems.map((item) => (
+              authenticatedNavItems.map((item) => (
                 <div key={'submenu' in item ? item.label : item.href}>
                   {'submenu' in item ? (
                     <>
@@ -211,7 +217,7 @@ export default function Header() {
               ))
             ) : (
               <div className="flex flex-wrap gap-2">
-                {navItems.map((item) => (
+                {unauthenticatedNavItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
