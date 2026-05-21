@@ -22,8 +22,14 @@ export default function NewTransactionPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/clients').then(r => r.json()).then(data => setClients(Array.isArray(data) ? data : [])).catch(() => setClients([])),
-      fetch('/api/chart-of-accounts').then(r => r.json()).then(data => setAccounts(Array.isArray(data) ? data : [])).catch(() => setAccounts([])),
+      fetch('/api/clients').then(r => {
+        if (!r.ok) throw new Error('Failed to fetch clients')
+        return r.json()
+      }).then(data => setClients(Array.isArray(data) ? data : [])).catch(() => setClients([])),
+      fetch('/api/chart-of-accounts').then(r => {
+        if (!r.ok) throw new Error('Failed to fetch accounts')
+        return r.json()
+      }).then(data => setAccounts(Array.isArray(data) ? data : [])).catch(() => setAccounts([])),
     ]).finally(() => setLoading(false))
   }, [])
 
