@@ -1,0 +1,213 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "demo@bookkeeping.ca",
+      "password_hash": "demo123",
+      "name": "Demo User",
+      "gst_registered": true,
+      "gst_number": "123456789RT0001",
+      "created_at": "2026-05-20T03:41:15.763Z"
+    }
+  ],
+  "chart_of_accounts": [
+    {
+      "id": 1,
+      "code": "1000",
+      "name": "Cash",
+      "type": "ASSET",
+      "user_id": 1
+    },
+    {
+      "id": 2,
+      "code": "1010",
+      "name": "Checking Account",
+      "type": "ASSET",
+      "user_id": 1
+    },
+    {
+      "id": 3,
+      "code": "1020",
+      "name": "Savings Account",
+      "type": "ASSET",
+      "user_id": 1
+    },
+    {
+      "id": 4,
+      "code": "1030",
+      "name": "Accounts Receivable",
+      "type": "ASSET",
+      "user_id": 1
+    },
+    {
+      "id": 5,
+      "code": "2000",
+      "name": "Accounts Payable",
+      "type": "LIABILITY",
+      "user_id": 1
+    },
+    {
+      "id": 6,
+      "code": "2010",
+      "name": "Credit Card",
+      "type": "LIABILITY",
+      "user_id": 1
+    },
+    {
+      "id": 7,
+      "code": "3000",
+      "name": "Retained Earnings",
+      "type": "EQUITY",
+      "user_id": 1
+    },
+    {
+      "id": 8,
+      "code": "4000",
+      "name": "Service Revenue",
+      "type": "INCOME",
+      "user_id": 1
+    },
+    {
+      "id": 9,
+      "code": "4010",
+      "name": "Product Revenue",
+      "type": "INCOME",
+      "user_id": 1
+    },
+    {
+      "id": 10,
+      "code": "5100",
+      "name": "Advertising",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 11,
+      "code": "5110",
+      "name": "Meals and Entertainment (50% rule)",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 12,
+      "code": "5120",
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 13,
+      "code": "5130",
+      "name": "Interest and Bank Charges",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 14,
+      "code": "5140",
+      "name": "Business Taxes and Licenses",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 15,
+      "code": "5150",
+      "name": "Office Expenses",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 16,
+      "code": "5160",
+      "name": "Supplies",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 17,
+      "code": "5170",
+      "name": "Legal and Accounting Fees",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 18,
+      "code": "5180",
+      "name": "Rent",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 19,
+      "code": "5190",
+      "name": "Salaries and Wages",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 20,
+      "code": "5200",
+      "name": "Travel",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 21,
+      "code": "5210",
+      "name": "Telephone and Utilities",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 22,
+      "code": "5220",
+      "name": "Motor Vehicle Expenses",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 23,
+      "code": "5230",
+      "name": "Capital Cost Allowance (CCA)",
+      "type": "EXPENSE",
+      "user_id": 1
+    }
+  ],
+  "transactions": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "account_id": 8,
+      "transaction_date": "2026-05-15",
+      "amount": 500,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 65,
+      "description": "Service Revenue",
+      "type": "INVOICE",
+      "created_at": "2026-05-20T04:33:53.986Z",
+      "updated_at": "2026-05-20T04:33:53.986Z"
+    }
+  ],
+  "documents": [],
+  "bank_reconciliations": [],
+  "reconciliation_items": [],
+  "recurring_transactions": [],
+  "transaction_instances": [],
+  "nextUserId": 2,
+  "nextAccountId": 24,
+  "nextTransactionId": 2,
+  "nextDocumentId": 1,
+  "nextBankReconciliationId": 1,
+  "nextReconciliationItemId": 1,
+  "nextRecurringTransactionId": 1,
+  "nextTransactionInstanceId": 1,
+  "clients": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "name": "Test Client",
+      "created_at": "2026-05-20T04:33:37.528Z"
+    }
+  ],
+  "nextClientId": 2
+}
