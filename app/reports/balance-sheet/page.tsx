@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Client } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
+import { getAccessToken } from '@/lib/auth'
 
 interface BalanceSheetData {
   month: string
@@ -27,24 +28,40 @@ export default function BalanceSheetPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch('/api/clients')
-      .then(r => r.json())
-      .then(setClients)
+    const token = getAccessToken()
+    const headers: HeadersInit = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    fetch('/api/clients', { headers })
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to fetch clients')
+        return r.json()
+      })
+      .then(data => setClients(Array.isArray(data) ? data : []))
+      .catch(err => {
+        console.error('Error fetching clients:', err)
+        setClients([])
+      })
   }, [])
 
   async function fetchBalanceSheet() {
-    if (!selectedClient) {
-      setError('Please select a client')
-      return
-    }
-
     setLoading(true)
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/reports/balance-sheet?clientId=${selectedClient}&month=${selectedMonth}`
-      )
+      const url = selectedClient
+        ? `/api/reports/balance-sheet?clientId=${selectedClient}&month=${selectedMonth}`
+        : `/api/reports/balance-sheet?month=${selectedMonth}`
+
+      const token = getAccessToken()
+      const headers: HeadersInit = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
+      const response = await fetch(url, { headers })
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -120,7 +137,7 @@ export default function BalanceSheetPage() {
 
               <button
                 onClick={fetchBalanceSheet}
-                disabled={loading || !selectedClient}
+                disabled={loading}
                 className="w-full bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 font-medium text-sm transition"
               >
                 {loading ? 'Generating...' : 'Generate Report'}
