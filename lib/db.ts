@@ -3,8 +3,9 @@ import { readFileSync, writeFileSync, existsSync } from 'fs'
 
 interface DbData {
   users: { id: number; email: string; password_hash: string; name: string; email_verified?: boolean; gst_registered?: boolean; gst_number?: string; qbo_access_token?: string; qbo_refresh_token?: string; qbo_realm_id?: string; qbo_connected_at?: string; plan?: string; helcim_customer_id?: string | null; created_at: string }[]
+  clients: { id: number; user_id: number; name: string; email?: string; address?: string; gst_registered: boolean; gst_number?: string; created_at: string }[]
   chart_of_accounts: { id: number; code: string; name: string; type: string; user_id?: number }[]
-  transactions: { id: number; user_id: number; account_id?: number; transaction_date: string; due_date?: string; amount: number; gst_hst_rate?: number; gst_hst_amount?: number; description: string; type: string; reference_number?: string; created_at: string; updated_at?: string; reconciliation_id?: number; reconciliation_status?: string; internal_notes?: { id: number; content: string; createdAt: string; updatedAt?: string; createdBy?: string }[]; tags?: string[]; audit_trail?: { field: string; oldValue: any; newValue: any; changedAt: string; changedBy?: string }[]; project_id?: number }[]
+  transactions: { id: number; user_id: number; client_id?: number; account_id?: number; transaction_date: string; due_date?: string; amount: number; gst_hst_rate?: number; gst_hst_amount?: number; description: string; type: string; reference_number?: string; created_at: string; updated_at?: string; reconciliation_id?: number; reconciliation_status?: string; internal_notes?: { id: number; content: string; createdAt: string; updatedAt?: string; createdBy?: string }[]; tags?: string[]; audit_trail?: { field: string; oldValue: any; newValue: any; changedAt: string; changedBy?: string }[]; project_id?: number }[]
   documents: { id: number; transaction_id: number; file_name: string; file_path: string; file_size: number; uploaded_at: string }[]
   bank_reconciliations: { id: number; user_id: number; account_id: number; statement_date: string; statement_opening_balance: number; statement_closing_balance: number; reconciliation_date: string; status: string; created_at: string; updated_at: string }[]
   reconciliation_items: { id: number; reconciliation_id: number; transaction_id: number; status: string; created_at: string }[]
@@ -15,6 +16,7 @@ interface DbData {
   payment_methods: { id: number; user_id: number; helcim_payment_method_id: string; last4: string; brand: string; exp_month: number; exp_year: number; is_default: boolean; created_at: string }[]
   helcim_webhooks: { id: number; helcim_event_id: string; event_type: string; processed: boolean; created_at: string }[]
   nextUserId: number
+  nextClientId: number
   nextAccountId: number
   nextTransactionId: number
   nextDocumentId: number
@@ -106,6 +108,12 @@ export function getDb(): DbData {
       if (!db.nextHelcimWebhookId) {
         db.nextHelcimWebhookId = 1
       }
+      if (!db.clients) {
+        db.clients = []
+      }
+      if (!db.nextClientId) {
+        db.nextClientId = 1
+      }
 
       // Save the updated database with new fields
       saveDb(db)
@@ -131,6 +139,10 @@ function initializeDb(): DbData {
         gst_number: '123456789RT0001',
         created_at: new Date().toISOString(),
       },
+    ],
+    clients: [
+      { id: 1, user_id: 1, name: 'Acme Corporation', gst_registered: true, gst_number: '123456789RT0002', created_at: new Date().toISOString() },
+      { id: 2, user_id: 1, name: 'Tech Startup Inc', gst_registered: false, created_at: new Date().toISOString() },
     ],
     chart_of_accounts: [
       // ASSETS (for demo user - user_id: 1)
@@ -173,6 +185,7 @@ function initializeDb(): DbData {
     payment_methods: [],
     helcim_webhooks: [],
     nextUserId: 2,
+    nextClientId: 3,
     nextAccountId: 24,
     nextTransactionId: 1,
     nextDocumentId: 1,
@@ -276,6 +289,54 @@ export function updateUser(id: number, name?: string, gstRegistered?: boolean, g
     if (gstNumber !== undefined) user.gst_number = gstNumber
     saveDb(db)
   }
+}
+
+// Client queries
+export function getClients(userId: number) {
+  const db = getDb()
+  return db.clients
+    .filter(c => c.user_id === userId)
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export function getClient(id: number) {
+  return getDb().clients.find(c => c.id === id)
+}
+
+export function createClient(userId: number, name: string, email?: string, address?: string, gstRegistered: boolean = false, gstNumber?: string) {
+  const db = getDb()
+  const id = db.nextClientId++
+  db.clients.push({
+    id,
+    user_id: userId,
+    name,
+    email,
+    address,
+    gst_registered: gstRegistered,
+    gst_number: gstNumber,
+    created_at: new Date().toISOString(),
+  })
+  saveDb(db)
+  return { lastID: id }
+}
+
+export function updateClient(id: number, name?: string, email?: string, address?: string, gstRegistered?: boolean, gstNumber?: string) {
+  const db = getDb()
+  const client = db.clients.find(c => c.id === id)
+  if (client) {
+    if (name !== undefined) client.name = name
+    if (email !== undefined) client.email = email
+    if (address !== undefined) client.address = address
+    if (gstRegistered !== undefined) client.gst_registered = gstRegistered
+    if (gstNumber !== undefined) client.gst_number = gstNumber
+    saveDb(db)
+  }
+}
+
+export function deleteClient(id: number) {
+  const db = getDb()
+  db.clients = db.clients.filter(c => c.id !== id)
+  saveDb(db)
 }
 
 // Chart of Accounts queries

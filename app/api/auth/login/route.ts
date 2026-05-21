@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { comparePassword } from '@/lib/bcrypt-utils'
 import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
 import { getUserByEmail } from '@/lib/db'
+import { getUserByEmailFromSupabase } from '@/lib/supabase-db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,8 +16,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Lookup user in database
-    const user = getUserByEmail(email)
+    // Lookup user in database (try Supabase first, then JSON)
+    let user = await getUserByEmailFromSupabase(email)
+    if (!user) {
+      user = getUserByEmail(email)
+    }
+
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
@@ -41,7 +46,7 @@ export async function POST(request: NextRequest) {
     const refreshToken = createRefreshToken(user.id)
 
     // Return user data without password
-    const { password_hash, ...userWithoutPassword } = user
+    const { password_hash, ...userWithoutPassword } = user as any
     return NextResponse.json(
       {
         user: userWithoutPassword,

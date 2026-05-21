@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hashPassword, isValidPassword } from '@/lib/bcrypt-utils'
 import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
 import { getDb, saveDb, getUserByEmail } from '@/lib/db'
+import { getUserByEmailFromSupabase, createUserInSupabase } from '@/lib/supabase-db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,8 +26,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user already exists
-    const existingUser = getUserByEmail(email)
+    // Check if user already exists (try Supabase first, then JSON)
+    let existingUser = await getUserByEmailFromSupabase(email)
+    if (!existingUser) {
+      existingUser = getUserByEmail(email)
+    }
     if (existingUser) {
       return NextResponse.json(
         { error: 'Email already registered' },
@@ -37,28 +41,33 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password)
 
-    // Create user in database
-    const db = getDb()
-    const userId = db.nextUserId++
-    const newUser = {
-      id: userId,
-      email,
-      password_hash: passwordHash,
-      name,
-      email_verified: true, // In production, set to false and send verification email
-      gst_registered: false,
-      created_at: new Date().toISOString(),
+    // Try to create user in Supabase first
+    let newUser = await createUserInSupabase(email, passwordHash, name)
+
+    // If Supabase is not available, fall back to JSON
+    if (!newUser) {
+      const db = getDb()
+      const userId = db.nextUserId++
+      newUser = {
+        id: userId,
+        email,
+        password_hash: passwordHash,
+        name,
+        email_verified: true, // In production, set to false and send verification email
+        gst_registered: false,
+        created_at: new Date().toISOString(),
+      }
+      db.users.push(newUser)
+      saveDb(db)
     }
 
-    db.users.push(newUser)
-    saveDb(db)
-
-    // Generate tokens
+    // Generate tokens (use ID for JWT)
+    const userId = newUser.id
     const accessToken = createJWTToken(userId, email)
     const refreshToken = createRefreshToken(userId)
 
     // Return user data without password
-    const { password_hash, ...userWithoutPassword } = newUser
+    const { password_hash, ...userWithoutPassword } = newUser as any
     return NextResponse.json({
       user: userWithoutPassword,
       accessToken,
