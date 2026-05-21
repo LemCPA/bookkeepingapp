@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { formatDate } from '@/lib/utils'
-import { getUserIdFromRequest } from '@/lib/auth'
+import { getUserIdFromRequest } from '@/lib/auth-server'
 
 export async function GET(request: NextRequest) {
   try {

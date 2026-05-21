@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { setAuth } from '@/lib/auth'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -14,11 +15,36 @@ export default function SignupPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([])
   const [showPassword, setShowPassword] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+
+    // Check password strength on change
+    if (name === 'password') {
+      validatePassword(value)
+    }
+  }
+
+  const validatePassword = (password: string) => {
+    const errors: string[] = []
+
+    if (!password || password.length < 8) {
+      errors.push('At least 8 characters')
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('At least one uppercase letter')
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('At least one lowercase letter')
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push('At least one number')
+    }
+
+    setPasswordErrors(errors)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,8 +62,8 @@ export default function SignupPage() {
       return
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters')
+    if (passwordErrors.length > 0) {
+      setError('Password does not meet requirements')
       return
     }
 
@@ -62,13 +88,16 @@ export default function SignupPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Signup failed')
+        if (data.details && Array.isArray(data.details)) {
+          setError(data.details.join(', '))
+        } else {
+          setError(data.error || 'Signup failed')
+        }
         return
       }
 
-      // Store session info
-      localStorage.setItem('user', JSON.stringify(data.user))
-      localStorage.setItem('sessionToken', data.token)
+      // Store authentication info using setAuth
+      setAuth(data.user, data.accessToken, data.refreshToken)
 
       // Redirect to dashboard
       router.push('/')
@@ -145,10 +174,30 @@ export default function SignupPage() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Create a password (min. 6 characters)"
+                placeholder="Create a secure password"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
+              {/* Password Requirements */}
+              {formData.password && (
+                <div className="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">Password must include:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li className={passwordErrors.includes('At least 8 characters') ? 'text-red-600' : 'text-green-600'}>
+                      {passwordErrors.includes('At least 8 characters') ? '✗' : '✓'} At least 8 characters
+                    </li>
+                    <li className={passwordErrors.includes('At least one uppercase letter') ? 'text-red-600' : 'text-green-600'}>
+                      {passwordErrors.includes('At least one uppercase letter') ? '✗' : '✓'} One uppercase letter
+                    </li>
+                    <li className={passwordErrors.includes('At least one lowercase letter') ? 'text-red-600' : 'text-green-600'}>
+                      {passwordErrors.includes('At least one lowercase letter') ? '✗' : '✓'} One lowercase letter
+                    </li>
+                    <li className={passwordErrors.includes('At least one number') ? 'text-red-600' : 'text-green-600'}>
+                      {passwordErrors.includes('At least one number') ? '✗' : '✓'} One number
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
 
             {/* Confirm Password Field */}

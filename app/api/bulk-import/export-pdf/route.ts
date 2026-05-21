@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserIdFromRequest } from '@/lib/auth'
+import { getUserIdFromRequest } from '@/lib/auth-server'
 
 interface Transaction {
   transaction_date: string

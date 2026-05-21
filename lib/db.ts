@@ -2,7 +2,7 @@ import path from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 
 interface DbData {
-  users: { id: number; email: string; password_hash: string; name: string; gst_registered?: boolean; gst_number?: string; created_at: string }[]
+  users: { id: number; email: string; password_hash: string; name: string; email_verified?: boolean; gst_registered?: boolean; gst_number?: string; qbo_access_token?: string; qbo_refresh_token?: string; qbo_realm_id?: string; qbo_connected_at?: string; plan?: string; helcim_customer_id?: string | null; created_at: string }[]
   chart_of_accounts: { id: number; code: string; name: string; type: string; user_id?: number }[]
   transactions: { id: number; user_id: number; account_id?: number; transaction_date: string; due_date?: string; amount: number; gst_hst_rate?: number; gst_hst_amount?: number; description: string; type: string; reference_number?: string; created_at: string; updated_at?: string; reconciliation_id?: number; reconciliation_status?: string; internal_notes?: { id: number; content: string; createdAt: string; updatedAt?: string; createdBy?: string }[]; tags?: string[]; audit_trail?: { field: string; oldValue: any; newValue: any; changedAt: string; changedBy?: string }[]; project_id?: number }[]
   documents: { id: number; transaction_id: number; file_name: string; file_path: string; file_size: number; uploaded_at: string }[]
@@ -10,6 +10,10 @@ interface DbData {
   reconciliation_items: { id: number; reconciliation_id: number; transaction_id: number; status: string; created_at: string }[]
   recurring_transactions: { id: number; user_id: number; account_id: number; template_name: string; amount: number; description: string; frequency: string; start_date: string; end_date?: string; next_due_date: string; is_active: boolean; gst_hst_rate?: number; gst_hst_amount?: number; created_at: string; updated_at?: string }[]
   transaction_instances: { id: number; recurring_template_id: number; created_transaction_id: number; due_date: string; status: string; created_at: string }[]
+  subscriptions: { id: number; user_id: number; plan: string; status: string; helcim_customer_id: string; helcim_subscription_id: string; trial_end_date?: string | null; current_period_start: string; current_period_end: string; created_at: string; canceled_at?: string | null; updated_at: string }[]
+  billing_history: { id: number; user_id: number; helcim_invoice_id: string; amount: number; currency: string; status: string; period_start: string; period_end: string; paid_at?: string; created_at: string }[]
+  payment_methods: { id: number; user_id: number; helcim_payment_method_id: string; last4: string; brand: string; exp_month: number; exp_year: number; is_default: boolean; created_at: string }[]
+  helcim_webhooks: { id: number; helcim_event_id: string; event_type: string; processed: boolean; created_at: string }[]
   nextUserId: number
   nextAccountId: number
   nextTransactionId: number
@@ -18,6 +22,10 @@ interface DbData {
   nextReconciliationItemId: number
   nextRecurringTransactionId: number
   nextTransactionInstanceId: number
+  nextSubscriptionId: number
+  nextBillingHistoryId: number
+  nextPaymentMethodId: number
+  nextHelcimWebhookId: number
 }
 
 const dbPath = path.join(process.cwd(), '.data', 'bookkeeping.json')
@@ -73,6 +81,30 @@ export function getDb(): DbData {
       }
       if (!db.nextUserId) {
         db.nextUserId = 2
+      }
+      if (!db.subscriptions) {
+        db.subscriptions = []
+      }
+      if (!db.billing_history) {
+        db.billing_history = []
+      }
+      if (!db.payment_methods) {
+        db.payment_methods = []
+      }
+      if (!db.helcim_webhooks) {
+        db.helcim_webhooks = []
+      }
+      if (!db.nextSubscriptionId) {
+        db.nextSubscriptionId = 1
+      }
+      if (!db.nextBillingHistoryId) {
+        db.nextBillingHistoryId = 1
+      }
+      if (!db.nextPaymentMethodId) {
+        db.nextPaymentMethodId = 1
+      }
+      if (!db.nextHelcimWebhookId) {
+        db.nextHelcimWebhookId = 1
       }
 
       // Save the updated database with new fields
@@ -136,6 +168,10 @@ function initializeDb(): DbData {
     reconciliation_items: [],
     recurring_transactions: [],
     transaction_instances: [],
+    subscriptions: [],
+    billing_history: [],
+    payment_methods: [],
+    helcim_webhooks: [],
     nextUserId: 2,
     nextAccountId: 24,
     nextTransactionId: 1,
@@ -144,6 +180,10 @@ function initializeDb(): DbData {
     nextReconciliationItemId: 1,
     nextRecurringTransactionId: 1,
     nextTransactionInstanceId: 1,
+    nextSubscriptionId: 1,
+    nextBillingHistoryId: 1,
+    nextPaymentMethodId: 1,
+    nextHelcimWebhookId: 1,
   }
   saveDb(db)
   return db
@@ -1511,4 +1551,230 @@ export function getYearOverYearData(userId: number, year: number): TrendComparis
   }
 
   return comparisons
+}
+
+// Subscription Queries (Helcim Billing)
+export function createSubscription(
+  userId: number,
+  plan: string,
+  helcimCustomerId: string,
+  helcimSubscriptionId: string,
+  trialEndDate?: string
+) {
+  const db = getDb()
+  const id = db.nextSubscriptionId++
+  const now = new Date().toISOString()
+  const currentPeriodEnd = new Date()
+  currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1)
+
+  db.subscriptions.push({
+    id,
+    user_id: userId,
+    plan,
+    status: trialEndDate ? 'trialing' : 'active',
+    helcim_customer_id: helcimCustomerId,
+    helcim_subscription_id: helcimSubscriptionId,
+    trial_end_date: trialEndDate || null,
+    current_period_start: now.split('T')[0],
+    current_period_end: currentPeriodEnd.toISOString().split('T')[0],
+    created_at: now,
+    updated_at: now,
+  })
+
+  // Update user's subscription info
+  const user = db.users.find(u => u.id === userId)
+  if (user) {
+    user.plan = plan
+    user.helcim_customer_id = helcimCustomerId
+  }
+
+  saveDb(db)
+  return { lastID: id }
+}
+
+export function getSubscription(userId: number) {
+  const db = getDb()
+  return db.subscriptions.find(s => s.user_id === userId)
+}
+
+export function updateSubscription(
+  userId: number,
+  updates: {
+    plan?: string
+    status?: string
+    trial_end_date?: string | null
+    current_period_start?: string
+    current_period_end?: string
+    canceled_at?: string | null
+  }
+) {
+  const db = getDb()
+  const subscription = db.subscriptions.find(s => s.user_id === userId)
+  if (!subscription) return false
+
+  Object.assign(subscription, updates, { updated_at: new Date().toISOString() })
+
+  // Update user if plan changed
+  if (updates.plan) {
+    const user = db.users.find(u => u.id === userId)
+    if (user) user.plan = updates.plan
+  }
+
+  saveDb(db)
+  return true
+}
+
+// Billing History Queries
+export function createBillingEntry(
+  userId: number,
+  helcimInvoiceId: string,
+  amount: number,
+  currency: string,
+  status: string,
+  periodStart: string,
+  periodEnd: string,
+  paidAt?: string
+) {
+  const db = getDb()
+  const id = db.nextBillingHistoryId++
+
+  db.billing_history.push({
+    id,
+    user_id: userId,
+    helcim_invoice_id: helcimInvoiceId,
+    amount,
+    currency,
+    status,
+    period_start: periodStart,
+    period_end: periodEnd,
+    paid_at: paidAt,
+    created_at: new Date().toISOString(),
+  })
+
+  saveDb(db)
+  return { lastID: id }
+}
+
+export function getBillingHistory(userId: number, limit: number = 50) {
+  const db = getDb()
+  return db.billing_history
+    .filter(b => b.user_id === userId)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, limit)
+}
+
+export function getBillingEntry(id: number) {
+  const db = getDb()
+  return db.billing_history.find(b => b.id === id)
+}
+
+export function updateBillingEntry(id: number, updates: { status?: string; paid_at?: string }) {
+  const db = getDb()
+  const entry = db.billing_history.find(b => b.id === id)
+  if (!entry) return false
+
+  Object.assign(entry, updates)
+  saveDb(db)
+  return true
+}
+
+// Payment Method Queries
+export function createPaymentMethod(
+  userId: number,
+  helcimPaymentMethodId: string,
+  last4: string,
+  brand: string,
+  expMonth: number,
+  expYear: number,
+  isDefault: boolean = false
+) {
+  const db = getDb()
+  const id = db.nextPaymentMethodId++
+
+  // If this is the default, unset other defaults for this user
+  if (isDefault) {
+    db.payment_methods
+      .filter(pm => pm.user_id === userId && pm.is_default)
+      .forEach(pm => (pm.is_default = false))
+  }
+
+  db.payment_methods.push({
+    id,
+    user_id: userId,
+    helcim_payment_method_id: helcimPaymentMethodId,
+    last4,
+    brand,
+    exp_month: expMonth,
+    exp_year: expYear,
+    is_default: isDefault,
+    created_at: new Date().toISOString(),
+  })
+
+  saveDb(db)
+  return { lastID: id }
+}
+
+export function getPaymentMethods(userId: number) {
+  const db = getDb()
+  return db.payment_methods
+    .filter(pm => pm.user_id === userId)
+    .sort((a, b) => (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0))
+}
+
+export function getDefaultPaymentMethod(userId: number) {
+  const db = getDb()
+  return db.payment_methods.find(pm => pm.user_id === userId && pm.is_default)
+}
+
+export function deletePaymentMethod(id: number) {
+  const db = getDb()
+  const initialLength = db.payment_methods.length
+  db.payment_methods = db.payment_methods.filter(pm => pm.id !== id)
+
+  if (db.payment_methods.length < initialLength) {
+    saveDb(db)
+    return true
+  }
+  return false
+}
+
+// Webhook Queries
+export function createWebhookEvent(
+  helcimEventId: string,
+  eventType: string
+) {
+  const db = getDb()
+  const id = db.nextHelcimWebhookId++
+
+  db.helcim_webhooks.push({
+    id,
+    helcim_event_id: helcimEventId,
+    event_type: eventType,
+    processed: false,
+    created_at: new Date().toISOString(),
+  })
+
+  saveDb(db)
+  return { lastID: id }
+}
+
+export function getWebhookEvent(helcimEventId: string) {
+  const db = getDb()
+  return db.helcim_webhooks.find(w => w.helcim_event_id === helcimEventId)
+}
+
+export function markWebhookProcessed(id: number) {
+  const db = getDb()
+  const webhook = db.helcim_webhooks.find(w => w.id === id)
+  if (webhook) {
+    webhook.processed = true
+    saveDb(db)
+    return true
+  }
+  return false
+}
+
+export function getUnprocessedWebhooks() {
+  const db = getDb()
+  return db.helcim_webhooks.filter(w => !w.processed)
 }

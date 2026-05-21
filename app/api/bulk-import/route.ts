@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb, saveDb } from '@/lib/db'
-import { getUserIdFromRequest } from '@/lib/auth'
+import { getUserIdFromRequest } from '@/lib/auth-server'
 
 interface BulkTransaction {
   transaction_date: string

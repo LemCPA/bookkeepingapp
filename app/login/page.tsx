@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { setAuth } from '@/lib/auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -31,9 +32,8 @@ export default function LoginPage() {
         return
       }
 
-      // Store session info
-      localStorage.setItem('user', JSON.stringify(data.user))
-      localStorage.setItem('sessionToken', data.token)
+      // Store authentication info using setAuth
+      setAuth(data.user, data.accessToken, data.refreshToken)
 
       // Redirect to dashboard
       router.push('/')

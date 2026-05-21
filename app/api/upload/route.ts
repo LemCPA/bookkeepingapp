@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFileSync, mkdirSync } from 'fs'
 import path from 'path'
 import { createDocument, getTransaction } from '@/lib/db'
-import { getUserIdFromRequest } from '@/lib/auth'
+import { getUserIdFromRequest } from '@/lib/auth-server'
 
 export async function POST(request: NextRequest) {
   try {

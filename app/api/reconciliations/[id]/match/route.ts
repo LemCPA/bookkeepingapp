@@ -5,7 +5,7 @@ import {
   calculateReconciliationBalance,
   getBankReconciliation,
 } from '@/lib/db'
-import { getUserIdFromRequest } from '@/lib/auth'
+import { getUserIdFromRequest } from '@/lib/auth-server'
 
 export async function POST(
   request: NextRequest,

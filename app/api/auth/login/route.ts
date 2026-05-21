@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { comparePassword } from '@/lib/bcrypt-utils'
+import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
 import { getUserByEmail } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
@@ -22,28 +24,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate password (simple string comparison for now)
-    // TODO: In production, use proper password hashing (bcrypt)
-    if (user.password_hash !== password) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      )
+    // Validate password with bcrypt
+    const isPasswordValid = await comparePassword(password, user.password_hash)
+    if (!isPasswordValid) {
+      // For backward compatibility, also check plain text (for existing demo user)
+      if (user.password_hash !== password) {
+        return NextResponse.json(
+          { error: 'Invalid email or password' },
+          { status: 401 }
+        )
+      }
     }
 
-    // Generate a simple session token (in production, use JWT or similar)
-    const token = Buffer.from(`${user.id}-${Date.now()}`).toString('base64')
+    // Generate JWT tokens
+    const accessToken = createJWTToken(user.id, user.email)
+    const refreshToken = createRefreshToken(user.id)
 
-    // Return user info and token
+    // Return user data without password
+    const { password_hash, ...userWithoutPassword } = user
     return NextResponse.json(
       {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-        token,
-        message: 'Login successful',
+        user: userWithoutPassword,
+        accessToken,
+        refreshToken,
       },
       { status: 200 }
     )

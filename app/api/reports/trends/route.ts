@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTrendData, getComparisonData, getYearOverYearData } from '@/lib/db'
-import { getUserIdFromRequest } from '@/lib/auth'
+import { getUserIdFromRequest } from '@/lib/auth-server'
 
 export async function GET(request: NextRequest) {
   try {

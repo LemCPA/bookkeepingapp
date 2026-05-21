@@ -11,7 +11,12 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
     "autoprefixer": "^10.4.19",
+    "axios": "^1.6.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.4.0",
+    "jsonwebtoken": "^9.0.3",
     "next": "^16.2.6",
+    "nodemailer": "^6.9.7",
     "pdfjs-dist": "^3.11.174",
     "postcss": "^8.4.38",
     "react": "^18.3.1",

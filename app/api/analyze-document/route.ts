@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Anthropic } from '@anthropic-ai/sdk'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { getUserIdFromRequest } from '@/lib/auth'
+import { getUserIdFromRequest } from '@/lib/auth-server'
 
 // Load API key from .env.local or environment
 function getApiKey(): string | undefined {

@@ -1,26 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserByEmail, createUser } from '@/lib/db'
+import { hashPassword, isValidPassword } from '@/lib/bcrypt-utils'
+import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
+import { getDb, saveDb, getUserByEmail } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, password } = body
+    const { email, password, name } = body
 
-    if (!name || !email || !password) {
+    // Validate input
+    if (!email || !password || !name) {
       return NextResponse.json(
-        { error: 'Name, email, and password are required' },
+        { error: 'Email, password, and name are required' },
         { status: 400 }
       )
     }
 
-    if (password.length < 6) {
+    // Validate password strength
+    const passwordValidation = isValidPassword(password)
+    if (!passwordValidation.valid) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
+        { error: 'Password does not meet requirements', details: passwordValidation.errors },
         { status: 400 }
       )
     }
 
-    // Check if email already exists
+    // Check if user already exists
     const existingUser = getUserByEmail(email)
     if (existingUser) {
       return NextResponse.json(
@@ -29,44 +34,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create new user in database
-    // TODO: In production, hash password with bcrypt
-    const result = createUser(email, password, name, false)
-    if (!result) {
-      return NextResponse.json(
-        { error: 'Failed to create user' },
-        { status: 500 }
-      )
+    // Hash password
+    const passwordHash = await hashPassword(password)
+
+    // Create user in database
+    const db = getDb()
+    const userId = db.nextUserId++
+    const newUser = {
+      id: userId,
+      email,
+      password_hash: passwordHash,
+      name,
+      email_verified: true, // In production, set to false and send verification email
+      gst_registered: false,
+      created_at: new Date().toISOString(),
     }
 
-    const newUser = getUserByEmail(email)
-    if (!newUser) {
-      return NextResponse.json(
-        { error: 'Failed to retrieve created user' },
-        { status: 500 }
-      )
-    }
+    db.users.push(newUser)
+    saveDb(db)
 
-    // Generate a simple session token
-    const token = Buffer.from(`${newUser.id}-${Date.now()}`).toString('base64')
+    // Generate tokens
+    const accessToken = createJWTToken(userId, email)
+    const refreshToken = createRefreshToken(userId)
 
-    // Return user info and token
-    return NextResponse.json(
-      {
-        user: {
-          id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-        },
-        token,
-        message: 'Signup successful',
-      },
-      { status: 201 }
-    )
+    // Return user data without password
+    const { password_hash, ...userWithoutPassword } = newUser
+    return NextResponse.json({
+      user: userWithoutPassword,
+      accessToken,
+      refreshToken,
+    }, { status: 201 })
   } catch (error) {
     console.error('Signup error:', error)
     return NextResponse.json(
-      { error: 'An error occurred during signup' },
+      { error: 'Failed to create account' },
       { status: 500 }
     )
   }

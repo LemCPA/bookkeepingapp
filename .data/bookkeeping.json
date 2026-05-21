@@ -7,6 +7,8 @@
       "name": "Demo User",
       "gst_registered": true,
       "gst_number": "123456789RT0001",
+      "plan": "free",
+      "helcim_customer_id": null,
       "created_at": "2026-05-20T03:41:15.763Z"
     }
   ],
@@ -209,5 +211,13 @@
       "created_at": "2026-05-20T04:33:37.528Z"
     }
   ],
-  "nextClientId": 2
+  "nextClientId": 2,
+  "subscriptions": [],
+  "nextSubscriptionId": 1,
+  "billing_history": [],
+  "nextBillingHistoryId": 1,
+  "payment_methods": [],
+  "nextPaymentMethodId": 1,
+  "helcim_webhooks": [],
+  "nextHelcimWebhookId": 1
 }

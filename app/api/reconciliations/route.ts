@@ -6,7 +6,7 @@ import {
   getEligibleTransactionsForReconciliation,
   getReconciliationItems,
 } from '@/lib/db'
-import { getUserIdFromRequest } from '@/lib/auth'
+import { getUserIdFromRequest } from '@/lib/auth-server'
 
 export async function GET(request: NextRequest) {
   try {
