@@ -12,7 +12,7 @@ export default function FAQPage() {
     },
     {
       question: "What are the service limitations?",
-      answer: "Bookkeeping App is limited to 100 transactions per month and one client account per user. If you have higher transaction volumes or need to manage multiple client accounts, we recommend QuickBooks Online or similar enterprise solutions."
+      answer: "Bookkeeping App is limited to 50 transactions per month and one client account per user. If you have higher transaction volumes or need to manage multiple client accounts, we recommend QuickBooks Online or similar enterprise solutions."
     },
     {
       question: "Is there a free trial?",
@@ -48,7 +48,7 @@ export default function FAQPage() {
     },
     {
       question: "What happens if I exceed 100 transactions in a month?",
-      answer: "If you're consistently exceeding 100 transactions per month, you should upgrade to a higher plan or consider using QuickBooks Online. Exceeding limits may result in reduced performance or service suspension."
+      answer: "If you're consistently exceeding 50 transactions per month, you should upgrade to a higher plan or consider using QuickBooks Online. Exceeding limits may result in reduced performance or service suspension."
     },
     {
       question: "Can I manage multiple businesses with one account?",

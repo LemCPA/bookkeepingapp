@@ -69,7 +69,7 @@ export default function Disclaimer() {
             <strong>This application has the following limitations:</strong>
           </p>
           <ul className="list-disc pl-6 space-y-2">
-            <li>Maximum 100 transactions per month</li>
+            <li>Maximum 50 transactions per month</li>
             <li>Only one client account per user</li>
             <li>Performance may be affected with near-maximum data volumes</li>
             <li>Not suitable for high-volume enterprise bookkeeping operations</li>
