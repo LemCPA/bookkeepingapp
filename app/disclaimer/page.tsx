@@ -64,6 +64,22 @@ export default function Disclaimer() {
         </section>
 
         <section>
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Service Limitations</h2>
+          <p>
+            <strong>This application has the following limitations:</strong>
+          </p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Maximum 100 transactions per month</li>
+            <li>Only one client account per user</li>
+            <li>Performance may be affected with near-maximum data volumes</li>
+            <li>Not suitable for high-volume enterprise bookkeeping operations</li>
+          </ul>
+          <p className="mt-2">
+            For businesses requiring higher transaction volumes or multiple client management, consider QuickBooks Online or similar enterprise solutions.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Data Security</h2>
           <p>
             While we implement industry-standard security practices, no online service is completely secure. You use this service at your own risk. We recommend:

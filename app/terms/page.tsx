@@ -18,6 +18,9 @@ export default function TermsOfUse() {
           <p>
             Bookkeeping App is a cloud-based software tool designed to help small businesses, self-employed individuals, and startups track financial transactions and maintain bookkeeping records in compliance with Canadian accounting standards.
           </p>
+          <p className="mt-2">
+            <strong>Service Limitations:</strong> This service is limited to 100 transactions per month and one client account per user. It is not intended for high-volume enterprise bookkeeping operations.
+          </p>
         </section>
 
         <section>
