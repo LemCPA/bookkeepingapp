@@ -22,8 +22,8 @@ export default function NewTransactionPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/clients').then(r => r.json()).then(setClients),
-      fetch('/api/chart-of-accounts').then(r => r.json()).then(setAccounts),
+      fetch('/api/clients').then(r => r.json()).then(data => setClients(Array.isArray(data) ? data : [])).catch(() => setClients([])),
+      fetch('/api/chart-of-accounts').then(r => r.json()).then(data => setAccounts(Array.isArray(data) ? data : [])).catch(() => setAccounts([])),
     ]).finally(() => setLoading(false))
   }, [])
 
