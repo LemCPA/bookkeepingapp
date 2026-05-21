@@ -54,6 +54,14 @@ export async function POST(request: NextRequest) {
       helcimCustomerId = customerData.id
     }
 
+    // Ensure customer ID exists
+    if (!helcimCustomerId) {
+      return NextResponse.json(
+        { error: 'Failed to create or retrieve customer' },
+        { status: 500 }
+      )
+    }
+
     // Create subscription with 14-day trial
     const trialEndDate = calculateTrialEndDate(14)
     const subscriptionData = await createHelcimSubscription(
