@@ -471,6 +471,7 @@ export default function Home() {
         <footer className="bg-gray-50 border-t border-gray-200 py-8">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex justify-center gap-8 mb-6 text-sm text-gray-700">
+              <Link href="/faq" className="hover:text-blue-600 font-medium">FAQ</Link>
               <Link href="/terms" className="hover:text-blue-600 font-medium">Terms of Use</Link>
               <Link href="/privacy" className="hover:text-blue-600 font-medium">Privacy & PIPEDA</Link>
               <Link href="/disclaimer" className="hover:text-blue-600 font-medium">Disclaimer</Link>
