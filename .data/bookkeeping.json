@@ -182,6 +182,41 @@
       "name": "Capital Cost Allowance (CCA)",
       "type": "EXPENSE",
       "user_id": 1
+    },
+    {
+      "id": 24,
+      "code": "1000",
+      "name": "Cash",
+      "type": "ASSET",
+      "user_id": 2
+    },
+    {
+      "id": 25,
+      "code": "1010",
+      "name": "Checking Account",
+      "type": "ASSET",
+      "user_id": 2
+    },
+    {
+      "id": 26,
+      "code": "4000",
+      "name": "Service Revenue",
+      "type": "INCOME",
+      "user_id": 2
+    },
+    {
+      "id": 27,
+      "code": "5100",
+      "name": "Advertising",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 28,
+      "code": "5150",
+      "name": "Office Expenses",
+      "type": "EXPENSE",
+      "user_id": 2
     }
   ],
   "transactions": [
@@ -197,17 +232,199 @@
       "type": "INVOICE",
       "created_at": "2026-05-20T04:33:53.986Z",
       "updated_at": "2026-05-20T04:33:53.986Z"
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "client_id": 2,
+      "account_id": 26,
+      "transaction_date": "2026-05-10",
+      "amount": 1500,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 195,
+      "description": "Consulting Services - Project A",
+      "type": "INVOICE",
+      "reference_number": "INV-001",
+      "created_at": "2026-05-21T10:00:00.000Z",
+      "updated_at": "2026-05-21T10:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "user_id": 2,
+      "client_id": 3,
+      "account_id": 26,
+      "transaction_date": "2026-05-12",
+      "amount": 2500,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 325,
+      "description": "Web Development Services",
+      "type": "INVOICE",
+      "reference_number": "INV-002",
+      "created_at": "2026-05-21T10:05:00.000Z",
+      "updated_at": "2026-05-21T10:05:00.000Z"
+    },
+    {
+      "id": 4,
+      "user_id": 2,
+      "account_id": 27,
+      "transaction_date": "2026-05-14",
+      "amount": 250,
+      "description": "Facebook Ads Campaign",
+      "type": "RECEIPT",
+      "reference_number": "REC-001",
+      "created_at": "2026-05-21T10:10:00.000Z",
+      "updated_at": "2026-05-21T10:10:00.000Z"
+    },
+    {
+      "id": 5,
+      "user_id": 2,
+      "account_id": 28,
+      "transaction_date": "2026-05-18",
+      "amount": 89.99,
+      "description": "Office Supplies - Staples with \"special\" characters & commas, test",
+      "type": "RECEIPT",
+      "reference_number": "REC-002",
+      "created_at": "2026-05-21T10:15:00.000Z",
+      "updated_at": "2026-05-21T10:15:00.000Z"
+    },
+    {
+      "id": 6,
+      "user_id": 2,
+      "account_id": 26,
+      "transaction_date": "2026-05-19",
+      "amount": 500,
+      "gst_hst_rate": 0,
+      "gst_hst_amount": 0,
+      "description": "Refund for cancelled service",
+      "type": "ADJUSTMENT",
+      "reference_number": "ADJ-001",
+      "created_at": "2026-05-21T10:20:00.000Z",
+      "updated_at": "2026-05-21T10:20:00.000Z"
+    },
+    {
+      "id": 7,
+      "user_id": 1,
+      "account_id": 8,
+      "transaction_date": "2026-05-22",
+      "amount": 100,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 13,
+      "description": "something",
+      "type": "INVOICE",
+      "reference_number": "",
+      "created_at": "2026-05-22T11:24:09.905Z",
+      "updated_at": "2026-05-22T11:24:09.905Z"
+    },
+    {
+      "id": 8,
+      "user_id": 1,
+      "account_id": 8,
+      "transaction_date": "2026-05-22",
+      "amount": 200,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 26,
+      "description": "tester",
+      "type": "INVOICE",
+      "reference_number": "",
+      "created_at": "2026-05-22T11:30:18.796Z",
+      "updated_at": "2026-05-22T11:30:18.796Z",
+      "sent_date": "2026-05-22T11:36:33.703Z",
+      "sent_to_email": "customer@example.com",
+      "reconciliation_status": "CLEARED"
+    },
+    {
+      "id": 9,
+      "user_id": 1,
+      "account_id": 10,
+      "transaction_date": "2026-05-22",
+      "amount": 100,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 13,
+      "description": "d",
+      "type": "RECEIPT",
+      "reference_number": "",
+      "created_at": "2026-05-22T12:04:43.887Z",
+      "updated_at": "2026-05-22T12:04:43.887Z"
+    },
+    {
+      "id": 10,
+      "user_id": 1,
+      "account_id": 5,
+      "transaction_date": "2025-05-22",
+      "amount": 29.91,
+      "description": "USB Cable and HDMI Cable",
+      "type": "RECEIPT",
+      "reference_number": "",
+      "gst_hst_rate": 5,
+      "gst_hst_amount": 1.42,
+      "created_at": "2026-05-22T16:04:54.393Z",
+      "updated_at": "2026-05-22T16:04:54.393Z",
+      "due_date": "2025-06-21",
+      "reconciliation_status": ""
+    },
+    {
+      "id": 11,
+      "user_id": 1,
+      "account_id": 8,
+      "transaction_date": "2026-05-22",
+      "amount": 500,
+      "gst_hst_rate": 0,
+      "gst_hst_amount": 0,
+      "description": "Website Design Services",
+      "type": "INVOICE",
+      "reference_number": "",
+      "created_at": "2026-05-22T18:47:26.094Z",
+      "updated_at": "2026-05-22T18:47:26.094Z"
+    },
+    {
+      "id": 12,
+      "user_id": 1,
+      "account_id": 8,
+      "transaction_date": "2026-05-22",
+      "amount": 100,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 13,
+      "description": "l;;",
+      "type": "INVOICE",
+      "reference_number": "",
+      "created_at": "2026-05-22T18:57:43.846Z",
+      "updated_at": "2026-05-22T18:57:43.846Z"
     }
   ],
-  "documents": [],
+  "documents": [
+    {
+      "id": 1,
+      "transaction_id": 7,
+      "file_name": "2025 11 04 Arcadia Solution Corp (T2 license to 2026May).pdf",
+      "file_path": "/uploads/7/1779449050121-2025 11 04 Arcadia Solution Corp (T2 license to 2026May).pdf",
+      "file_size": 139845,
+      "uploaded_at": "2026-05-22T11:24:10.123Z"
+    },
+    {
+      "id": 2,
+      "transaction_id": 8,
+      "file_name": "2025 11 04 Arcadia Solution Corp (T2 license to 2026May).pdf",
+      "file_path": "/uploads/8/1779449418826-2025 11 04 Arcadia Solution Corp (T2 license to 2026May).pdf",
+      "file_size": 139845,
+      "uploaded_at": "2026-05-22T11:30:18.829Z"
+    },
+    {
+      "id": 3,
+      "transaction_id": 10,
+      "file_name": "receipt_image.jpg",
+      "file_path": "/uploads/user-1/10-1779465894394-receipt_image.jpg",
+      "file_size": 14855,
+      "uploaded_at": "2026-05-22T16:04:54.395Z"
+    }
+  ],
   "bank_reconciliations": [],
   "reconciliation_items": [],
   "recurring_transactions": [],
   "transaction_instances": [],
   "nextUserId": 3,
-  "nextAccountId": 24,
-  "nextTransactionId": 2,
-  "nextDocumentId": 1,
+  "nextAccountId": 29,
+  "nextTransactionId": 13,
+  "nextDocumentId": 4,
   "nextBankReconciliationId": 1,
   "nextReconciliationItemId": 1,
   "nextRecurringTransactionId": 1,
@@ -218,9 +435,21 @@
       "user_id": 1,
       "name": "Test Client",
       "created_at": "2026-05-20T04:33:37.528Z"
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "name": "Acme Corporation",
+      "created_at": "2026-05-21T10:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "user_id": 2,
+      "name": "Tech Startup Inc.",
+      "created_at": "2026-05-21T10:05:00.000Z"
     }
   ],
-  "nextClientId": 2,
+  "nextClientId": 4,
   "subscriptions": [],
   "nextSubscriptionId": 1,
   "billing_history": [],
@@ -228,5 +457,7 @@
   "payment_methods": [],
   "nextPaymentMethodId": 1,
   "helcim_webhooks": [],
-  "nextHelcimWebhookId": 1
+  "nextHelcimWebhookId": 1,
+  "stripe_webhooks": [],
+  "nextStripeWebhookId": 1
 }

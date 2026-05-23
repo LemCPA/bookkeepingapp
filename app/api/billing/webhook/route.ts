@@ -1,0 +1,64 @@
+import { NextRequest, NextResponse } from 'next/server'
+import {
+  verifyWebhookSignature,
+  handleSubscriptionEvent,
+} from '@/lib/stripe-utils'
+import { getDb, saveDb } from '@/lib/db'
+export const dynamic = 'force-dynamic'
+
+
+export async function POST(request: NextRequest) {
+  const body = await request.text()
+  const signature = request.headers.get('stripe-signature')
+export const dynamic = 'force-dynamic'
+
+
+  if (!signature) {
+    return NextResponse.json(
+      { error: 'Missing stripe-signature header' },
+      { status: 400 }
+    )
+  }
+export const dynamic = 'force-dynamic'
+
+
+  try {
+    const event = verifyWebhookSignature(body, signature)
+export const dynamic = 'force-dynamic'
+
+
+    // Handle different event types
+    const handled = handleSubscriptionEvent(event)
+    if (!handled) {
+      // Ignore unhandled event types
+      return NextResponse.json({ received: true })
+    }
+export const dynamic = 'force-dynamic'
+
+
+    const db = getDb()
+export const dynamic = 'force-dynamic'
+
+
+    // Log webhook event for now
+    console.log('Webhook event received:', handled.type, handled.data)
+export const dynamic = 'force-dynamic'
+
+
+    // Save database
+    saveDb(db)
+export const dynamic = 'force-dynamic'
+
+
+    return NextResponse.json({ received: true })
+  } catch (error) {
+    console.error('Webhook error:', error)
+    return NextResponse.json(
+      {
+        error: 'Webhook processing failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
+  }
+}
