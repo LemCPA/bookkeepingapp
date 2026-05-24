@@ -128,14 +128,6 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Delete from Helcim first
-    try {
-      await deleteHelcimPaymentMethod(paymentMethod.helcim_payment_method_id)
-    } catch (helcimError) {
-      console.error('Error deleting payment method from Helcim:', helcimError)
-      // Continue with local deletion even if Helcim fails
-    }
-
     // Delete from database
     const deleted = deletePaymentMethod(id)
 
