@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ChartOfAccount } from '@/lib/types'
 import { createAuthenticatedFetch } from '@/lib/auth'
 
-export default function NewTransactionPage() {
+function NewTransactionContent() {
   const searchParams = useSearchParams()
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
   const [loading, setLoading] = useState(true)
@@ -395,5 +395,13 @@ export default function NewTransactionPage() {
         </div>
       </form>
     </div>
+  )
+}
+
+export default function NewTransactionPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <NewTransactionContent />
+    </Suspense>
   )
 }

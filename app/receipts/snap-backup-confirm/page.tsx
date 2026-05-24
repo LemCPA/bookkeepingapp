@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createAuthenticatedFetch, getStoredUser } from '@/lib/auth'
 
@@ -11,8 +11,7 @@ interface Account {
   type: string
 }
 
-
-export default function ConfirmTransactionPage() {
+function ConfirmTransactionContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [notLoggedIn, setNotLoggedIn] = useState(false)
@@ -331,5 +330,13 @@ export default function ConfirmTransactionPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ConfirmTransactionPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <ConfirmTransactionContent />
+    </Suspense>
   )
 }
