@@ -4,14 +4,12 @@ import {
   handleSubscriptionEvent,
 } from '@/lib/stripe-utils'
 import { getDb, saveDb } from '@/lib/db'
-export const dynamic = 'force-dynamic'
 
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
-export const dynamic = 'force-dynamic'
-
 
   if (!signature) {
     return NextResponse.json(
@@ -19,13 +17,9 @@ export const dynamic = 'force-dynamic'
       { status: 400 }
     )
   }
-export const dynamic = 'force-dynamic'
-
 
   try {
     const event = verifyWebhookSignature(body, signature)
-export const dynamic = 'force-dynamic'
-
 
     // Handle different event types
     const handled = handleSubscriptionEvent(event)
@@ -33,22 +27,14 @@ export const dynamic = 'force-dynamic'
       // Ignore unhandled event types
       return NextResponse.json({ received: true })
     }
-export const dynamic = 'force-dynamic'
-
 
     const db = getDb()
-export const dynamic = 'force-dynamic'
-
 
     // Log webhook event for now
     console.log('Webhook event received:', handled.type, handled.data)
-export const dynamic = 'force-dynamic'
-
 
     // Save database
     saveDb(db)
-export const dynamic = 'force-dynamic'
-
 
     return NextResponse.json({ received: true })
   } catch (error) {

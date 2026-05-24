@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { getUser } from '@/lib/db'
 import { createBillingPortalSession } from '@/lib/stripe-utils'
-export const dynamic = 'force-dynamic'
 
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,15 +11,11 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-export const dynamic = 'force-dynamic'
-
 
     const user = getUser(userId)
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-export const dynamic = 'force-dynamic'
-
 
     if (!user.stripe_customer_id) {
       return NextResponse.json(
@@ -27,16 +23,12 @@ export const dynamic = 'force-dynamic'
         { status: 400 }
       )
     }
-export const dynamic = 'force-dynamic'
-
 
     const baseUrl = request.headers.get('origin') || 'http://localhost:3000'
     const session = await createBillingPortalSession(
       user.stripe_customer_id,
       `${baseUrl}/billing`
     )
-export const dynamic = 'force-dynamic'
-
 
     return NextResponse.json({ url: session.url })
   } catch (error) {
