@@ -1,9 +1,16 @@
 import Stripe from 'stripe'
 
-// Initialize Stripe with server key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-04-10' as any,
-})
+// Initialize Stripe with server key (lazy initialization)
+let stripe: Stripe | null = null
+
+function getStripe(): Stripe {
+  if (!stripe) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+      apiVersion: '2024-04-10' as any,
+    })
+  }
+  return stripe
+}
 
 // Pricing plans
 export const PRICING_PLANS = {
@@ -35,7 +42,7 @@ export const PRICING_PLANS = {
  */
 export async function createStripeCustomer(email: string, name: string) {
   try {
-    const customer = await stripe.customers.create({
+    const customer = await getStripe().customers.create({
       email,
       name,
       metadata: {
@@ -64,7 +71,7 @@ export async function createSubscription(
       throw new Error(`Stripe price ID not configured for plan: ${planKey}`)
     }
 
-    const subscription = await stripe.subscriptions.create({
+    const subscription = await getStripe().subscriptions.create({
       customer: customerId,
       items: [
         {
@@ -89,7 +96,7 @@ export async function createSubscription(
  */
 export async function getSubscription(subscriptionId: string) {
   try {
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+    const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
     return subscription
   } catch (error) {
     console.error('Error retrieving subscription:', error)
@@ -102,7 +109,7 @@ export async function getSubscription(subscriptionId: string) {
  */
 export async function cancelSubscription(subscriptionId: string) {
   try {
-    const subscription = await stripe.subscriptions.cancel(subscriptionId)
+    const subscription = await getStripe().subscriptions.cancel(subscriptionId)
     return subscription
   } catch (error) {
     console.error('Error canceling subscription:', error)
@@ -124,9 +131,9 @@ export async function updateSubscription(
       throw new Error(`Stripe price ID not configured for plan: ${planKey}`)
     }
 
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+    const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
 
-    const updated = await stripe.subscriptions.update(subscriptionId, {
+    const updated = await getStripe().subscriptions.update(subscriptionId, {
       items: [
         {
           id: subscription.items.data[0].id,
@@ -161,7 +168,7 @@ export async function createCheckoutSession(
       throw new Error(`Stripe price ID not configured for plan: ${planKey}`)
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [
@@ -193,7 +200,7 @@ export async function createBillingPortalSession(
   returnUrl: string
 ) {
   try {
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
     })
@@ -210,7 +217,7 @@ export async function createBillingPortalSession(
  */
 export function verifyWebhookSignature(body: string, signature: string) {
   try {
-    const event = stripe.webhooks.constructEvent(
+    const event = getStripe().webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET || ''
@@ -227,7 +234,7 @@ export function verifyWebhookSignature(body: string, signature: string) {
  */
 export async function getCustomerInvoices(customerId: string) {
   try {
-    const invoices = await stripe.invoices.list({
+    const invoices = await getStripe().invoices.list({
       customer: customerId,
       limit: 10,
     })
@@ -243,7 +250,7 @@ export async function getCustomerInvoices(customerId: string) {
  */
 export async function getCustomerPaymentMethods(customerId: string) {
   try {
-    const paymentMethods = await stripe.paymentMethods.list({
+    const paymentMethods = await getStripe().paymentMethods.list({
       customer: customerId,
       type: 'card',
     })
