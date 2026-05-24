@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { getSubscription, updateSubscription } from '@/lib/db'
-import { cancelHelcimSubscription } from '@/lib/helcim-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,24 +24,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Subscription is already canceled' },
         { status: 400 }
-      )
-    }
-
-    // Parse request body for cancellation reason
-    const body = await request.json()
-    const { reason } = body
-
-    // Cancel subscription in Helcim
-    try {
-      await cancelHelcimSubscription(subscription.helcim_subscription_id, reason)
-    } catch (helcimError) {
-      console.error('Error canceling subscription in Helcim:', helcimError)
-      return NextResponse.json(
-        {
-          error: 'Failed to cancel subscription',
-          details: helcimError instanceof Error ? helcimError.message : 'Unknown error',
-        },
-        { status: 500 }
       )
     }
 
