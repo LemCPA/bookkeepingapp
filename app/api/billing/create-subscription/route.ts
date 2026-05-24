@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getUser, getDb, saveDb } from '@/lib/db'
-import { createHelcimCustomer, createHelcimSubscription, createPaymentIntent } from '@/lib/helcim-utils'
+import { getUser, getDb } from '@/lib/db'
 import { getPlan, calculateTrialEndDate } from '@/lib/billing-utils'
-import { createSubscription } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { planId, paymentMethodToken } = body
+    const { planId } = body
 
     // Validate plan
     if (!planId) {
@@ -45,52 +43,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create Helcim customer if not already created
-    let helcimCustomerId = user.helcim_customer_id
-    if (!helcimCustomerId) {
-      const customerData = await createHelcimCustomer(user.email, user.name, {
-        user_id: userId.toString(),
-      })
-      helcimCustomerId = customerData.id
-    }
-
-    // Ensure customer ID exists
-    if (!helcimCustomerId) {
-      return NextResponse.json(
-        { error: 'Failed to create or retrieve customer' },
-        { status: 500 }
-      )
-    }
-
     // Create subscription with 14-day trial
     const trialEndDate = calculateTrialEndDate(14)
-    const subscriptionData = await createHelcimSubscription(
-      helcimCustomerId,
-      plan.id,
-      plan.priceInCents,
-      14 // 14-day trial
-    )
+    const subscriptionId = `sub_${Date.now()}`
 
-    // Store subscription in database
-    createSubscription(
-      userId,
-      plan.id,
-      helcimCustomerId,
-      subscriptionData.id,
-      trialEndDate
-    )
+    // Add subscription to database
+    if (!db.subscriptions) {
+      db.subscriptions = []
+    }
+
+    db.subscriptions.push({
+      id: subscriptionId,
+      user_id: userId,
+      plan: planId,
+      status: 'trialing',
+      stripe_customer_id: '', // Will be set when payment is processed
+      stripe_subscription_id: subscriptionId,
+      trial_end_date: trialEndDate,
+      current_period_start: new Date().toISOString(),
+      current_period_end: trialEndDate,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
 
     // Return subscription data with trial info
     return NextResponse.json({
       subscription: {
-        id: subscriptionData.id,
-        customerId: helcimCustomerId,
-        plan: plan.id,
+        id: subscriptionId,
+        plan: planId,
         status: 'trialing',
         trialEndDate,
-        priceInCents: plan.priceInCents,
+        message: 'Subscription created successfully with 14-day free trial',
       },
-      message: 'Subscription created successfully with 14-day free trial',
     })
   } catch (error) {
     console.error('Create subscription error:', error)
