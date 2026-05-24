@@ -45,20 +45,21 @@ export async function POST(request: NextRequest) {
 
     // Create subscription with 14-day trial
     const trialEndDate = calculateTrialEndDate(14)
-    const subscriptionId = `sub_${Date.now()}`
+    const subscriptionId = parseInt(Date.now().toString().slice(-9)) // Numeric ID
 
     // Add subscription to database
     if (!db.subscriptions) {
       db.subscriptions = []
     }
 
+    const stripeSubscriptionId = `sub_${Date.now()}`
     db.subscriptions.push({
       id: subscriptionId,
       user_id: userId,
       plan: planId,
       status: 'trialing',
       stripe_customer_id: '', // Will be set when payment is processed
-      stripe_subscription_id: subscriptionId,
+      stripe_subscription_id: stripeSubscriptionId,
       trial_end_date: trialEndDate,
       current_period_start: new Date().toISOString(),
       current_period_end: trialEndDate,
