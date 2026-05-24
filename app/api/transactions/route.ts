@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTransaction, getTransactions, createTransaction, updateTransaction, deleteTransaction } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -71,6 +72,41 @@ export async function POST(request: NextRequest) {
       body.gst_hst_amount || 0,
       body.reference_number
     )
+
+    // Track first receipt scanned for email sequence
+    try {
+      const { data: user } = await supabase
+        .from('users')
+        .select('first_receipt_scanned_at')
+        .eq('id', userId)
+        .single()
+
+      // If this is the user's first transaction, mark it
+      if (user && !user.first_receipt_scanned_at) {
+        await supabase
+          .from('users')
+          .update({
+            first_receipt_scanned_at: new Date().toISOString(),
+            receipt_count: 1,
+          })
+          .eq('id', userId)
+          .catch(err => console.warn('Could not track first receipt:', err))
+      } else if (user) {
+        // Increment receipt count
+        const currentCount = (user as any).receipt_count || 0
+        await supabase
+          .from('users')
+          .update({
+            receipt_count: currentCount + 1,
+          })
+          .eq('id', userId)
+          .catch(err => console.warn('Could not update receipt count:', err))
+      }
+    } catch (trackingError) {
+      // Don't fail transaction if tracking fails
+      console.warn('Failed to track receipt:', trackingError)
+    }
+
     return NextResponse.json({ id: result.lastID })
   } catch (error) {
     console.error('Error creating transaction:', error)
