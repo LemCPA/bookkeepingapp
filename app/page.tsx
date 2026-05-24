@@ -47,94 +47,165 @@ function LandingPage() {
   return (
     <div className="space-y-2">
       {/* Hero Section */}
-      <section className="py-3">
-        <div className="flex items-center gap-12">
-          {/* Left side - Text content */}
-          <div className="flex-1">
-            <h1 className="text-5xl font-bold text-gray-900 mb-4">
-              Your Business Bookkeeping, Simplified
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Professional bookkeeping software for Canadian small businesses, self-employed professionals, startups, and anyone who wants to take control of their finances. Whether you're just starting out or looking to simplify your bookkeeping, we've got you covered.
+      <section className="py-12 px-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg mb-8">
+        <div className="max-w-4xl">
+          <h1 className="text-5xl font-bold mb-4">
+            Bookkeeping for Self-Employed
+          </h1>
+          <p className="text-xl mb-6 opacity-95">
+            Stop losing money to disorganized finances. Snap receipts instead of typing. Know your profit. Be tax-ready.
+          </p>
+          <div className="flex gap-4">
+            <Link
+              href="/signup"
+              className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold transition"
+            >
+              Start Free Trial
+            </Link>
+            <Link
+              href="/login"
+              className="border-2 border-white text-white hover:bg-blue-800 px-8 py-3 rounded-lg font-semibold transition"
+            >
+              Sign In
+            </Link>
+          </div>
+          <p className="text-sm mt-4 opacity-80">14 days free, no credit card required</p>
+        </div>
+      </section>
+
+      {/* The Problem Section */}
+      <section className="py-12">
+        <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+          Your Story. We Get It.
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center">
+            <div className="text-5xl mb-4">🧾</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Receipts Everywhere</h3>
+            <p className="text-gray-600">
+              Shoebox of receipts. Notes on your phone. Crumpled papers in your car. Where did that $200 go?
             </p>
-            <div className="flex gap-4">
-              <Link
-                href="/signup"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition"
-              >
-                Get Started Free
-              </Link>
-              <Link
-                href="/login"
-                className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-lg font-semibold transition"
-              >
-                Sign In
-              </Link>
-            </div>
           </div>
 
-          {/* Right side - Image */}
-          <div className="flex-shrink-0">
-            <img
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=300&h=250&fit=crop"
-              alt="Team working together at computers"
-              className="rounded-lg shadow-lg w-80 h-auto"
-            />
+          <div className="text-center">
+            <div className="text-5xl mb-4">⏰</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Too Busy</h3>
+            <p className="text-gray-600">
+              Running the business takes all your time. Bookkeeping feels like a chore you keep putting off.
+            </p>
+          </div>
+
+          <div className="text-center">
+            <div className="text-5xl mb-4">😰</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Tax Stress</h3>
+            <p className="text-gray-600">
+              March comes. You don't know your profit. CRA deadline looms. Time to panic.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* The Solution: Receipt Scanning */}
+      <section className="py-12 bg-blue-50 rounded-lg px-8">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            The Solution: Receipt Scanning
+          </h2>
+          <div className="space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="text-4xl flex-shrink-0">📱</div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Snap. Confirm. Done.</h3>
+                <p className="text-gray-700">
+                  Instead of typing 6 fields (date, amount, vendor, category, GST, account), just take a photo. Our AI extracts the data automatically. You confirm. Transaction recorded. Total time: 15 seconds.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="text-4xl flex-shrink-0">🧠</div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">AI That Understands Receipts</h3>
+                <p className="text-gray-700">
+                  We don't ask you to type vendor names or calculate GST. Our AI reads your receipt and knows what's a business expense. You just verify and save.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="text-4xl flex-shrink-0">📊</div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Always Know Your Profit</h3>
+                <p className="text-gray-700">
+                  Every receipt you snap becomes a transaction. Your dashboard updates automatically. See your real profit at a glance, anytime.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="text-4xl flex-shrink-0">🇨🇦</div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Tax-Ready Automatically</h3>
+                <p className="text-gray-700">
+                  Every receipt is categorized. GST/HST is calculated. Your tax file is ready months before the deadline. No panic. No last-minute scrambling.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What You Get Section */}
       <section id="features" className="py-12">
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-12 mt-2">
-          Built for Your Business
+        <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+          Everything You Need
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-600">
+            <div className="text-3xl mb-4">📷</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Receipt Scanning</h3>
+            <p className="text-gray-600 text-sm">
+              Snap receipts with your phone. AI extracts date, amount, vendor, and category automatically.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-600">
             <div className="text-3xl mb-4">📊</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Transaction Management</h3>
-            <p className="text-gray-600">
-              Easily record income and expenses. Categorize transactions and maintain detailed records for tax filing.
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Profit Dashboard</h3>
+            <p className="text-gray-600 text-sm">
+              See your revenue, expenses, and net profit at a glance. Know if you're actually making money.
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-3xl mb-4">👥</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Client Tracking</h3>
-            <p className="text-gray-600">
-              Manage multiple clients with unlimited accounts. Track invoices, payments, and aging reports per client.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-600">
             <div className="text-3xl mb-4">📄</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Financial Reports</h3>
-            <p className="text-gray-600">
-              Generate balance sheets, income statements, and tax reports. Full reconciliation and audit trails included.
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Financial Reports</h3>
+            <p className="text-gray-600 text-sm">
+              Income statement, balance sheet, tax summary. Everything you need for CRA or your accountant.
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-600">
             <div className="text-3xl mb-4">🏦</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Bank Reconciliation</h3>
-            <p className="text-gray-600">
-              Match transactions with bank statements. Identify discrepancies and keep your accounts accurate.
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Bank Reconciliation</h3>
+            <p className="text-gray-600 text-sm">
+              Match transactions with your bank account. Spot errors instantly. Always accurate.
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-3xl mb-4">🧾</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Document Management</h3>
-            <p className="text-gray-600">
-              Upload receipts, invoices, and supporting documents. AI-powered categorization saves time.
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-600">
+            <div className="text-3xl mb-4">💰</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">GST/HST Ready</h3>
+            <p className="text-gray-600 text-sm">
+              Automatic GST/HST calculations for all provinces. Tax filing takes minutes, not days.
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-3xl mb-4">🇨🇦</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Canadian Tax Ready</h3>
-            <p className="text-gray-600">
-              Built for GST/HST, payroll deductions, and Canadian tax requirements. Tax filing made easy.
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-600">
+            <div className="text-3xl mb-4">🔒</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Privacy First</h3>
+            <p className="text-gray-600 text-sm">
+              Your data stays yours. No credit card uploads. No sketchy 3rd parties. Just secure bookkeeping.
             </p>
           </div>
         </div>
@@ -142,62 +213,77 @@ function LandingPage() {
 
       {/* Pricing Section */}
       <section id="pricing" className="py-12">
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-12 mt-8">
-          Plans for Every Business
+        <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">
+          Simple Pricing for Self-Employed
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <p className="text-center text-gray-600 mb-12">
+          Start free. Upgrade only when you need to.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {/* Free Plan */}
           <div className="bg-white rounded-lg shadow p-8 border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Free</h3>
-            <p className="text-gray-600 mb-4">Get started with essentials</p>
-            <div className="text-3xl font-bold text-gray-900 mb-6">$0<span className="text-lg text-gray-600">/month</span></div>
-            <ul className="space-y-3 mb-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
+            <p className="text-gray-600 mb-6">Perfect for getting started</p>
+            <div className="text-4xl font-bold text-gray-900 mb-8">$0<span className="text-lg text-gray-600">/month</span></div>
+            <ul className="space-y-4 mb-8">
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Basic transaction tracking</span>
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Receipt scanning (unlimited)</span>
               </li>
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Monthly reports</span>
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Transaction tracking</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Monthly profit view</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Basic reports</span>
               </li>
             </ul>
             <Link
               href="/signup"
-              className="block w-full text-center border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold transition"
+              className="block w-full text-center border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-3 rounded-lg font-semibold transition"
             >
-              Get Started
+              Start Free
             </Link>
           </div>
 
           {/* Starter Plan */}
-          <div className="bg-white rounded-lg shadow p-8 border-2 border-blue-600 relative">
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-              Most Popular
+          <div className="bg-blue-600 text-white rounded-lg shadow p-8 relative transform scale-105">
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-amber-400 text-gray-900 px-4 py-1 rounded-full text-sm font-bold">
+              MOST POPULAR
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Starter</h3>
-            <p className="text-gray-600 mb-4">Perfect for freelancers & small teams</p>
-            <div className="text-3xl font-bold text-gray-900 mb-6">$9<span className="text-lg text-gray-600">/month</span></div>
-            <ul className="space-y-3 mb-8">
+            <h3 className="text-2xl font-bold mb-2">Starter</h3>
+            <p className="mb-6 opacity-90">For freelancers & self-employed</p>
+            <div className="text-4xl font-bold mb-8">$9<span className="text-lg opacity-90">/month</span></div>
+            <ul className="space-y-4 mb-8">
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Transaction categorization</span>
+                <span className="text-amber-400 mr-3 text-xl">✓</span>
+                <span>Everything in Free, plus:</span>
               </li>
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Monthly & annual reports</span>
+                <span className="text-amber-400 mr-3 text-xl">✓</span>
+                <span>Advanced financial reports</span>
               </li>
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Basic bank reconciliation</span>
+                <span className="text-amber-400 mr-3 text-xl">✓</span>
+                <span>Bank reconciliation</span>
               </li>
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">GST/HST calculation</span>
+                <span className="text-amber-400 mr-3 text-xl">✓</span>
+                <span>Tax summary (GST/HST ready)</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-amber-400 mr-3 text-xl">✓</span>
+                <span>Invoice management</span>
               </li>
             </ul>
             <Link
               href="/signup"
-              className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+              className="block w-full text-center bg-white text-blue-600 hover:bg-gray-100 px-4 py-3 rounded-lg font-bold transition"
             >
               Start Free Trial
             </Link>
@@ -205,30 +291,34 @@ function LandingPage() {
 
           {/* Professional Plan */}
           <div className="bg-white rounded-lg shadow p-8 border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Professional</h3>
-            <p className="text-gray-600 mb-4">For growing agencies</p>
-            <div className="text-3xl font-bold text-gray-900 mb-6">$29<span className="text-lg text-gray-600">/month</span></div>
-            <ul className="space-y-3 mb-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
+            <p className="text-gray-600 mb-6">For growing teams</p>
+            <div className="text-4xl font-bold text-gray-900 mb-8">$29<span className="text-lg text-gray-600">/month</span></div>
+            <ul className="space-y-4 mb-8">
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Advanced transaction management</span>
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Everything in Starter, plus:</span>
               </li>
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Multi-month reporting</span>
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Multiple clients/projects</span>
               </li>
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Full bank reconciliation</span>
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Advanced analytics</span>
               </li>
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Advanced analytics & audit trails</span>
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Team members & roles</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Priority support</span>
               </li>
             </ul>
             <Link
               href="/signup"
-              className="block w-full text-center border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold transition"
+              className="block w-full text-center border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-3 rounded-lg font-semibold transition"
             >
               Start Free Trial
             </Link>
@@ -237,17 +327,20 @@ function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-blue-600 text-white rounded-lg py-12 px-8 text-center">
-        <h2 className="text-3xl font-bold mb-4">Ready to simplify your bookkeeping?</h2>
-        <p className="text-lg mb-6 opacity-90">
-          Start your free trial today. 14 days free, no credit card required.
+      <section className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg py-16 px-8 text-center mt-12">
+        <h2 className="text-4xl font-bold mb-4">Ready to Stop Losing Money?</h2>
+        <p className="text-xl mb-8 opacity-95">
+          Start snapping receipts today. Your first 14 days are free. No credit card needed.
         </p>
         <Link
           href="/signup"
-          className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold transition inline-block"
+          className="bg-white text-blue-600 hover:bg-gray-100 px-10 py-4 rounded-lg font-bold text-lg transition inline-block"
         >
           Get Started Free
         </Link>
+        <p className="text-sm mt-6 opacity-80">
+          Join hundreds of self-employed Canadians taking control of their finances
+        </p>
       </section>
     </div>
   )
