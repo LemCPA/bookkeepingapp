@@ -26,6 +26,10 @@ export default function ConfirmReceiptPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [showCreateAccountModal, setShowCreateAccountModal] = useState(false)
+  const [newAccountName, setNewAccountName] = useState('')
+  const [newAccountCategory, setNewAccountCategory] = useState('5210') // Default to Telephone and Utilities
+  const [creatingAccount, setCreatingAccount] = useState(false)
 
   const [formData, setFormData] = useState({
     accountId: '',
@@ -148,6 +152,70 @@ export default function ConfirmReceiptPage() {
       const baseAmount = amount
       const taxAmount = amount * (totalRate / 100)
       return { baseAmount, taxAmount }
+    }
+  }
+
+  // Standard T2125 expense accounts for selection
+  const standardAccounts = [
+    { id: 5100, code: '5100', name: 'Advertising' },
+    { id: 5110, code: '5110', name: 'Meals and Entertainment (50% rule)' },
+    { id: 5120, code: '5120', name: 'Insurance' },
+    { id: 5130, code: '5130', name: 'Interest and Bank Charges' },
+    { id: 5140, code: '5140', name: 'Business Taxes and Licenses' },
+    { id: 5150, code: '5150', name: 'Office Expenses' },
+    { id: 5160, code: '5160', name: 'Supplies' },
+    { id: 5170, code: '5170', name: 'Legal and Accounting Fees' },
+    { id: 5180, code: '5180', name: 'Rent' },
+    { id: 5190, code: '5190', name: 'Salaries and Wages' },
+    { id: 5200, code: '5200', name: 'Travel' },
+    { id: 5210, code: '5210', name: 'Telephone and Utilities' },
+    { id: 5220, code: '5220', name: 'Motor Vehicle Expenses' },
+  ]
+
+  async function handleCreateAccount(e: React.FormEvent) {
+    e.preventDefault()
+    setCreatingAccount(true)
+    setError('')
+
+    try {
+      // Find the standard account details
+      const standardAccount = standardAccounts.find(a => a.id === parseInt(newAccountCategory))
+      if (!standardAccount) {
+        setError('Invalid account category selected')
+        setCreatingAccount(false)
+        return
+      }
+
+      const authenticatedFetch = createAuthenticatedFetch()
+      const response = await authenticatedFetch('/api/chart-of-accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: standardAccount.code,
+          name: standardAccount.name,
+          type: 'EXPENSE',
+          is_vehicle_expense: standardAccount.id === 5220,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to create account')
+
+      const newAccount = await response.json()
+
+      // Add to accounts list
+      setAccounts([...accounts, newAccount])
+
+      // Auto-select the new account
+      setFormData({ ...formData, accountId: newAccount.id.toString() })
+
+      // Close modal and reset form
+      setShowCreateAccountModal(false)
+      setNewAccountName('')
+      setNewAccountCategory('5210')
+      setCreatingAccount(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error creating account')
+      setCreatingAccount(false)
     }
   }
 
@@ -283,21 +351,36 @@ export default function ConfirmReceiptPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Expense Account *</label>
-              <select
-                required
-                value={formData.accountId}
-                onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">📁 Select an account...</option>
-                {accounts
-                  .filter(account => account.type === 'EXPENSE' && !account.is_vehicle_expense)
-                  .map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.code} - {account.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  required
+                  value={formData.accountId}
+                  onChange={(e) => {
+                    if (e.target.value === 'CREATE_NEW') {
+                      setShowCreateAccountModal(true)
+                      setFormData({ ...formData, accountId: '' })
+                    } else {
+                      setFormData({ ...formData, accountId: e.target.value })
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">📁 Select an account...</option>
+                  {accounts
+                    .filter(account => account.type === 'EXPENSE' && !account.is_vehicle_expense)
+                    .map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.code} - {account.name}
+                    </option>
+                  ))}
+                  <option value="CREATE_NEW" className="border-t-2">+ Add New Account</option>
+                </select>
+              </div>
+              {accounts.filter(account => account.type === 'EXPENSE' && !account.is_vehicle_expense).length === 0 && (
+                <p className="mt-2 text-sm text-blue-600">
+                  💡 No accounts found. Click "Add New Account" to create one, or we'll set up defaults for you.
+                </p>
+              )}
             </div>
 
             <div>
@@ -572,6 +655,75 @@ export default function ConfirmReceiptPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Account Modal */}
+      {showCreateAccountModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-2xl font-bold mb-4">Create New Expense Account</h2>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateAccount} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Expense Category
+                </label>
+                <select
+                  required
+                  value={newAccountCategory}
+                  onChange={(e) => setNewAccountCategory(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {standardAccounts.map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.code} - {acc.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs text-gray-600">
+                  These are standard T2125 (self-employed) expense categories for Canadian sole proprietors.
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-900">
+                  <span className="font-medium">💡 Account will be created as:</span>
+                </p>
+                <p className="text-sm text-blue-900 mt-1">
+                  {standardAccounts.find(a => a.id === parseInt(newAccountCategory))?.name}
+                </p>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <button
+                  type="submit"
+                  disabled={creatingAccount}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 transition"
+                >
+                  {creatingAccount ? 'Creating...' : 'Create Account'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateAccountModal(false)
+                    setNewAccountName('')
+                    setNewAccountCategory('5210')
+                    setError('')
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-800 py-2 rounded-lg hover:bg-gray-400 font-medium transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
