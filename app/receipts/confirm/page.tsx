@@ -277,6 +277,29 @@ export default function ConfirmReceiptPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 lg:p-8 space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-blue-900 font-medium">⚠️ Account selection is required to save this transaction</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Expense Account *</label>
+              <select
+                required
+                value={formData.accountId}
+                onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">📁 Select an account...</option>
+                {accounts
+                  .filter(account => account.type === 'EXPENSE' && !account.is_vehicle_expense)
+                  .map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.code} - {account.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
               <select
@@ -456,32 +479,6 @@ export default function ConfirmReceiptPage() {
                 </p>
               </div>
             )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Account *</label>
-              <select
-                required
-                value={formData.accountId}
-                onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Select an account</option>
-                {accounts
-                  .filter(account => {
-                    if (formData.isVehicleExpense) {
-                      return account.is_vehicle_expense === true
-                    }
-                    if (formData.type === 'INVOICE') return account.type === 'INCOME'
-                    if (formData.type === 'RECEIPT') return account.type === 'EXPENSE' && !account.is_vehicle_expense
-                    return true
-                  })
-                  .map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.code} - {account.name} ({account.type})
-                  </option>
-                ))}
-              </select>
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
