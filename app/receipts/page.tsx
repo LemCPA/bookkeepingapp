@@ -104,11 +104,183 @@ export default function ReceiptsPage() {
     }
 
     try {
-      // Don't compress for analysis - send high quality for better OCR
-      // Only compress for storage later
+      // Fix EXIF orientation for mobile camera images before OCR analysis
+      // Mobile cameras often save images rotated, which breaks OCR
+      let fileToAnalyze = selectedFile
+
+      try {
+        // Read EXIF orientation from the image
+        const reader = new FileReader()
+        const orientationPromise = new Promise<number>((resolve) => {
+          reader.onload = (e) => {
+            const buffer = e.target?.result as ArrayBuffer
+            const view = new DataView(buffer)
+
+            // Check for JPEG SOI marker (0xFFD8)
+            if (view.getUint16(0, false) !== 0xFFD8) {
+              resolve(1) // Not a JPEG, no rotation needed
+              return
+            }
+
+            let offset = 2
+            while (offset < Math.min(view.byteLength, 65536)) {
+              const marker = view.getUint16(offset, false)
+              offset += 2
+
+              if (marker === 0xFFE1) {
+                // Found APP1 (EXIF) marker
+                const length = view.getUint16(offset, false)
+                if (offset + length > view.byteLength) {
+                  resolve(1)
+                  return
+                }
+
+                try {
+                  // Look for orientation tag (0x0112) in EXIF
+                  const exifStart = offset + 4
+                  if (offset + length < view.byteLength) {
+                    const exifData = new DataView(buffer, exifStart, length - 4)
+
+                    // Check for Exif header signature
+                    if (exifData.byteLength < 8) {
+                      resolve(1)
+                      return
+                    }
+
+                    // Skip TIFF header and read IFD offset
+                    let isLittleEndian = false
+                    const tiffMark = exifData.getUint16(0, false)
+                    if (tiffMark === 0x4949) {
+                      isLittleEndian = true
+                    }
+
+                    const ifdOffset = exifData.getUint32(4, isLittleEndian)
+                    if (ifdOffset + 2 > exifData.byteLength) {
+                      resolve(1)
+                      return
+                    }
+
+                    const ifdData = new DataView(buffer, exifStart + ifdOffset, exifData.byteLength - ifdOffset)
+                    const numEntries = ifdData.getUint16(0, isLittleEndian)
+
+                    // Search for orientation tag (0x0112)
+                    for (let i = 0; i < numEntries; i++) {
+                      const entryOffset = 2 + (i * 12)
+                      if (entryOffset + 12 > ifdData.byteLength) break
+
+                      const tag = ifdData.getUint16(entryOffset, isLittleEndian)
+                      if (tag === 0x0112) {
+                        const value = ifdData.getUint16(entryOffset + 8, isLittleEndian)
+                        resolve(Math.min(value, 8)) // Orientation is 1-8
+                        return
+                      }
+                    }
+                  }
+                } catch (err) {
+                  console.error("Error reading EXIF:", err)
+                }
+                resolve(1)
+                return
+              }
+
+              // Skip to next marker if not APP1
+              if (offset + 2 <= view.byteLength) {
+                offset += view.getUint16(offset, false)
+              } else {
+                break
+              }
+            }
+            resolve(1)
+          }
+          reader.onerror = () => resolve(1)
+          reader.readAsArrayBuffer(selectedFile.slice(0, 65536))
+        })
+
+        const orientation = await orientationPromise
+        console.log("Detected image orientation:", orientation)
+
+        // If orientation needs correction, rotate the image
+        if (orientation > 1) {
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')
+          if (!ctx) throw new Error('Cannot get canvas context')
+
+          const imgData = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const img = new Image()
+            img.onload = () => resolve(img)
+            img.onerror = () => reject(new Error('Failed to load image'))
+            img.src = preview || ''
+          })
+
+          // Set canvas size based on orientation
+          let width = imgData.width
+          let height = imgData.height
+
+          if (orientation >= 5 && orientation <= 8) {
+            // These orientations swap width and height
+            ;[width, height] = [height, width]
+          }
+
+          canvas.width = width
+          canvas.height = height
+
+          // Apply EXIF rotation
+          switch (orientation) {
+            case 2:
+              ctx.translate(width, 0)
+              ctx.scale(-1, 1)
+              break
+            case 3:
+              ctx.translate(width, height)
+              ctx.rotate(Math.PI)
+              break
+            case 4:
+              ctx.translate(0, height)
+              ctx.scale(1, -1)
+              break
+            case 5:
+              ctx.rotate(Math.PI / 2)
+              ctx.translate(0, -imgData.height)
+              ctx.scale(1, -1)
+              break
+            case 6:
+              ctx.rotate(Math.PI / 2)
+              ctx.translate(0, -imgData.height)
+              break
+            case 7:
+              ctx.rotate(-Math.PI / 2)
+              ctx.translate(-imgData.width, 0)
+              ctx.scale(1, -1)
+              break
+            case 8:
+              ctx.rotate(-Math.PI / 2)
+              ctx.translate(-imgData.width, 0)
+              break
+          }
+
+          ctx.drawImage(imgData, 0, 0)
+
+          // Convert canvas to blob and create new file
+          await new Promise<void>((resolve, reject) => {
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error('Failed to rotate image'))
+                return
+              }
+              fileToAnalyze = new File([blob], selectedFile.name, { type: 'image/jpeg' })
+              resolve()
+            }, 'image/jpeg', 0.95)
+          })
+        }
+      } catch (err) {
+        console.warn("Could not apply EXIF orientation, using original image:", err)
+        // Continue with original file if rotation fails
+      }
+
+      // Send the (potentially rotated) image for OCR analysis
       const authenticatedFetch = createAuthenticatedFetch()
       const formData = new FormData()
-      formData.append("file", selectedFile)
+      formData.append("file", fileToAnalyze)
 
       const response = await authenticatedFetch("/api/analyze-document", {
         method: "POST",
