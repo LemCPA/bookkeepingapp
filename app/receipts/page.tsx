@@ -16,6 +16,13 @@ interface ExtractedData {
   gst_hst_applicable?: boolean
 }
 
+interface Account {
+  id: number
+  code: string
+  name: string
+  type: string
+}
+
 type DocumentType = "receipt" | "invoice"
 type PageStep = "select" | "upload" | "confirm"
 
@@ -30,30 +37,67 @@ export default function ReceiptsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [defaultGstRate, setDefaultGstRate] = useState<number>(0)
+  const [selectedAccountId, setSelectedAccountId] = useState<number>(5210) // Default to Telephone and Utilities
+  const [accounts, setAccounts] = useState<Account[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Fetch user's default GST/HST rate from settings on mount
+  // Fallback T2125 expense accounts (Canadian sole proprietor standard)
+  const fallbackAccounts: Account[] = [
+    { id: 5100, code: '5100', name: 'Advertising', type: 'EXPENSE' },
+    { id: 5110, code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE' },
+    { id: 5120, code: '5120', name: 'Insurance', type: 'EXPENSE' },
+    { id: 5130, code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE' },
+    { id: 5140, code: '5140', name: 'Business Taxes and Licenses', type: 'EXPENSE' },
+    { id: 5150, code: '5150', name: 'Office Expenses', type: 'EXPENSE' },
+    { id: 5160, code: '5160', name: 'Supplies', type: 'EXPENSE' },
+    { id: 5170, code: '5170', name: 'Legal and Accounting Fees', type: 'EXPENSE' },
+    { id: 5180, code: '5180', name: 'Rent', type: 'EXPENSE' },
+    { id: 5190, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE' },
+    { id: 5200, code: '5200', name: 'Travel', type: 'EXPENSE' },
+    { id: 5210, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE' },
+    { id: 5220, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE' },
+  ]
+
+  // Fetch user's default GST/HST rate and accounts on mount
   useEffect(() => {
-    const fetchDefaultGstRate = async () => {
+    const fetchData = async () => {
       try {
         const authenticatedFetch = createAuthenticatedFetch()
-        const response = await authenticatedFetch("/api/user/settings")
-        if (response.ok) {
-          const settings = await response.json()
+
+        // Fetch settings
+        const settingsResponse = await authenticatedFetch("/api/user/settings")
+        if (settingsResponse.ok) {
+          const settings = await settingsResponse.json()
           console.log("Settings fetched:", settings)
           if (settings.default_gst_hst_rate !== undefined) {
             console.log("Setting default GST rate to:", settings.default_gst_hst_rate)
             setDefaultGstRate(settings.default_gst_hst_rate)
           }
         } else {
-          console.error("Failed to fetch settings:", response.status)
+          console.error("Failed to fetch settings:", settingsResponse.status)
+        }
+
+        // Fetch accounts
+        const accountsResponse = await authenticatedFetch("/api/chart-of-accounts")
+        if (accountsResponse.ok) {
+          const accountsData = await accountsResponse.json()
+          setAccounts(accountsData)
+          // Set default account to first expense account if available
+          const defaultAccount = accountsData.find((a: Account) => a.type === 'EXPENSE')
+          if (defaultAccount) {
+            setSelectedAccountId(defaultAccount.id)
+          }
+        } else {
+          // API failed - use fallback accounts
+          setAccounts(fallbackAccounts)
         }
       } catch (err) {
-        console.error("Failed to fetch default GST/HST rate:", err)
-        // Fallback to 0 if fetch fails
+        console.error("Failed to fetch data:", err)
+        // Fallback to fallback accounts if fetch fails
+        setAccounts(fallbackAccounts)
       }
     }
-    fetchDefaultGstRate()
+    fetchData()
   }, [])
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -380,6 +424,13 @@ export default function ReceiptsPage() {
         submissionAmount = extractedData.amount - extractedData.gst_hst_amount
       }
 
+      // Validate account selection
+      if (!selectedAccountId) {
+        setError("Please select an account")
+        setSaving(false)
+        return
+      }
+
       const txResponse = await authenticatedFetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -388,7 +439,7 @@ export default function ReceiptsPage() {
           amount: submissionAmount,
           description: extractedData.description,
           type: extractedData.type,
-          account_id: 1, // Default to first account - user can edit later
+          account_id: selectedAccountId,
           gst_hst_rate: extractedData.gst_hst_rate || 0,
           gst_hst_amount: extractedData.gst_hst_amount || 0,
           gst_hst_included: extractedData.gst_hst_included || false,
@@ -642,6 +693,29 @@ export default function ReceiptsPage() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium mb-1">
+                Expense Account <span className="text-red-600">*required</span>
+              </label>
+              <select
+                value={selectedAccountId}
+                onChange={(e) => setSelectedAccountId(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border rounded-lg"
+              >
+                <option value={0}>📁 Select an account...</option>
+                {(accounts.length > 0 ? accounts : fallbackAccounts)
+                  .filter(account => account.type === 'EXPENSE')
+                  .map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.code} - {account.name}
+                    </option>
+                  ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-600">
+                {(accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.type === 'EXPENSE').length} T2125 accounts available
+              </p>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium mb-1">Description / Vendor</label>
               <input
                 type="text"
@@ -803,7 +877,7 @@ export default function ReceiptsPage() {
           </button>
           <button
             onClick={handleSaveTransaction}
-            disabled={saving}
+            disabled={saving || !selectedAccountId}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
           >
             {saving ? "Creating transaction..." : "Create Transaction"}
