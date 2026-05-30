@@ -19,6 +19,7 @@ interface ExtractedReceiptData {
 
 export default function ConfirmReceiptPage() {
   const router = useRouter()
+  // Redeploy trigger v2 - Account dropdown fix
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
