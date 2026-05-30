@@ -24,6 +24,8 @@ export default function ConfirmReceiptPage() {
   const [saving, setSaving] = useState(false)
   const [extractedData, setExtractedData] = useState<ExtractedReceiptData | null>(null)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
 
   const [formData, setFormData] = useState({
     accountId: '',
@@ -200,7 +202,15 @@ export default function ConfirmReceiptPage() {
       }
 
       sessionStorage.removeItem('extractedReceiptData')
-      window.location.href = '/transactions'
+
+      // Show success message
+      setSuccess(true)
+      setSuccessMessage(`✅ Transaction saved! Amount: $${baseAmount.toFixed(2)} + $${taxAmount.toFixed(2)} tax = $${(baseAmount + taxAmount).toFixed(2)}`)
+
+      // Redirect after 2 seconds to let user see success message
+      setTimeout(() => {
+        window.location.href = '/transactions'
+      }, 2000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error saving transaction')
       setSaving(false)
@@ -212,13 +222,20 @@ export default function ConfirmReceiptPage() {
   if (!extractedData) return null
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
+    <div className="max-w-6xl mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-2">Confirm Receipt Details</h1>
       <p className="text-gray-600 mb-6">Review and edit the extracted information before saving</p>
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
           {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 animate-pulse">
+          <p className="font-medium text-lg">{successMessage}</p>
+          <p className="text-sm mt-2">Redirecting to transactions...</p>
         </div>
       )}
 
@@ -229,9 +246,9 @@ export default function ConfirmReceiptPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2">
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 lg:p-8 space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
               <select
@@ -515,8 +532,8 @@ export default function ConfirmReceiptPage() {
           </form>
         </div>
 
-        <div className="col-span-1">
-          <div className="bg-white rounded-lg shadow-md p-6 sticky top-4 z-10">
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow-md p-6 lg:sticky lg:top-4 z-10">
             <h3 className="text-lg font-bold mb-4">Receipt Image</h3>
             <img
               src={extractedData.receiptImage}
