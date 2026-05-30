@@ -89,16 +89,44 @@ export default function ConfirmReceiptPage() {
       businessUsePercentage: '100',
     })
 
+    // Fallback expense accounts (for receipts)
+    const fallbackAccounts: ChartOfAccount[] = [
+      { id: 5100, code: '5100', name: 'Advertising', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5110, code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5120, code: '5120', name: 'Insurance', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5130, code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5140, code: '5140', name: 'Business Taxes and Licenses', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5150, code: '5150', name: 'Office Expenses', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5160, code: '5160', name: 'Supplies', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5170, code: '5170', name: 'Legal and Accounting Fees', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5180, code: '5180', name: 'Rent', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5190, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5200, code: '5200', name: 'Travel', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5210, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE', is_vehicle_expense: false },
+      { id: 5220, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE', is_vehicle_expense: true },
+    ]
+
     const authenticatedFetch = createAuthenticatedFetch()
     authenticatedFetch('/api/chart-of-accounts')
       .then(r => {
-        if (!r.ok) throw new Error('Failed to fetch accounts')
+        if (!r.ok) {
+          console.warn('Failed to fetch accounts from API, using fallback')
+          return null
+        }
         return r.json()
       })
-      .then(data => setAccounts(Array.isArray(data) ? data : []))
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setAccounts(data)
+        } else {
+          console.warn('No accounts from API, using fallback expense accounts')
+          setAccounts(fallbackAccounts)
+        }
+      })
       .catch(err => {
         console.error('Error loading accounts:', err)
-        setAccounts([])
+        console.warn('Using fallback expense accounts')
+        setAccounts(fallbackAccounts)
       })
       .finally(() => setLoading(false))
   }, [router])
