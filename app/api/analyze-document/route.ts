@@ -58,42 +58,60 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
           },
           {
             type: 'text',
-            text: `CRITICAL: Extract invoice/receipt financial data. Return ONLY valid JSON, nothing else.
+            text: `Extract receipt/invoice data. Return ONLY JSON object, no other text.
 
-Return format:
 {
-  "date": "YYYY-MM-DD",
-  "amount": <number, the invoice total>,
-  "description": "what was purchased",
-  "vendor_name": "company name",
-  "type": "RECEIPT or INVOICE",
-  "account_type": "ASSET or EXPENSE",
-  "gst_hst_amount": <number, 0 if not found>,
-  "gst_hst_rate": <number: 0, 5, 7, 12, or 13>
+  "date": "YYYY-MM-DD or null",
+  "amount": <number or null>,
+  "description": "what was purchased/service",
+  "vendor_name": "company/business name or null",
+  "type": "RECEIPT or INVOICE or null",
+  "account_type": "ASSET or EXPENSE or null",
+  "gst_hst_amount": 0,
+  "gst_hst_rate": 0
 }
 
-AMOUNT EXTRACTION - HIGHEST PRIORITY:
-Step 1: Find all dollar amounts ($XX.XX pattern) on the entire document
-Step 2: Identify which line contains "Total", "Invoice Total", "TOTAL", "Amount Due", or "INVOICE TOTAL:"
-Step 3: The amount is the LARGEST dollar value on the page (usually at bottom)
-Step 4: Return as NUMBER only: 62.15 (NOT string, NOT "$", NOT "CAD")
-Step 5: MUST include tax in the total - this is the final amount owed
-Step 6: If "Subtotal: $X" and "Total: $Y", use Total (the bigger one)
-Step 7: If multiple large numbers, use the one next to "Total" or "Amount Due"
-Step 8: CRITICAL: Do not return 0 unless you literally cannot find ANY dollar amount. Return null instead of 0 if completely missing.
+VENDOR NAME - HIGH PRIORITY:
+1. Look at TOP of document for company/business name
+2. Check for bold/large text near top
+3. Look for business address (gives clue to company name)
+4. Examples: "ExecuSpace North York", "Tim Hortons", "Staples"
+5. Return the BUSINESS/COMPANY NAME that issued the receipt
+6. If not found: use null (NOT empty string)
 
-TAX EXTRACTION:
-- Find "GST", "HST", "PST", "QST", "Tax:", "Total Tax"
-- If "Subtotal: $X" and "Total: $Y": Tax = Y - X
-- Identify rate: 5% (GST), 13% (HST), 7% (PST), etc.
-- Return tax amount (numeric) and rate separately
-- If no tax found: amount=0, rate=0
+DOCUMENT TYPE (RECEIPT vs INVOICE):
+- RECEIPT = Document from vendor (I received a bill, I paid money out) → EXPENSE
+- INVOICE = Document to customer (customer owes me money) → INCOME
+- Look at context: Does it say "Invoice To:" or "Bill To:" (mine - INVOICE) vs "From:" (their bill - RECEIPT)
+- This is a RECEIPT if it's from a vendor/supplier to me
+- Return: "RECEIPT" or "INVOICE" or null
 
-RULES:
-- Return ONLY JSON object - no markdown, no text, no explanation
-- All numeric fields must be numbers (not strings)
-- Date format: YYYY-MM-DD
-- If field missing: use null (except tax fields default to 0)`,
+ACCOUNT TYPE (ASSET vs EXPENSE):
+- EXPENSE: rent, utilities, supplies, services, food, office space, etc.
+- ASSET: equipment, vehicles, property, inventory purchase, etc.
+- Look at what was purchased and categorize accordingly
+- Most vendor receipts are EXPENSE
+- Return: "EXPENSE" or "ASSET" or null
+
+TOTAL AMOUNT:
+1. Find largest dollar amount ($XX.XX format)
+2. Look for "Total", "Invoice Total", "Amount Due"
+3. Return as NUMBER: 62.15 (not string)
+4. Include tax in this total
+5. If cannot find: return null (not 0)
+
+DATE:
+1. Look for invoice date, transaction date, or bill date
+2. Format: YYYY-MM-DD
+3. Common locations: near company name (top), in header, or below invoice #
+4. If not found: return null (not today's date)
+
+TAX:
+1. Find "GST", "HST", "PST", "QST", "Tax", "Total Tax"
+2. Return amount (number) and rate (5, 7, 13, etc.)
+3. If not found: both = 0
+
+RETURN ONLY JSON - no markdown, explanations, or extra text`,
           },
         ],
       },
