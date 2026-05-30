@@ -110,27 +110,31 @@ export default function ConfirmReceiptPage() {
       { id: 5220, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE', is_vehicle_expense: true },
     ]
 
+    // Show fallback accounts immediately while loading
+    setAccounts(fallbackAccounts)
+
     const authenticatedFetch = createAuthenticatedFetch()
     authenticatedFetch('/api/chart-of-accounts')
       .then(r => {
         if (!r.ok) {
-          console.warn('Failed to fetch accounts from API, using fallback')
+          console.warn('Failed to fetch accounts from API, keeping fallback')
           return null
         }
         return r.json()
       })
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
+          console.log('Loaded accounts from API:', data)
           setAccounts(data)
         } else {
           console.warn('No accounts from API, using fallback expense accounts')
-          setAccounts(fallbackAccounts)
+          // Already set above
         }
       })
       .catch(err => {
         console.error('Error loading accounts:', err)
         console.warn('Using fallback expense accounts')
-        setAccounts(fallbackAccounts)
+        // Already set above
       })
       .finally(() => setLoading(false))
   }, [router])
