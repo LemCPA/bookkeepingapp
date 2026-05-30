@@ -433,7 +433,10 @@ export default function ReceiptsPage() {
       }
 
       // Validate business use percentage for motor vehicle expenses
-      if (selectedAccountId === 5220 && !businessUsePercentage) {
+      const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
+      const isVehicleExpense = selectedAccount?.code === '5220' || selectedAccount?.name.includes('Motor Vehicle')
+
+      if (isVehicleExpense && !businessUsePercentage) {
         setError("Please enter the business use percentage for vehicle expenses")
         setSaving(false)
         return
@@ -451,8 +454,8 @@ export default function ReceiptsPage() {
           gst_hst_rate: extractedData.gst_hst_rate || 0,
           gst_hst_amount: extractedData.gst_hst_amount || 0,
           gst_hst_included: extractedData.gst_hst_included || false,
-          is_vehicle_expense: selectedAccountId === 5220,
-          business_use_percentage: selectedAccountId === 5220 ? businessUsePercentage : undefined,
+          is_vehicle_expense: isVehicleExpense,
+          business_use_percentage: isVehicleExpense ? businessUsePercentage : undefined,
         }),
       })
 
@@ -726,7 +729,10 @@ export default function ReceiptsPage() {
             </div>
 
             {/* Motor Vehicle Expenses - require business use percentage */}
-            {selectedAccountId === 5220 && (
+            {(() => {
+              const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
+              return selectedAccount?.code === '5220' || selectedAccount?.name.includes('Motor Vehicle')
+            })() && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <label className="block text-sm font-medium mb-2 text-blue-900">
                   🚗 Business Use Percentage *required for vehicle expenses
