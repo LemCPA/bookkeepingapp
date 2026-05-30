@@ -355,36 +355,24 @@ export default function ConfirmReceiptPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Expense Account *</label>
-              <div className="flex gap-2">
-                <select
-                  required
-                  value={formData.accountId}
-                  onChange={(e) => {
-                    if (e.target.value === 'CREATE_NEW') {
-                      setShowCreateAccountModal(true)
-                      setFormData({ ...formData, accountId: '' })
-                    } else {
-                      setFormData({ ...formData, accountId: e.target.value })
-                    }
-                  }}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">📁 Select an account...</option>
-                  {accounts
-                    .filter(account => account.type === 'EXPENSE' && !account.is_vehicle_expense)
-                    .map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.code} - {account.name}
-                    </option>
-                  ))}
-                  <option value="CREATE_NEW" className="border-t-2">+ Add New Account</option>
-                </select>
-              </div>
-              {accounts.filter(account => account.type === 'EXPENSE' && !account.is_vehicle_expense).length === 0 && (
-                <p className="mt-2 text-sm text-blue-600">
-                  💡 No accounts found. Click "Add New Account" to create one, or we'll set up defaults for you.
-                </p>
-              )}
+              <select
+                required
+                value={formData.accountId}
+                onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">📁 Select an account...</option>
+                {accounts
+                  .filter(account => account.type === 'EXPENSE')
+                  .map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.code} - {account.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-gray-600">
+                {accounts.filter(a => a.type === 'EXPENSE').length} account(s) available
+              </p>
             </div>
 
             <div>
