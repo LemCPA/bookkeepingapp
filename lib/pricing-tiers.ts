@@ -25,7 +25,7 @@ export const PRICING_TIERS: Record<PlanType, PricingTier> = {
     label: 'Free',
     price: 0,
     interval: 'trial',
-    transactionLimit: 20,
+    transactionLimit: null, // unlimited for testing/development
     monthlyLimit: false, // Trial limit is cumulative
     trialDays: 7,
     monthlyPrice: 0,
