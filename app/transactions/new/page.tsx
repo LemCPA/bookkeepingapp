@@ -5,6 +5,30 @@ import { useSearchParams } from 'next/navigation'
 import { ChartOfAccount } from '@/lib/types'
 import { createAuthenticatedFetch } from '@/lib/auth'
 
+// Fallback T2125 expense accounts (Canadian sole proprietor standard)
+const fallbackAccounts: ChartOfAccount[] = [
+  { id: 5100, code: '5100', name: 'Advertising', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5110, code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5120, code: '5120', name: 'Insurance', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5130, code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5140, code: '5140', name: 'Business Taxes and Licenses', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5150, code: '5150', name: 'Office Expenses', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5160, code: '5160', name: 'Supplies', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5170, code: '5170', name: 'Legal and Accounting Fees', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5180, code: '5180', name: 'Rent', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5190, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5200, code: '5200', name: 'Travel', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5210, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE', is_vehicle_expense: false },
+  { id: 5220, code: '5220', name: 'Motor Vehicle Expenses - Fuel and Oil', type: 'EXPENSE', is_vehicle_expense: true },
+  { id: 5221, code: '5221', name: 'Motor Vehicle Expenses - Interest (Loan)', type: 'EXPENSE', is_vehicle_expense: true },
+  { id: 5222, code: '5222', name: 'Motor Vehicle Expenses - Insurance', type: 'EXPENSE', is_vehicle_expense: true },
+  { id: 5223, code: '5223', name: 'Motor Vehicle Expenses - Licence and Registration', type: 'EXPENSE', is_vehicle_expense: true },
+  { id: 5224, code: '5224', name: 'Motor Vehicle Expenses - Maintenance and Repairs', type: 'EXPENSE', is_vehicle_expense: true },
+  { id: 5225, code: '5225', name: 'Motor Vehicle Expenses - Parking and Tolls', type: 'EXPENSE', is_vehicle_expense: true },
+  { id: 5226, code: '5226', name: 'Motor Vehicle Expenses - Other', type: 'EXPENSE', is_vehicle_expense: true },
+  { id: 5230, code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE', is_vehicle_expense: true },
+]
+
 function NewTransactionContent() {
   const searchParams = useSearchParams()
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
@@ -80,16 +104,22 @@ function NewTransactionContent() {
               const retryData = await retryR.json()
               console.log('Retry fetch response:', retryData)
               console.log('Setting accounts, length:', Array.isArray(retryData) ? retryData.length : 'not array')
-              setAccounts(Array.isArray(retryData) ? retryData : [])
+              setAccounts(Array.isArray(retryData) ? retryData : fallbackAccounts)
+            } else {
+              // Retry failed, use fallback
+              setAccounts(fallbackAccounts)
             }
+          } else {
+            // Initialization failed, use fallback
+            setAccounts(fallbackAccounts)
           }
         } else {
           console.log('Accounts already exist, setting to state')
-          setAccounts(Array.isArray(data) ? data : [])
+          setAccounts(Array.isArray(data) ? data : fallbackAccounts)
         }
       } catch (err) {
         console.error('Error loading accounts:', err)
-        setAccounts([])
+        setAccounts(fallbackAccounts)
       } finally {
         setLoading(false)
       }

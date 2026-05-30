@@ -56,7 +56,14 @@ export default function ReceiptsPage() {
     { id: 5190, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE' },
     { id: 5200, code: '5200', name: 'Travel', type: 'EXPENSE' },
     { id: 5210, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE' },
-    { id: 5220, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE' },
+    { id: 5220, code: '5220', name: 'Motor Vehicle Expenses - Fuel and Oil', type: 'EXPENSE' },
+    { id: 5221, code: '5221', name: 'Motor Vehicle Expenses - Interest (Loan)', type: 'EXPENSE' },
+    { id: 5222, code: '5222', name: 'Motor Vehicle Expenses - Insurance', type: 'EXPENSE' },
+    { id: 5223, code: '5223', name: 'Motor Vehicle Expenses - Licence and Registration', type: 'EXPENSE' },
+    { id: 5224, code: '5224', name: 'Motor Vehicle Expenses - Maintenance and Repairs', type: 'EXPENSE' },
+    { id: 5225, code: '5225', name: 'Motor Vehicle Expenses - Parking and Tolls', type: 'EXPENSE' },
+    { id: 5226, code: '5226', name: 'Motor Vehicle Expenses - Other', type: 'EXPENSE' },
+    { id: 5230, code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE' },
   ]
 
   // Fetch user's default GST/HST rate and accounts on mount
