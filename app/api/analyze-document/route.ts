@@ -58,7 +58,7 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
           },
           {
             type: 'text',
-            text: `Analyze this receipt or invoice image and extract the following information in JSON format:
+            text: `Analyze this receipt or invoice image and extract CRITICAL financial information in JSON format:
 {
   "date": "YYYY-MM-DD (from the document, or today if not found)",
   "amount": "numeric amount as number (e.g., 150.50) - this should be the TOTAL amount including tax",
@@ -70,24 +70,34 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
   "gst_hst_rate": "GST/HST rate as number (5 for 5% GST, 13 for 13% HST, 0 if no GST/HST)"
 }
 
-Important:
-- Extract ONLY the JSON object, nothing else
+TOTAL AMOUNT EXTRACTION (CRITICAL - DO NOT MISS):
+1. Scan the ENTIRE document from bottom to top (totals are usually at the end)
+2. Look for these keywords: "Total", "Invoice Total", "Grand Total", "TOTAL", "Amount Due", "Total Due", "TOTAL AMOUNT", "$" with largest number
+3. The TOTAL is the LARGEST dollar amount on the document (excluding item-level prices if itemized)
+4. Must include tax/GST/HST in the total amount
+5. Return as a number: 62.15 (not "$62.15", not "62.15 CAD", not a string)
+6. If you find "Subtotal" and "Total": use the TOTAL value (the larger one)
+7. If no explicit "Total" label found: use the largest single dollar amount that appears to be a final sum
+
+GST/HST EXTRACTION (CRITICAL):
+- Look for ANY mention of tax: "GST", "HST", "Sales Tax", "Total Tax", "Tax Amount", "Taxe", "Impôt", "Tax", "Taxes"
+- Look for subtotal + tax = total patterns to identify tax amount
+- If you see "Subtotal" and "Total", calculate: tax amount = Total - Subtotal
+- Extract the TOTAL GST/HST amount, not per-line taxes
+- For 5% GST: set rate to 5 and amount to the GST total
+- For 13% HST: set rate to 13 and amount to the HST total
+- If both GST and PST/QST are present, add them together for the total amount, set rate to sum (e.g., 12 for 5% GST + 7% PST)
+- Search the entire document carefully for tax information - it might be in small text, at bottom, or in different sections
+- If no explicit tax found but document has multiple currencies or looks like it's a cross-border transaction, check for implicit tax
+- If no GST/HST found after thorough search: set both amount and rate to 0
+- Only Canadian tax rates are expected (0, 5, 7, 12, or 13)
+
+GENERAL RULES:
+- Extract ONLY the JSON object, nothing else - no markdown, no explanation
 - If a field cannot be determined, use null (except gst_hst_amount and gst_hst_rate, which default to 0)
 - Amount should be a number, not a string
 - Type should be either "RECEIPT" or "INVOICE"
-- Account type should be either "ASSET" (for deposits/income) or "EXPENSE" (for payments/costs)
-- GST/HST Extraction (CRITICAL):
-  * Look for ANY mention of tax: "GST", "HST", "Sales Tax", "Total Tax", "Tax Amount", "Taxe", "Impôt"
-  * Look for subtotal + tax = total patterns to identify tax amount
-  * If you see "Subtotal" and "Total", calculate: tax amount = Total - Subtotal
-  * Extract the TOTAL GST/HST amount, not per-line taxes
-  * For 5% GST: set rate to 5 and amount to the GST total
-  * For 13% HST: set rate to 13 and amount to the HST total
-  * If both GST and PST/QST are present, add them together for the total amount, set rate to sum (e.g., 12 for 5% GST + 7% PST)
-  * Search the entire document carefully for tax information - it might be in small text, at bottom, or in different sections
-  * If no explicit tax found but document has multiple currencies or looks like it's a cross-border transaction, check for implicit tax
-  * If no GST/HST found after thorough search: set both amount and rate to 0
-- Only Canadian tax rates are expected (0, 5, 7, 12, or 13)`,
+- Account type should be either "ASSET" (for deposits/income) or "EXPENSE" (for payments/costs)`,
           },
         ],
       },

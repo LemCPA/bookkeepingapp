@@ -128,6 +128,21 @@ export default function ConfirmReceiptPage() {
 
     try {
       const amount = parseFloat(formData.amount)
+
+      // Validate amount
+      if (!formData.amount || isNaN(amount) || amount <= 0) {
+        setError('Please enter a valid amount greater than 0')
+        setSaving(false)
+        return
+      }
+
+      // Validate account selection
+      if (!formData.accountId) {
+        setError('Please select an account')
+        setSaving(false)
+        return
+      }
+
       const gstRate = parseFloat(formData.gstRate)
 
       let pstRate = 0
@@ -207,6 +222,13 @@ export default function ConfirmReceiptPage() {
         </div>
       )}
 
+      {!extractedData.amount || extractedData.amount === 0 && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+          <p className="font-medium">⚠️ Invoice Total Not Detected</p>
+          <p className="text-sm mt-1">The receipt scanner couldn't extract the total amount. Please manually enter the invoice total below.</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2">
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
@@ -275,10 +297,22 @@ export default function ConfirmReceiptPage() {
                   type="number"
                   required
                   step="0.01"
+                  min="0.01"
                   value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  onChange={(e) => {
+                    // Trim leading zeros and ensure valid amount
+                    let value = e.target.value
+                    if (value && parseFloat(value) === 0) {
+                      value = ''
+                    }
+                    setFormData({ ...formData, amount: value })
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0.00"
                 />
+                {!formData.amount && (
+                  <p className="mt-1 text-xs text-red-600">Amount is required</p>
+                )}
               </div>
             </div>
 

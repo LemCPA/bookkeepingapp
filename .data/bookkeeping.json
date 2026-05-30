@@ -19,6 +19,15 @@
       "gst_registered": false,
       "created_at": "2026-05-25T04:26:38.048Z",
       "default_gst_hst_rate": 13
+    },
+    {
+      "id": 3,
+      "email": "test@test.ca",
+      "password_hash": "$2a$10$fUH5LG5T/UAvwpNLtkT0yuThmHqboq2KsBktL1Q1Y4UR7pUHb0u0.",
+      "name": "Test User",
+      "email_verified": true,
+      "gst_registered": false,
+      "created_at": "2026-05-30T16:11:35.037Z"
     }
   ],
   "clients": [
@@ -1090,7 +1099,7 @@
   "billing_history": [],
   "payment_methods": [],
   "stripe_webhooks": [],
-  "nextUserId": 3,
+  "nextUserId": 4,
   "nextClientId": 3,
   "nextAccountId": 55,
   "nextTransactionId": 25,
