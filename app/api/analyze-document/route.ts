@@ -71,47 +71,63 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
   "gst_hst_rate": 0
 }
 
-VENDOR NAME - HIGH PRIORITY:
-1. Look at TOP of document for company/business name
-2. Check for bold/large text near top
-3. Look for business address (gives clue to company name)
-4. Examples: "ExecuSpace North York", "Tim Hortons", "Staples"
-5. Return the BUSINESS/COMPANY NAME that issued the receipt
-6. If not found: use null (NOT empty string)
+VENDOR NAME - CRITICAL (Extract before anything else):
+1. FIRST: Look at the very TOP of the document (first 20% of page)
+2. Look for: Company logo, business header, large bold text
+3. Check for: Company name in a box, banner, or stamp
+4. Look for: Business address which indicates the company name
+5. Look for: Merchant name on credit card receipts
+6. Examples of where found: "ExecuSpace North York" (header), "Tim Hortons" (logo area), "Staples Canada" (top banner)
+7. CRITICAL: The vendor is the BUSINESS that ISSUED this receipt to me
+8. NOT the customer (that's me)
+9. If you see any text that looks like a company/business name: EXTRACT IT
+10. Do not return null if you see ANY business-like name at top
+11. Return as simple string: "CompanyName" (no "From:" or extra text)
+12. If truly cannot find: return null
 
 DOCUMENT TYPE (RECEIPT vs INVOICE):
-- RECEIPT = Document from vendor (I received a bill, I paid money out) → EXPENSE
-- INVOICE = Document to customer (customer owes me money) → INCOME
-- Look at context: Does it say "Invoice To:" or "Bill To:" (mine - INVOICE) vs "From:" (their bill - RECEIPT)
-- This is a RECEIPT if it's from a vendor/supplier to me
-- Return: "RECEIPT" or "INVOICE" or null
+- Ask yourself: "Did I BUY from this business?" (Yes = RECEIPT) or "Did I SELL to a customer?" (No = INVOICE)
+- RECEIPT: Document issued TO ME by a vendor/store/service provider showing what I paid
+- INVOICE: Document issued BY ME to a customer showing what they owe
+- Check for key words:
+  * "Invoice To:" or "Bill To:" followed by MY info = I created this (INVOICE)
+  * "From:" or "Sold By:" followed by vendor = They sold to me (RECEIPT)
+  * No clear indicator = Most likely RECEIPT (95% of scanned docs are receipts)
+- Return: "RECEIPT" if I received this from a vendor, "INVOICE" if I created it, null if truly ambiguous
 
 ACCOUNT TYPE (ASSET vs EXPENSE):
-- EXPENSE: rent, utilities, supplies, services, food, office space, etc.
-- ASSET: equipment, vehicles, property, inventory purchase, etc.
-- Look at what was purchased and categorize accordingly
-- Most vendor receipts are EXPENSE
+- EXPENSE (most common): rent, utilities, office supplies, meals, services, subscriptions
+- ASSET (less common): equipment, vehicles, property, furniture, tools with useful life > 1 year
+- Items purchased: If unclear, default to EXPENSE
 - Return: "EXPENSE" or "ASSET" or null
 
 TOTAL AMOUNT:
-1. Find largest dollar amount ($XX.XX format)
-2. Look for "Total", "Invoice Total", "Amount Due"
-3. Return as NUMBER: 62.15 (not string)
-4. Include tax in this total
-5. If cannot find: return null (not 0)
+1. Find the LARGEST dollar amount ($XX.XX format)
+2. Look for "Total", "Invoice Total", "Amount Due", "TOTAL"
+3. Return as NUMBER: 62.15 (not string, not "$62.15")
+4. Include tax in this total (don't subtract)
+5. If cannot find: return null (not 0, not empty)
 
 DATE:
-1. Look for invoice date, transaction date, or bill date
-2. Format: YYYY-MM-DD
-3. Common locations: near company name (top), in header, or below invoice #
-4. If not found: return null (not today's date)
+1. Look for: Invoice Date, Transaction Date, Bill Date, or Date field
+2. Format: YYYY-MM-DD (e.g., "2026-05-24")
+3. Common locations: Near company name (top), in header, near invoice number, at bottom
+4. Do not use today's date if not found
+5. If not found: return null
 
-TAX:
-1. Find "GST", "HST", "PST", "QST", "Tax", "Total Tax"
-2. Return amount (number) and rate (5, 7, 13, etc.)
-3. If not found: both = 0
+TAX (GST/HST):
+1. Find "GST", "HST", "PST", "QST", or "Tax" label
+2. GST (5%) = Federal, HST (13%) = most provinces, PST = BC
+3. Return gst_hst_amount as number (e.g., 7.15 for $7.15)
+4. Return gst_hst_rate as number (e.g., 13 for 13%)
+5. If not found: both = 0
 
-RETURN ONLY JSON - no markdown, explanations, or extra text`,
+DEBUGGING NOTES:
+- If you find a business name but aren't 100% sure it's the vendor, still return it with high confidence
+- Better to extract something plausible than return null
+- The user can edit if wrong
+
+RETURN ONLY JSON - no markdown, explanations, code blocks, or extra text`,
           },
         ],
       },
