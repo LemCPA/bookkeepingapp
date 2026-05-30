@@ -78,21 +78,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Rate limiting check
-    if (!checkDemoRateLimit(`${userId}`)) {
-      logDemoActivity({
-        operation: 'RATE_LIMIT_EXCEEDED',
-        method: 'POST',
-        endpoint: request.nextUrl.pathname,
-        status: 429,
-        ip: request.headers.get('x-forwarded-for') || undefined,
-      })
-      return NextResponse.json(
-        { error: 'Rate limit exceeded. Please try again later.' },
-        { status: 429 }
-      )
-    }
-
     const body = await request.json()
     const { initializeDefaults, code, name, type } = body
 
