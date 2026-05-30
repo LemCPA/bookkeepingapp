@@ -20,9 +20,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    console.log('API: Calling getIncomeStatementDataByMonths with userId:', userId, 'startMonth:', startMonth, 'endMonth:', endMonth)
     const data = getIncomeStatementDataByMonths(userId, startMonth, endMonth)
+    console.log('API: Received months from function:', data.months)
 
-    return NextResponse.json(data)
+    // Return response with debug info in headers
+    const response = NextResponse.json(data)
+    response.headers.set('X-Debug-Months', JSON.stringify(data.months))
+    return response
   } catch (error: any) {
     console.error('Income statement error:', error)
     return NextResponse.json(

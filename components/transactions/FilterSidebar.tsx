@@ -4,11 +4,6 @@ import SearchBox from './SearchBox'
 import { TransactionFilters } from '@/lib/filterUtils'
 import { useEffect, useState } from 'react'
 
-interface Client {
-  id: number
-  name: string
-}
-
 interface FilterSidebarProps {
   filters: TransactionFilters
   onFiltersChange: (filters: TransactionFilters) => void
@@ -22,27 +17,6 @@ export default function FilterSidebar({
   onClearFilters,
   onSearch,
 }: FilterSidebarProps) {
-  const [clients, setClients] = useState<Client[]>([])
-  const [loadingClients, setLoadingClients] = useState(true)
-
-  // Fetch clients for the dropdown
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const response = await fetch('/api/clients')
-        if (response.ok) {
-          const data = await response.json()
-          setClients(data)
-        }
-      } catch (error) {
-        console.error('Error fetching clients:', error)
-      } finally {
-        setLoadingClients(false)
-      }
-    }
-
-    fetchClients()
-  }, [])
 
   const handleTypeChange = (type: string, checked: boolean) => {
     const currentTypes = filters.types || []
@@ -53,18 +27,6 @@ export default function FilterSidebar({
     onFiltersChange({
       ...filters,
       types: newTypes.length > 0 ? newTypes : undefined,
-    })
-  }
-
-  const handleClientChange = (clientId: number, checked: boolean) => {
-    const currentClientIds = filters.clientIds || []
-    const newClientIds = checked
-      ? [...currentClientIds, clientId]
-      : currentClientIds.filter(id => id !== clientId)
-
-    onFiltersChange({
-      ...filters,
-      clientIds: newClientIds.length > 0 ? newClientIds : undefined,
     })
   }
 
@@ -97,34 +59,6 @@ export default function FilterSidebar({
         />
       </div>
 
-      {/* Client Filter */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Client
-        </label>
-        {loadingClients ? (
-          <p className="text-sm text-gray-500">Loading clients...</p>
-        ) : (
-          <div className="space-y-2 max-h-40 overflow-y-auto">
-            {clients.length === 0 ? (
-              <p className="text-sm text-gray-500">No clients found</p>
-            ) : (
-              clients.map(client => (
-                <label key={client.id} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={filters.clientIds?.includes(client.id) || false}
-                    onChange={e => handleClientChange(client.id, e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 cursor-pointer"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">{client.name}</span>
-                </label>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-
       {/* Date Range */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -141,6 +75,9 @@ export default function FilterSidebar({
               })
             }}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{
+              backgroundImage: 'none',
+            }}
           />
           <input
             type="date"
@@ -152,8 +89,25 @@ export default function FilterSidebar({
               })
             }}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{
+              backgroundImage: 'none',
+            }}
           />
         </div>
+        <style>{`
+          input[type="date"]::-webkit-calendar-picker-indicator {
+            width: 12px !important;
+            height: 12px !important;
+            cursor: pointer;
+            opacity: 0.5;
+            margin-right: 2px;
+            padding: 0 !important;
+          }
+          input[type="date"]::-webkit-outer-spin-button,
+          input[type="date"]::-webkit-inner-spin-button {
+            display: none;
+          }
+        `}</style>
       </div>
 
       {/* Transaction Type */}

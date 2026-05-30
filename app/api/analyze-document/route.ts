@@ -61,7 +61,7 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
             text: `Analyze this receipt or invoice image and extract the following information in JSON format:
 {
   "date": "YYYY-MM-DD (from the document, or today if not found)",
-  "amount": "numeric amount as number (e.g., 150.50)",
+  "amount": "numeric amount as number (e.g., 150.50) - this should be the TOTAL amount including tax",
   "description": "brief description of what was purchased or service provided",
   "vendor_name": "name of the vendor/company",
   "type": "RECEIPT or INVOICE (determine from context)",
@@ -76,15 +76,18 @@ Important:
 - Amount should be a number, not a string
 - Type should be either "RECEIPT" or "INVOICE"
 - Account type should be either "ASSET" (for deposits/income) or "EXPENSE" (for payments/costs)
-- GST/HST Extraction:
-  * Look for lines labeled "GST", "HST", "Sales Tax", "Total Tax" on the receipt/invoice
-  * Extract only the TOTAL GST/HST amount, not per-line taxes
+- GST/HST Extraction (CRITICAL):
+  * Look for ANY mention of tax: "GST", "HST", "Sales Tax", "Total Tax", "Tax Amount", "Taxe", "Impôt"
+  * Look for subtotal + tax = total patterns to identify tax amount
+  * If you see "Subtotal" and "Total", calculate: tax amount = Total - Subtotal
+  * Extract the TOTAL GST/HST amount, not per-line taxes
   * For 5% GST: set rate to 5 and amount to the GST total
   * For 13% HST: set rate to 13 and amount to the HST total
   * If both GST and PST/QST are present, add them together for the total amount, set rate to sum (e.g., 12 for 5% GST + 7% PST)
-  * If no GST/HST found: set both amount and rate to 0
-  * If tax information is ambiguous or unclear: default to 0
-- Only Canadian tax rates are expected (0, 5, or 13)`,
+  * Search the entire document carefully for tax information - it might be in small text, at bottom, or in different sections
+  * If no explicit tax found but document has multiple currencies or looks like it's a cross-border transaction, check for implicit tax
+  * If no GST/HST found after thorough search: set both amount and rate to 0
+- Only Canadian tax rates are expected (0, 5, 7, 12, or 13)`,
           },
         ],
       },

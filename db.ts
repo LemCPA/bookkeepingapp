@@ -48,7 +48,7 @@ export function getDb(): DbData {
           {
             id: 1,
             email: 'demo@bookkeeping.ca',
-            password_hash: 'demo123',
+            password_hash: '$2b$10$n9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36CHqDiK', // bcrypt hash of demo123
             name: 'Demo User',
             gst_registered: true,
             gst_number: '123456789RT0001',
@@ -133,7 +133,7 @@ function initializeDb(): DbData {
       {
         id: 1,
         email: 'demo@bookkeeping.ca',
-        password_hash: 'demo123', // In production, hash with bcrypt
+        password_hash: '$2b$10$n9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36CHqDiK', // bcrypt hash of demo123
         name: 'Demo User',
         gst_registered: true,
         gst_number: '123456789RT0001',

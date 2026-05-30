@@ -1,0 +1,122 @@
+[
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T04:35:28.320Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T14:49:33.702Z"
+  },
+  {
+    "operation": "UPDATE_TRANSACTION_BLOCKED",
+    "method": "PUT",
+    "endpoint": "/api/transactions/1",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T14:49:35.102Z"
+  },
+  {
+    "operation": "DELETE_TRANSACTION_BLOCKED",
+    "method": "DELETE",
+    "endpoint": "/api/transactions/1",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T14:49:35.211Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T19:37:39.237Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T19:37:52.328Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T19:39:12.738Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T20:17:26.808Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T20:17:31.097Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T20:28:08.190Z"
+  },
+  {
+    "operation": "UPDATE_SETTINGS_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/user/settings",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T20:39:47.094Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T21:09:13.051Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-24T23:31:15.906Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-25T00:01:34.092Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-05-25T00:01:58.776Z"
+  }
+]

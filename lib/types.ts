@@ -17,6 +17,7 @@ export interface ChartOfAccount {
   name: string
   type: AccountType
   client_id?: number
+  is_vehicle_expense?: boolean
 }
 
 export interface AuditEntry {

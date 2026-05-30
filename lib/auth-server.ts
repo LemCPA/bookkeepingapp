@@ -13,15 +13,43 @@ import { verifyJWTToken } from '@/lib/jwt-utils'
 export function getUserIdFromRequest(request: NextRequest): number | null {
   try {
     const authHeader = request.headers.get('Authorization')
+    console.log('[AUTH-SERVER] Auth header present:', !!authHeader)
+
+    // Log all headers for debugging
+    const allHeaders: Record<string, string> = {}
+    request.headers.forEach((value, key) => {
+      allHeaders[key] = value.substring(0, 50)
+    })
+    console.log('[AUTH-SERVER] All request headers:', JSON.stringify(allHeaders, null, 2))
+
+    if (authHeader) {
+      console.log('[AUTH-SERVER] Full auth header:', authHeader.substring(0, 40) + '...')
+    }
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[AUTH-SERVER] Invalid auth header format - returning null')
+      console.log('[AUTH-SERVER] authHeader value:', authHeader)
       return null
     }
 
     const token = authHeader.substring('Bearer '.length)
+    console.log('[AUTH-SERVER] Token extracted, length:', token.length)
+    console.log('[AUTH-SERVER] Token first 15 chars:', token.substring(0, 15))
+
     const payload = verifyJWTToken(token)
-    return payload?.userId || null
+    console.log('[AUTH-SERVER] JWT verification succeeded:', !!payload)
+    if (payload) {
+      console.log('[AUTH-SERVER] Extracted userId:', payload.userId, 'type:', typeof payload.userId)
+      console.log('[AUTH-SERVER] Extracted email:', payload.email)
+    } else {
+      console.log('[AUTH-SERVER] JWT verification failed, payload is null/undefined')
+    }
+
+    const result = payload?.userId || null
+    console.log('[AUTH-SERVER] Final userId to return:', result, 'type:', typeof result)
+    return result
   } catch (error) {
-    console.error('Error getting user ID from request:', error)
+    console.error('[AUTH-SERVER] Error getting user ID from request:', error)
     return null
   }
 }

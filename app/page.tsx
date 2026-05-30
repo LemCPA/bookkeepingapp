@@ -67,9 +67,9 @@ function LandingPage() {
   }, [])
 
   return (
-    <div className="space-y-2 pt-4 px-4 sm:px-0 max-w-4xl mx-auto">
+    <div className="space-y-2 pt-0 px-4 sm:px-0 max-w-4xl mx-auto">
       {/* Hero Section */}
-      <section className="py-12 px-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg mb-8">
+      <section className="pt-12 pb-16 px-8 m-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg mb-8">
         <div className="max-w-4xl">
           <h1 className="text-5xl font-bold mb-4">
             Bookkeeping Built for Canadian Sole Proprietors 🍁
@@ -181,7 +181,7 @@ function LandingPage() {
       </section>
 
       {/* What You Get Section */}
-      <section id="features" className="py-12">
+      <section id="features" className="py-12 scroll-mt-20">
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
           Built for Sole Proprietor Success
         </h2>
@@ -237,7 +237,7 @@ function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-12">
+      <section id="pricing" className="py-12 scroll-mt-20">
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">
           Fair Pricing for Sole Proprietors
         </h2>
@@ -359,7 +359,7 @@ function LandingPage() {
 function Dashboard({ data }: { data: DashboardData }) {
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-6">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>

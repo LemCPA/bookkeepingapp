@@ -3,8 +3,6 @@ import { hashPassword, isValidPassword } from '@/lib/bcrypt-utils'
 import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
 import { getDb, saveDb, getUserByEmail } from '@/lib/db'
 import { getUserByEmailFromSupabase, createUserInSupabase } from '@/lib/supabase-db'
-import { sendEmail, createBrandedEmail, renderEmailTemplate } from '@/lib/sendgrid-service'
-import { getEmailTemplate } from '@/lib/email-sequences'
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,48 +68,54 @@ export async function POST(request: NextRequest) {
 
     // Send welcome email (non-blocking - don't fail signup if email fails)
     // Note: Email sending is async and fire-and-forget
-    try {
-      const welcomeTemplate = getEmailTemplate('email_welcome')
-      if (welcomeTemplate && process.env.SENDGRID_API_KEY) {
-        const firstName = name.split(' ')[0]
-        const userData = {
-          FirstName: firstName,
-          APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://bookkeepingapp.ca',
+    // Dynamically import to avoid hard dependency
+    if (process.env.SENDGRID_API_KEY?.startsWith('SG.')) {
+      try {
+        const { sendEmail, createBrandedEmail, renderEmailTemplate } = await import('@/lib/sendgrid-service')
+        const { getEmailTemplate } = await import('@/lib/email-sequences')
+
+        const welcomeTemplate = getEmailTemplate('email_welcome')
+        if (welcomeTemplate) {
+          const firstName = name.split(' ')[0]
+          const userData = {
+            FirstName: firstName,
+            APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://bookkeepingapp.ca',
+          }
+
+          const content = renderEmailTemplate(welcomeTemplate.content, userData)
+          const subject = renderEmailTemplate(welcomeTemplate.subject, userData)
+          const cta = {
+            text: renderEmailTemplate(welcomeTemplate.cta.text, userData),
+            url: renderEmailTemplate(welcomeTemplate.cta.url, userData),
+          }
+          const secondaryCta = welcomeTemplate.secondaryCta
+            ? {
+                text: renderEmailTemplate(welcomeTemplate.secondaryCta.text, userData),
+                url: renderEmailTemplate(welcomeTemplate.secondaryCta.url, userData),
+              }
+            : undefined
+
+          const htmlContent = createBrandedEmail({
+            subject,
+            preheader: welcomeTemplate.preview,
+            heading: welcomeTemplate.name,
+            content,
+            primaryCta: cta,
+            secondaryCta: secondaryCta,
+          })
+
+          // Send email async without waiting
+          sendEmail({
+            to: email,
+            subject,
+            html: htmlContent,
+            text: content,
+          }).catch(err => console.warn('Failed to queue welcome email:', err))
         }
-
-        const content = renderEmailTemplate(welcomeTemplate.content, userData)
-        const subject = renderEmailTemplate(welcomeTemplate.subject, userData)
-        const cta = {
-          text: renderEmailTemplate(welcomeTemplate.cta.text, userData),
-          url: renderEmailTemplate(welcomeTemplate.cta.url, userData),
-        }
-        const secondaryCta = welcomeTemplate.secondaryCta
-          ? {
-              text: renderEmailTemplate(welcomeTemplate.secondaryCta.text, userData),
-              url: renderEmailTemplate(welcomeTemplate.secondaryCta.url, userData),
-            }
-          : undefined
-
-        const htmlContent = createBrandedEmail({
-          subject,
-          preheader: welcomeTemplate.preview,
-          heading: welcomeTemplate.name,
-          content,
-          primaryCta: cta,
-          secondaryCta: secondaryCta,
-        })
-
-        // Send email async without waiting
-        sendEmail({
-          to: email,
-          subject,
-          html: htmlContent,
-          text: content,
-        }).catch(err => console.warn('Failed to queue welcome email:', err))
+      } catch (emailError) {
+        // Log but don't fail signup
+        console.warn('Welcome email setup failed:', emailError)
       }
-    } catch (emailError) {
-      // Log but don't fail signup
-      console.warn('Welcome email setup failed:', emailError)
     }
 
     // Return user data without password

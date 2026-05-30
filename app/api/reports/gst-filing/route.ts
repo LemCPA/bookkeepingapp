@@ -5,8 +5,14 @@ import { getUserIdFromRequest } from '@/lib/auth-server'
 export async function GET(request: NextRequest) {
   try {
     // Extract user ID from Authorization header
+    const authHeader = request.headers.get('Authorization')
+    console.log('GST Filing API - Auth Header:', authHeader ? 'Present' : 'Missing')
+
     const userId = getUserIdFromRequest(request)
+    console.log('GST Filing API - User ID:', userId)
+
     if (!userId) {
+      console.log('GST Filing API - Returning 401 Unauthorized')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

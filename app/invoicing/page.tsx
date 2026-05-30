@@ -7,7 +7,6 @@ import { createAuthenticatedFetch } from '@/lib/auth'
 interface InvoiceTransaction {
   id: number
   invoice_number?: string
-  client_name: string
   client_id: number
   amount: number
   gst_hst_amount?: number
@@ -155,33 +154,51 @@ export default function InvoicingPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Invoice Tracking</h1>
-          <p className="text-gray-600 mt-2">Manage invoices, track payments, and send reminders</p>
+    <>
+      <div className="space-y-6">
+      <div className="pb-6 border-b border-gray-200">
+        {/* Income Indicator */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+          <span className="text-xl">💰</span>
+          <div>
+            <p className="font-semibold text-blue-900">INCOME - Money You're Charging Customers</p>
+            <p className="text-sm text-blue-800">Invoices are for tracking revenue when you provide goods or services to clients.</p>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <Link
-            href="/transactions/new?type=INVOICE"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            + New Invoice
-          </Link>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingFile}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {uploadingFile ? '⏳ Uploading...' : '⬆ Upload Invoice'}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
+
+        <div className="flex justify-between items-start gap-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Invoice Tracking</h1>
+            <p className="text-gray-600 mt-2">Manage invoices, track payments</p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Link
+              href="/receipts"
+              className="bg-purple-600 text-white px-4 py-1 rounded-lg font-semibold hover:bg-purple-700 transition-colors text-base"
+            >
+              📸 Snap Document
+            </Link>
+            <Link
+              href="/transactions/new?type=INVOICE"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-base"
+            >
+              + New Invoice
+            </Link>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingFile}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base"
+            >
+              {uploadingFile ? '⏳ Uploading...' : '⬆ Upload Invoice'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </div>
         </div>
       </div>
 
@@ -295,8 +312,20 @@ export default function InvoicingPage() {
         )}
       </div>
 
-      {/* Filter Tabs */}
-      <div className="bg-white rounded-lg shadow">
+      {/* Help Section */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 className="font-semibold text-blue-900 mb-2">Invoice Status Guide</h3>
+        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+          <li><strong>Draft:</strong> Created but not yet sent to client</li>
+          <li><strong>Sent:</strong> Invoice sent to client, awaiting payment</li>
+          <li><strong>Overdue:</strong> Invoice sent but not paid past due date</li>
+          <li><strong>Paid:</strong> Invoice marked as cleared/reconciled</li>
+        </ul>
+      </div>
+      </div>
+
+      {/* Filter Tabs & Invoice Table - Full Width */}
+      <div className="bg-white rounded-lg shadow -mx-4 md:mx-0">
         <div className="flex border-b border-gray-200">
           {['all', 'draft', 'sent', 'overdue', 'paid'].map(status => (
             <button
@@ -328,33 +357,31 @@ export default function InvoicingPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Invoice #</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Client</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Amount</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Date Sent</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Due Date</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold text-gray-900">Invoice #</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold text-gray-900">Amount</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold text-gray-900">Date Sent</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold text-gray-900">Due Date</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {invoices.map(invoice => (
                   <tr key={invoice.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    <td className="px-3 py-4 text-sm font-medium text-gray-900">
                       {invoice.invoice_number || `INV-${String(invoice.id).padStart(4, '0')}`}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{invoice.client_name}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    <td className="px-3 py-4 text-sm font-medium text-gray-900">
                       ${(invoice.amount + (invoice.gst_hst_amount || 0)).toFixed(2)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-3 py-4 text-sm text-gray-600">
                       {invoice.sent_date ? new Date(invoice.sent_date).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-3 py-4 text-sm text-gray-600">
                       {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-6 py-4 text-sm">{getStatusBadge(invoice)}</td>
-                    <td className="px-6 py-4 text-sm space-x-2">
+                    <td className="px-3 py-4 text-sm">{getStatusBadge(invoice)}</td>
+                    <td className="px-3 py-4 text-sm space-x-2">
                       <Link
                         href={`/invoicing/${invoice.id}/view`}
                         className="text-blue-600 hover:text-blue-800 font-medium"
@@ -377,17 +404,6 @@ export default function InvoicingPage() {
           </div>
         )}
       </div>
-
-      {/* Help Section */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">Invoice Status Guide</h3>
-        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-          <li><strong>Draft:</strong> Created but not yet sent to client</li>
-          <li><strong>Sent:</strong> Invoice sent to client, awaiting payment</li>
-          <li><strong>Overdue:</strong> Invoice sent but not paid past due date</li>
-          <li><strong>Paid:</strong> Invoice marked as cleared/reconciled</li>
-        </ul>
-      </div>
-    </div>
+    </>
   )
 }

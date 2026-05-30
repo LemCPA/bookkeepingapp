@@ -17,12 +17,15 @@ function NewTransactionContent() {
     date: new Date().toISOString().split('T')[0],
     amount: '',
     gstRate: '0',
-    pstRate: '0-ab',
+    pstRate: '0',
     customPstRate: '',
     description: '',
     type: 'RECEIPT',
     reference: '',
     taxIncluded: false, // true = amount includes tax, false = amount is before tax
+    isVehicleExpense: false,
+    businessUsePercentage: 100,
+    invoiceStatus: 'DRAFT', // Only used for INVOICE type: DRAFT, TO_BE_SENT, PAID
   })
 
   useEffect(() => {
@@ -48,11 +51,51 @@ function NewTransactionContent() {
       setDefaultGstRate('0')
     })
 
-    // Load accounts
-    authenticatedFetch('/api/chart-of-accounts').then(r => {
-      if (!r.ok) throw new Error('Failed to fetch accounts')
-      return r.json()
-    }).then(data => setAccounts(Array.isArray(data) ? data : [])).catch(() => setAccounts([])).finally(() => setLoading(false))
+    // Load accounts with fallback to initialize defaults if empty
+    async function loadAccounts() {
+      try {
+        const r = await authenticatedFetch('/api/chart-of-accounts')
+        if (!r.ok) throw new Error('Failed to fetch accounts')
+        const data = await r.json()
+
+        console.log('First fetch response:', data)
+        console.log('Is array?', Array.isArray(data))
+        console.log('Length:', Array.isArray(data) ? data.length : 'N/A')
+
+        // If no accounts, initialize defaults
+        if (!Array.isArray(data) || data.length === 0) {
+          console.log('No accounts found, initializing defaults...')
+          const initR = await authenticatedFetch('/api/chart-of-accounts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initializeDefaults: true })
+          })
+
+          console.log('POST response status:', initR.status)
+          if (initR.ok) {
+            console.log('Defaults initialized, re-fetching accounts...')
+            // Re-fetch after initialization
+            const retryR = await authenticatedFetch('/api/chart-of-accounts')
+            if (retryR.ok) {
+              const retryData = await retryR.json()
+              console.log('Retry fetch response:', retryData)
+              console.log('Setting accounts, length:', Array.isArray(retryData) ? retryData.length : 'not array')
+              setAccounts(Array.isArray(retryData) ? retryData : [])
+            }
+          }
+        } else {
+          console.log('Accounts already exist, setting to state')
+          setAccounts(Array.isArray(data) ? data : [])
+        }
+      } catch (err) {
+        console.error('Error loading accounts:', err)
+        setAccounts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadAccounts()
   }, [])
 
   function calculateTaxAmount(amount: number, gstRate: number, pstRate: number, taxIncluded: boolean): { baseAmount: number; taxAmount: number } {
@@ -75,12 +118,15 @@ function NewTransactionContent() {
 
     try {
       const amount = parseFloat(formData.amount)
-      const gstRate = parseFloat(formData.gstRate)
+      // Extract numeric GST rate (handle province codes like "5-qc", "15-nb")
+      const gstRateStr = formData.gstRate.split('-')[0]
+      const gstRate = parseFloat(gstRateStr)
 
       let pstRate = 0
       if (formData.pstRate === 'custom') {
         pstRate = parseFloat(formData.customPstRate)
       } else if (formData.pstRate !== '0') {
+        // Extract numeric PST rate (handle province codes like "7-bc", "10-nb")
         const rateStr = formData.pstRate.split('-')[0]
         pstRate = parseFloat(rateStr)
       }
@@ -89,22 +135,43 @@ function NewTransactionContent() {
       const { baseAmount, taxAmount } = calculateTaxAmount(amount, gstRate, pstRate, formData.taxIncluded)
 
       const authenticatedFetch = createAuthenticatedFetch()
+
+      // Build request body
+      const requestBody: any = {
+        account_id: parseInt(formData.accountId),
+        transaction_date: formData.date,
+        amount: baseAmount, // Use the base amount (before tax)
+        gst_hst_rate: totalRate,
+        gst_hst_amount: taxAmount,
+        gst_hst_included: formData.taxIncluded,
+        description: formData.description,
+        type: formData.type,
+        reference_number: formData.reference,
+        is_vehicle_expense: formData.isVehicleExpense,
+        business_use_percentage: formData.isVehicleExpense ? formData.businessUsePercentage : undefined,
+      }
+
+      // Add invoice-specific fields if this is an invoice
+      if (formData.type === 'INVOICE') {
+        if (formData.invoiceStatus === 'TO_BE_SENT') {
+          requestBody.sent_date = formData.date // Mark as sent today
+        } else if (formData.invoiceStatus === 'PAID') {
+          requestBody.sent_date = formData.date // Mark as sent
+          requestBody.reconciliation_status = 'PAID' // Mark as paid
+        }
+        // DRAFT status doesn't need sent_date or reconciliation_status
+      }
+
       const response = await authenticatedFetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          account_id: parseInt(formData.accountId),
-          transaction_date: formData.date,
-          amount: baseAmount, // Use the base amount (before tax)
-          gst_hst_rate: totalRate,
-          gst_hst_amount: taxAmount,
-          description: formData.description,
-          type: formData.type,
-          reference_number: formData.reference,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
-      if (!response.ok) throw new Error('Failed to create transaction')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to create transaction')
+      }
 
       const transaction = await response.json()
 
@@ -126,18 +193,22 @@ function NewTransactionContent() {
         date: new Date().toISOString().split('T')[0],
         amount: '',
         gstRate: defaultGstRate,
-        pstRate: '0-ab',
+        pstRate: '0',
         customPstRate: '',
         description: '',
         type: 'RECEIPT',
         reference: '',
         taxIncluded: false,
+        isVehicleExpense: false,
+        businessUsePercentage: 100,
+        invoiceStatus: 'DRAFT',
       })
       setFile(null)
       window.location.href = '/transactions'
     } catch (error) {
       console.error('Error creating transaction:', error)
-      alert('Error creating transaction')
+      const message = error instanceof Error ? error.message : 'Error creating transaction'
+      alert(message)
     }
   }
 
@@ -149,11 +220,19 @@ function NewTransactionContent() {
 
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+          <label className="block text-sm font-medium text-red-600 mb-1">Type *</label>
           <select
             required
             value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+            onChange={(e) => {
+              const newType = e.target.value
+              // Reset vehicle expense flag if switching away from RECEIPT
+              if (newType !== 'RECEIPT') {
+                setFormData({ ...formData, type: newType, isVehicleExpense: false })
+              } else {
+                setFormData({ ...formData, type: newType })
+              }
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="RECEIPT">Receipt</option>
@@ -164,7 +243,7 @@ function NewTransactionContent() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+            <label className="block text-sm font-medium text-red-600 mb-1">Date *</label>
             <input
               type="date"
               required
@@ -175,7 +254,7 @@ function NewTransactionContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+            <label className="block text-sm font-medium text-red-600 mb-1">Amount *</label>
             <input
               type="number"
               required
@@ -217,76 +296,61 @@ function NewTransactionContent() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">GST (Federal)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">GST/HST Rate</label>
             <select
               value={formData.gstRate}
               onChange={(e) => setFormData({ ...formData, gstRate: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="0">No GST</option>
-              <option value="5">5% GST</option>
+              <option value="0">No GST/HST</option>
+              <option value="5">5% GST (AB, BC, MB, SK, NT, NU, YT)</option>
+              <option value="5-qc">5% GST (Quebec)</option>
+              <option value="13">13% HST (Ontario)</option>
+              <option value="15-nb">15% HST (New Brunswick)</option>
+              <option value="15-ns">15% HST (Nova Scotia)</option>
+              <option value="15-pe">15% HST (Prince Edward Island)</option>
+              <option value="15-nl">15% HST (Newfoundland)</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">PST/HST/QST (Provincial)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">PST/HST/QST Rate</label>
             <select
               value={formData.pstRate}
               onChange={(e) => setFormData({ ...formData, pstRate: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="0-ab">No PST/HST (Alberta)</option>
+              <option value="0">No PST/HST</option>
               <option value="6-sk">6% PST (Saskatchewan)</option>
               <option value="7-bc">7% PST (British Columbia)</option>
               <option value="8-mb">8% PST (Manitoba)</option>
+              <option value="9.975-qc">9.975% QST (Quebec)</option>
               <option value="8-on">8% HST (Ontario)</option>
-              <option value="10-pe">10% HST (Prince Edward Island)</option>
-              <option value="10-ns">10% HST (Nova Scotia)</option>
               <option value="10-nb">10% HST (New Brunswick)</option>
-              <option value="10-nl">10% HST (Newfoundland & Labrador)</option>
-              <option value="9.975-qc">9.975% QST (Quebec - in addition to GST)</option>
-              <option value="custom">Custom PST/HST/QST Rate</option>
+              <option value="10-ns">10% HST (Nova Scotia)</option>
+              <option value="10-pe">10% HST (Prince Edward Island)</option>
+              <option value="10-nl">10% HST (Newfoundland)</option>
             </select>
           </div>
         </div>
 
-        {formData.pstRate === 'custom' && (
+        {formData.type === 'RECEIPT' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Custom PST/HST/QST Rate (%)</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="100"
-              value={formData.customPstRate}
-              onChange={(e) => setFormData({ ...formData, customPstRate: e.target.value })}
-              placeholder="Enter custom provincial tax rate"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        )}
-
-        {(formData.gstRate || formData.pstRate) && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-sm text-blue-900">
-              <span className="font-medium">Total Tax Rate: </span>
-              {(() => {
-                const gst = parseFloat(formData.gstRate)
-                let pst = 0
-                if (formData.pstRate === 'custom') {
-                  pst = parseFloat(formData.customPstRate) || 0
-                } else if (formData.pstRate !== '0') {
-                  const rateStr = formData.pstRate.split('-')[0]
-                  pst = parseFloat(rateStr)
-                }
-                return (gst + pst).toFixed(3)
-              })()}%
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Is this a vehicle expense?</label>
+            <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+              <input
+                type="checkbox"
+                checked={formData.isVehicleExpense}
+                onChange={() => setFormData({ ...formData, isVehicleExpense: !formData.isVehicleExpense })}
+                className="w-4 h-4 text-blue-600"
+              />
+              <span className="ml-3 font-medium text-gray-900">Flag as vehicle/motor expense (for T2125 tracking)</span>
+            </label>
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Account *</label>
+          <label className="block text-sm font-medium text-red-600 mb-1">Account *</label>
           <select
             required
             value={formData.accountId}
@@ -296,23 +360,32 @@ function NewTransactionContent() {
             <option value="">Select an account</option>
             {accounts
               .filter(account => {
-                // Filter accounts based on transaction type
-                if (formData.type === 'INVOICE') return account.type === 'INCOME'
-                if (formData.type === 'RECEIPT') return account.type === 'EXPENSE'
-                return true // ADJUSTMENT can use any account
+                // If vehicle expense is selected, only show vehicle-specific accounts
+                if (formData.isVehicleExpense) {
+                  return account.is_vehicle_expense === true
+                }
+                // Otherwise filter accounts based on transaction type and exclude vehicle accounts
+                if (formData.type === 'INVOICE') return account.type === 'INCOME' && !account.is_vehicle_expense
+                if (formData.type === 'RECEIPT') return account.type === 'EXPENSE' && !account.is_vehicle_expense
+                return !account.is_vehicle_expense // ADJUSTMENT can use any non-vehicle account
               })
-              .map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.code} - {account.name} ({account.type})
-              </option>
-            ))}
+              .map((account) => {
+                // Strip "Motor Vehicle Expenses - " prefix from vehicle expense account names
+                const displayName = account.name.startsWith('Motor Vehicle Expenses - ')
+                  ? account.name.replace('Motor Vehicle Expenses - ', '')
+                  : account.name
+                return (
+                  <option key={account.id} value={account.id}>
+                    {account.code} - {displayName} ({account.type})
+                  </option>
+                )
+              })}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
           <textarea
-            required
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={3}
@@ -378,6 +451,56 @@ function NewTransactionContent() {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
+
+        {formData.type === 'INVOICE' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">Invoice Status</label>
+            <div className="space-y-2">
+              <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                <input
+                  type="radio"
+                  name="invoiceStatus"
+                  value="DRAFT"
+                  checked={formData.invoiceStatus === 'DRAFT'}
+                  onChange={(e) => setFormData({ ...formData, invoiceStatus: e.target.value })}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="ml-3">
+                  <span className="font-medium text-gray-900">Draft</span>
+                  <span className="ml-2 text-sm text-gray-500">(not yet sent to client)</span>
+                </span>
+              </label>
+              <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                <input
+                  type="radio"
+                  name="invoiceStatus"
+                  value="TO_BE_SENT"
+                  checked={formData.invoiceStatus === 'TO_BE_SENT'}
+                  onChange={(e) => setFormData({ ...formData, invoiceStatus: e.target.value })}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="ml-3">
+                  <span className="font-medium text-gray-900">To be Sent</span>
+                  <span className="ml-2 text-sm text-gray-500">(ready to send, awaiting payment)</span>
+                </span>
+              </label>
+              <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                <input
+                  type="radio"
+                  name="invoiceStatus"
+                  value="PAID"
+                  checked={formData.invoiceStatus === 'PAID'}
+                  onChange={(e) => setFormData({ ...formData, invoiceStatus: e.target.value })}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="ml-3">
+                  <span className="font-medium text-gray-900">Paid</span>
+                  <span className="ml-2 text-sm text-gray-500">(payment already received)</span>
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-4">
           <button

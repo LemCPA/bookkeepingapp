@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const userId = getUserIdFromRequest(request) || 1
 
     const db = getDb()
+    const user = db.users.find(u => u.id === userId)
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || 'month' // month, year, all
 
@@ -41,31 +42,8 @@ export async function GET(request: NextRequest) {
       .filter(t => t.type === 'RECEIPT')
       .reduce((sum, t) => sum + t.amount, 0)
 
-    // Get all transactions for this user (not just for period) for A/R and A/P aging
+    // Get all transactions for this user
     const allUserTransactions = db.transactions.filter(t => t.user_id === userId)
-    const allInvoices = allUserTransactions.filter(t => t.type === 'INVOICE')
-    const allBills = allUserTransactions.filter(t => t.type === 'RECEIPT')
-
-    // Calculate overdue A/R (unpaid invoices past due)
-    const asOfDateStr = '2026-05-18'
-    const asOfDate = new Date(asOfDateStr)
-
-    const overdueAR = allInvoices
-      .filter(t => t.reconciliation_status !== 'CLEARED') // unpaid
-      .filter(t => {
-        const dueDate = t.due_date ? new Date(t.due_date) : new Date(new Date(t.transaction_date).getTime() + 30 * 24 * 60 * 60 * 1000)
-        return dueDate < asOfDate // overdue
-      })
-      .reduce((sum, t) => sum + t.amount + (t.gst_hst_amount || 0), 0)
-
-    // Calculate overdue A/P (unpaid bills past due)
-    const overdueAP = allBills
-      .filter(t => t.reconciliation_status !== 'CLEARED') // unpaid
-      .filter(t => {
-        const dueDate = t.due_date ? new Date(t.due_date) : new Date(new Date(t.transaction_date).getTime() + 30 * 24 * 60 * 60 * 1000)
-        return dueDate < asOfDate // overdue
-      })
-      .reduce((sum, t) => sum + t.amount + (t.gst_hst_amount || 0), 0)
 
     // Get recent transactions (last 5) for this user
     const recentTransactions = allUserTransactions
@@ -100,34 +78,17 @@ export async function GET(request: NextRequest) {
         }
       })
 
-    // Get reconciliation status for this user
-    const userTransactions = db.transactions.filter(t => t.user_id === userId)
-    const totalTransactions = userTransactions.length
-    const reconciled = userTransactions.filter(t => t.reconciliation_status === 'CLEARED').length
-    const unreconciled = totalTransactions - reconciled
-    const lastReconciliation = db.bank_reconciliations
-      .filter(r => r.user_id === userId)
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-      .at(0)?.updated_at || null
-
     return NextResponse.json({
       period,
       periodStart: formatDate(periodStart.toISOString()),
       periodEnd: formatDate(periodEnd.toISOString()),
+      plan: user?.plan || 'free',
+      userCreatedAt: user?.created_at || new Date().toISOString(),
       metrics: {
         totalTransactions: transactionsForPeriod.length,
         totalRevenue,
         totalExpenses,
         netIncome: totalRevenue - totalExpenses,
-        overdueAR,
-        overdueAP,
-      },
-      reconciliation: {
-        totalTransactions,
-        reconciled,
-        unreconciled,
-        percentReconciled: totalTransactions > 0 ? Math.round((reconciled / totalTransactions) * 100) : 0,
-        lastReconciliation,
       },
       recentTransactions,
       recentDocuments,

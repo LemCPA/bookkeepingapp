@@ -148,7 +148,7 @@ export default function SnapReceiptPage() {
   if (notLoggedIn) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">📷 Snap Receipt</h1>
+        <h1 className="text-3xl font-bold">📷 Snap Document</h1>
         <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-blue-800">Please log in to scan receipts</p>
           <p className="text-blue-700 text-sm mt-2">Use the Sign In button in the top right corner to log in.</p>
@@ -160,7 +160,7 @@ export default function SnapReceiptPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">📷 Snap Receipt</h1>
+        <h1 className="text-3xl font-bold">📷 Snap Document</h1>
         <p className="text-gray-600 mt-2">Take a photo of a receipt and we'll extract the details automatically</p>
       </div>
 

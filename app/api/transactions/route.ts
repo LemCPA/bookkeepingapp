@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTransaction, getTransactions, createTransaction, updateTransaction, deleteTransaction } from '@/lib/db'
+import { getTransaction, getTransactions, createTransaction, updateTransaction, deleteTransaction, getDb } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { supabase } from '@/lib/supabase'
+import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
+import { logDemoActivity } from '@/lib/demo-audit'
+import { canCreateTransaction } from '@/lib/transaction-limits'
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,6 +63,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Demo account security checks
+    if (isDemoAccount(userId)) {
+      logDemoActivity({
+        operation: 'CREATE_TRANSACTION_BLOCKED',
+        method: 'POST',
+        endpoint: request.nextUrl.pathname,
+        status: 403,
+        ip: request.headers.get('x-forwarded-for') || undefined,
+      })
+      return NextResponse.json(
+        { error: 'Demo account cannot create transactions. Sign up for a free account to use all features.' },
+        { status: 403 }
+      )
+    }
+
+    // Rate limiting check
+    if (!checkDemoRateLimit(`${userId}`)) {
+      logDemoActivity({
+        operation: 'RATE_LIMIT_EXCEEDED',
+        method: 'POST',
+        endpoint: request.nextUrl.pathname,
+        status: 429,
+        ip: request.headers.get('x-forwarded-for') || undefined,
+      })
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
+    // Check transaction limits
+    const db = getDb()
+    const user = db.users.find(u => u.id === userId)
+    const limitCheck = canCreateTransaction(userId, user?.plan, user?.created_at)
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: limitCheck.reason },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const result = createTransaction(
       userId,
@@ -70,12 +114,17 @@ export async function POST(request: NextRequest) {
       body.type,
       body.gst_hst_rate || 0,
       body.gst_hst_amount || 0,
-      body.reference_number
+      body.reference_number,
+      body.is_vehicle_expense || false,
+      body.business_use_percentage || 100,
+      body.sent_date,
+      body.reconciliation_status,
+      body.gst_hst_included
     )
 
     // Track first receipt scanned for email sequence
     try {
-      const { data: user } = await supabase
+      const { data: user } = await supabase!
         .from('users')
         .select('first_receipt_scanned_at')
         .eq('id', userId)
@@ -83,24 +132,22 @@ export async function POST(request: NextRequest) {
 
       // If this is the user's first transaction, mark it
       if (user && !user.first_receipt_scanned_at) {
-        await supabase
+        await supabase!
           .from('users')
           .update({
             first_receipt_scanned_at: new Date().toISOString(),
             receipt_count: 1,
           })
           .eq('id', userId)
-          .catch(err => console.warn('Could not track first receipt:', err))
       } else if (user) {
         // Increment receipt count
         const currentCount = (user as any).receipt_count || 0
-        await supabase
+        await supabase!
           .from('users')
           .update({
             receipt_count: currentCount + 1,
           })
           .eq('id', userId)
-          .catch(err => console.warn('Could not update receipt count:', err))
       }
     } catch (trackingError) {
       // Don't fail transaction if tracking fails
@@ -120,6 +167,36 @@ export async function PUT(request: NextRequest) {
     const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Demo account security checks
+    if (isDemoAccount(userId)) {
+      logDemoActivity({
+        operation: 'UPDATE_TRANSACTION_BLOCKED',
+        method: 'PUT',
+        endpoint: request.nextUrl.pathname,
+        status: 403,
+        ip: request.headers.get('x-forwarded-for') || undefined,
+      })
+      return NextResponse.json(
+        { error: 'Demo account cannot modify transactions. Sign up for a free account to use all features.' },
+        { status: 403 }
+      )
+    }
+
+    // Rate limiting check
+    if (!checkDemoRateLimit(`${userId}`)) {
+      logDemoActivity({
+        operation: 'RATE_LIMIT_EXCEEDED',
+        method: 'PUT',
+        endpoint: request.nextUrl.pathname,
+        status: 429,
+        ip: request.headers.get('x-forwarded-for') || undefined,
+      })
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429 }
+      )
     }
 
     const searchParams = request.nextUrl.searchParams
@@ -145,7 +222,8 @@ export async function PUT(request: NextRequest) {
       body.description,
       body.gst_hst_rate,
       body.gst_hst_amount,
-      body.reference_number
+      body.reference_number,
+      body.gst_hst_included
     )
 
     if (!success) {
@@ -169,6 +247,36 @@ export async function DELETE(request: NextRequest) {
     const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Demo account security checks
+    if (isDemoAccount(userId)) {
+      logDemoActivity({
+        operation: 'DELETE_TRANSACTION_BLOCKED',
+        method: 'DELETE',
+        endpoint: request.nextUrl.pathname,
+        status: 403,
+        ip: request.headers.get('x-forwarded-for') || undefined,
+      })
+      return NextResponse.json(
+        { error: 'Demo account cannot delete transactions. Sign up for a free account to use all features.' },
+        { status: 403 }
+      )
+    }
+
+    // Rate limiting check
+    if (!checkDemoRateLimit(`${userId}`)) {
+      logDemoActivity({
+        operation: 'RATE_LIMIT_EXCEEDED',
+        method: 'DELETE',
+        endpoint: request.nextUrl.pathname,
+        status: 429,
+        ip: request.headers.get('x-forwarded-for') || undefined,
+      })
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429 }
+      )
     }
 
     const searchParams = request.nextUrl.searchParams

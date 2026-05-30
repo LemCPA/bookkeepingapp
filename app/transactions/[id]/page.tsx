@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { createAuthenticatedFetch, getAccessToken, getRefreshToken } from '@/lib/auth'
 
 interface NoteEntry {
   id: number
@@ -23,7 +24,6 @@ interface AuditEntry {
 interface Transaction {
   id: number
   client_id: number
-  client_name: string
   account_id: number
   account_name: string
   transaction_date: string
@@ -69,13 +69,14 @@ export default function TransactionDetailPage() {
 
   async function fetchTransactionDetails() {
     try {
-      const response = await fetch(`/api/transactions?id=${transactionId}`)
+      const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
+      const response = await authenticatedFetch(`/api/transactions?id=${transactionId}`)
       if (!response.ok) throw new Error('Failed to fetch transaction')
       const data = await response.json()
       setTransaction(data[0] || data)
 
       // Fetch documents for this transaction
-      const docsResponse = await fetch(`/api/documents?id=${transactionId}`)
+      const docsResponse = await authenticatedFetch(`/api/documents?id=${transactionId}`)
       if (docsResponse.ok) {
         const docsData = await docsResponse.json()
         setDocuments(docsData)
@@ -90,7 +91,8 @@ export default function TransactionDetailPage() {
   async function handleAddTag() {
     if (!newTag.trim()) return
     try {
-      const response = await fetch(`/api/transactions/${transactionId}/tags`, {
+      const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
+      const response = await authenticatedFetch(`/api/transactions/${transactionId}/tags`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tag: newTag })
@@ -107,7 +109,8 @@ export default function TransactionDetailPage() {
 
   async function handleRemoveTag(tag: string) {
     try {
-      const response = await fetch(`/api/transactions/${transactionId}/tags/${encodeURIComponent(tag)}`, {
+      const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
+      const response = await authenticatedFetch(`/api/transactions/${transactionId}/tags/${encodeURIComponent(tag)}`, {
         method: 'DELETE'
       })
       if (response.ok) {
@@ -122,7 +125,8 @@ export default function TransactionDetailPage() {
   async function handleAddNote() {
     if (!newNote.trim()) return
     try {
-      const response = await fetch(`/api/transactions/${transactionId}/notes`, {
+      const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
+      const response = await authenticatedFetch(`/api/transactions/${transactionId}/notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: newNote })
@@ -141,7 +145,8 @@ export default function TransactionDetailPage() {
   async function handleUpdateNote(noteId: number) {
     if (!editingNoteContent.trim()) return
     try {
-      const response = await fetch(`/api/transactions/${transactionId}/notes/${noteId}`, {
+      const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
+      const response = await authenticatedFetch(`/api/transactions/${transactionId}/notes/${noteId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: editingNoteContent })
@@ -160,7 +165,8 @@ export default function TransactionDetailPage() {
   async function handleDeleteNote(noteId: number) {
     if (!confirm('Delete this note?')) return
     try {
-      const response = await fetch(`/api/transactions/${transactionId}/notes/${noteId}`, {
+      const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
+      const response = await authenticatedFetch(`/api/transactions/${transactionId}/notes/${noteId}`, {
         method: 'DELETE'
       })
       if (response.ok) {
@@ -179,7 +185,8 @@ export default function TransactionDetailPage() {
 
     setDeleting(true)
     try {
-      const response = await fetch(`/api/transactions?id=${transactionId}`, {
+      const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
+      const response = await authenticatedFetch(`/api/transactions?id=${transactionId}`, {
         method: 'DELETE',
       })
 
@@ -239,10 +246,6 @@ export default function TransactionDetailPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Date</label>
             <p className="text-gray-900">{formatDate(transaction?.transaction_date || '')}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Client</label>
-            <p className="text-gray-900">{transaction?.client_name}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Account</label>

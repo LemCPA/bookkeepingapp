@@ -6,7 +6,6 @@ import { TransactionFilters } from '@/lib/filterUtils'
 interface Transaction {
   id: number
   transaction_date: string
-  client_name: string
   description: string
   type: string
   amount: number
@@ -67,9 +66,6 @@ export default function TransactionsTable({
               </button>
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-              Client
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
               Description
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
@@ -83,11 +79,14 @@ export default function TransactionsTable({
                 onClick={() => onSortChange('amount')}
                 className="flex items-center justify-end gap-2 w-full hover:text-blue-600"
               >
-                Amount {getSortIndicator('amount')}
+                Subtotal {getSortIndicator('amount')}
               </button>
             </th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
               GST/HST
+            </th>
+            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+              Total
             </th>
             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
               Actions
@@ -104,9 +103,6 @@ export default function TransactionsTable({
             >
               <td className="px-4 py-3 text-sm text-gray-900">
                 {new Date(transaction.transaction_date).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-3 text-sm text-gray-900">
-                {transaction.client_name}
               </td>
               <td className="px-4 py-3 text-sm text-gray-900">
                 {transaction.description}
@@ -134,6 +130,9 @@ export default function TransactionsTable({
                 {transaction.gst_hst_amount && transaction.gst_hst_amount > 0
                   ? `$${transaction.gst_hst_amount.toFixed(2)}`
                   : '-'}
+              </td>
+              <td className="px-4 py-3 text-sm font-medium text-right text-gray-900">
+                ${(transaction.amount + (transaction.gst_hst_amount || 0)).toFixed(2)}
               </td>
               <td className="px-4 py-3 text-sm text-center">
                 <Link

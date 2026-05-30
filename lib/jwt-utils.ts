@@ -41,12 +41,14 @@ export function createRefreshToken(userId: number): string {
  */
 export function verifyJWTToken(token: string): JWTPayload | null {
   try {
+    console.log('[JWT-UTILS] Verifying token with secret length:', JWT_SECRET.length)
     const decoded = jwt.verify(token, JWT_SECRET, {
       algorithms: ['HS256'],
     })
+    console.log('[JWT-UTILS] Token verified successfully, userId:', (decoded as JWTPayload).userId)
     return decoded as JWTPayload
-  } catch (error) {
-    console.error('Error verifying JWT token:', error)
+  } catch (error: any) {
+    console.error('[JWT-UTILS] Token verification error:', error.message || error)
     return null
   }
 }

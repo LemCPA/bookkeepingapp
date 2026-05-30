@@ -17,15 +17,17 @@ interface GstFilingData {
 
 export default function GstFilingContent() {
   const [filingData, setFilingData] = useState<GstFilingData | null>(null)
-  const [startMonth, setStartMonth] = useState<string>('')
-  const [endMonth, setEndMonth] = useState<string>('')
+  const [startMonthNum, setStartMonthNum] = useState<string>('01')
+  const [endMonthNum, setEndMonthNum] = useState<string>('12')
+  const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()))
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const currentMonth = new Date().toISOString().slice(0, 7)
-    setStartMonth(currentMonth)
-    setEndMonth(currentMonth)
-    fetchGstData(currentMonth, currentMonth)
+    const currentYear = new Date().getFullYear()
+    setSelectedYear(String(currentYear))
+    const startOfYear = `${currentYear}-01`
+    const endOfYear = `${currentYear}-12`
+    fetchGstData(startOfYear, endOfYear)
   }, [])
 
   async function fetchGstData(start: string, end: string) {
@@ -47,11 +49,11 @@ export default function GstFilingContent() {
     }
   }
 
-  const handleDateChange = (start: string, end: string) => {
-    setStartMonth(start)
-    setEndMonth(end)
-    if (start && end) {
-      fetchGstData(start, end)
+  const handleDateChange = () => {
+    const startStr = `${selectedYear}-${startMonthNum}`
+    const endStr = `${selectedYear}-${endMonthNum}`
+    if (startStr && endStr) {
+      fetchGstData(startStr, endStr)
     }
   }
 
@@ -60,9 +62,9 @@ export default function GstFilingContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">GST/HST Filing</h1>
+    <div className="max-w-4xl mx-auto space-y-8 px-6">
+      <div className="mt-6">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">GST/HST Filing</h1>
         <div className="text-gray-600 space-y-1">
           <p><strong>Client:</strong> {filingData.clientName}</p>
           <p><strong>GST/HST Number:</strong> {filingData.gstNumber || 'Not provided'}</p>
@@ -70,24 +72,72 @@ export default function GstFilingContent() {
         </div>
       </div>
 
-      <div className="flex gap-4 items-end">
+      <div className="flex gap-6 items-end flex-wrap">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Start Period</label>
-          <input
-            type="month"
-            value={startMonth}
-            onChange={(e) => handleDateChange(e.target.value, endMonth)}
+          <label className="block text-sm font-medium text-gray-700 mb-2">Start Month</label>
+          <select
+            value={startMonthNum}
+            onChange={(e) => {
+              setStartMonthNum(e.target.value)
+              setTimeout(handleDateChange, 0)
+            }}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          >
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End Period</label>
-          <input
-            type="month"
-            value={endMonth}
-            onChange={(e) => handleDateChange(startMonth, e.target.value)}
+          <label className="block text-sm font-medium text-gray-700 mb-2">End Month</label>
+          <select
+            value={endMonthNum}
+            onChange={(e) => {
+              setEndMonthNum(e.target.value)
+              setTimeout(handleDateChange, 0)
+            }}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          >
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+          <select
+            value={selectedYear}
+            onChange={(e) => {
+              setSelectedYear(e.target.value)
+              setTimeout(handleDateChange, 0)
+            }}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
         </div>
       </div>
 
@@ -189,6 +239,15 @@ export default function GstFilingContent() {
           <li>• Consult with a tax professional for accurate GST/HST compliance.</li>
           <li>• Keep all supporting documentation (invoices, receipts) for audit purposes.</li>
         </ul>
+      </div>
+
+      {/* Footer Links */}
+      <div className="border-t border-gray-200 mt-12 py-6 text-center text-sm text-gray-600">
+        <p>
+          <a href="/terms" className="hover:text-blue-600 font-medium">Terms of Use</a>
+          {' '} | {' '}
+          <a href="/disclaimer" className="hover:text-blue-600 font-medium">Disclaimer</a>
+        </p>
       </div>
     </div>
   )

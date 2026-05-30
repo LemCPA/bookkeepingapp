@@ -35,9 +35,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         return
       }
 
-      // Store session info
+      // Store authentication info
       localStorage.setItem('user', JSON.stringify(data.user))
-      localStorage.setItem('sessionToken', data.token)
+      localStorage.setItem('accessToken', data.accessToken)
+      localStorage.setItem('refreshToken', data.refreshToken)
 
       // Close modal and redirect
       onClose()
@@ -54,8 +55,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+    <div className="fixed top-20 right-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-96">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Sign In</h2>
@@ -87,6 +88,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
+              autoComplete="email"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -104,6 +106,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
+                autoComplete="current-password"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />

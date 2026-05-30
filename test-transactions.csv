@@ -1,0 +1,5 @@
+transaction_date,amount,description,type,reference_number,gst_hst_rate
+2026-05-20,150.50,Office Supplies - Stapler Box,RECEIPT,INV001,5
+2026-05-21,275.00,Consulting Services,INVOICE,INV002,13
+2026-05-22,89.99,Coffee and Snacks,RECEIPT,INV003,5
+2026-05-23,450.00,Web Design Work,INVOICE,INV004,0

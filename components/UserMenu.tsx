@@ -20,7 +20,7 @@ export default function UserMenu() {
   useEffect(() => {
     // Check if user is logged in
     const userStr = localStorage.getItem('user')
-    const token = localStorage.getItem('sessionToken')
+    const token = localStorage.getItem('accessToken')
 
     if (userStr && token) {
       try {
@@ -29,7 +29,8 @@ export default function UserMenu() {
       } catch (error) {
         console.error('Error parsing user data:', error)
         localStorage.removeItem('user')
-        localStorage.removeItem('sessionToken')
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
       }
     }
     setIsLoading(false)
@@ -39,7 +40,8 @@ export default function UserMenu() {
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
       localStorage.removeItem('user')
-      localStorage.removeItem('sessionToken')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
       setUser(null)
       router.refresh()
     } catch (error) {

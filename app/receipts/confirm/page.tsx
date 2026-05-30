@@ -36,6 +36,8 @@ export default function ConfirmReceiptPage() {
     type: 'RECEIPT',
     reference: '',
     taxIncluded: false,
+    isVehicleExpense: false,
+    businessUsePercentage: '100',
   })
 
   useEffect(() => {
@@ -48,20 +50,26 @@ export default function ConfirmReceiptPage() {
     const parsed = JSON.parse(data) as ExtractedReceiptData
     setExtractedData(parsed)
 
-    // Map extracted rate to GST/PST format
-    let gstRate = '0'
-    let pstRate = '0-ab'
+    // Load saved GST/PST preferences from localStorage, or use extracted data
+    const savedGstRate = localStorage.getItem('receiptDefaultGstRate')
+    const savedPstRate = localStorage.getItem('receiptDefaultPstRate')
 
-    if (parsed.gst_hst_rate === 5) {
-      gstRate = '5'
-      pstRate = '0-ab'
-    } else if (parsed.gst_hst_rate === 13) {
-      gstRate = '5'
-      pstRate = '8-on'
-    } else if (parsed.gst_hst_rate > 5 && parsed.gst_hst_rate < 13) {
-      // Likely a PST-only province
-      gstRate = '0'
-      pstRate = parsed.gst_hst_rate + '-other'
+    let gstRate = savedGstRate || '0'
+    let pstRate = savedPstRate || '0-ab'
+
+    // Only use extracted rate if no saved preference exists
+    if (!savedGstRate && !savedPstRate) {
+      if (parsed.gst_hst_rate === 5) {
+        gstRate = '5'
+        pstRate = '0-ab'
+      } else if (parsed.gst_hst_rate === 13) {
+        gstRate = '5'
+        pstRate = '8-on'
+      } else if (parsed.gst_hst_rate > 5 && parsed.gst_hst_rate < 13) {
+        // Likely a PST-only province
+        gstRate = '0'
+        pstRate = parsed.gst_hst_rate + '-other'
+      }
     }
 
     setFormData({
@@ -75,6 +83,8 @@ export default function ConfirmReceiptPage() {
       type: parsed.type,
       reference: '',
       taxIncluded: false,
+      isVehicleExpense: false,
+      businessUsePercentage: '100',
     })
 
     const authenticatedFetch = createAuthenticatedFetch()
@@ -90,6 +100,12 @@ export default function ConfirmReceiptPage() {
       })
       .finally(() => setLoading(false))
   }, [router])
+
+  // Save GST/PST preferences whenever they change
+  useEffect(() => {
+    localStorage.setItem('receiptDefaultGstRate', formData.gstRate)
+    localStorage.setItem('receiptDefaultPstRate', formData.pstRate)
+  }, [formData.gstRate, formData.pstRate])
 
   function calculateTaxAmount(amount: number, gstRate: number, pstRate: number, taxIncluded: boolean): { baseAmount: number; taxAmount: number } {
     const totalRate = gstRate + pstRate
@@ -138,6 +154,8 @@ export default function ConfirmReceiptPage() {
           description: formData.description,
           type: formData.type,
           reference_number: formData.reference,
+          is_vehicle_expense: formData.isVehicleExpense,
+          business_use_percentage: formData.isVehicleExpense ? parseFloat(formData.businessUsePercentage) : undefined,
         }),
       })
 
@@ -205,6 +223,39 @@ export default function ConfirmReceiptPage() {
                 <option value="ADJUSTMENT">Adjustment</option>
               </select>
             </div>
+
+            <div className="flex items-center p-3 border border-gray-300 rounded-lg">
+              <input
+                type="checkbox"
+                id="isVehicleExpense"
+                checked={formData.isVehicleExpense}
+                onChange={(e) => setFormData({ ...formData, isVehicleExpense: e.target.checked })}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="isVehicleExpense" className="ml-3 font-medium text-gray-900 cursor-pointer">
+                Motor Vehicle Expense (T2125 Tracking)
+              </label>
+            </div>
+
+            {formData.isVehicleExpense && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Business Use Percentage *</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    required
+                    value={formData.businessUsePercentage}
+                    onChange={(e) => setFormData({ ...formData, businessUsePercentage: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <span className="text-gray-700 font-medium">%</span>
+                </div>
+                <p className="mt-1 text-xs text-gray-600">Enter the percentage of business use for this vehicle expense (0-100%)</p>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -338,8 +389,11 @@ export default function ConfirmReceiptPage() {
                 <option value="">Select an account</option>
                 {accounts
                   .filter(account => {
+                    if (formData.isVehicleExpense) {
+                      return account.is_vehicle_expense === true
+                    }
                     if (formData.type === 'INVOICE') return account.type === 'INCOME'
-                    if (formData.type === 'RECEIPT') return account.type === 'EXPENSE'
+                    if (formData.type === 'RECEIPT') return account.type === 'EXPENSE' && !account.is_vehicle_expense
                     return true
                   })
                   .map((account) => (
@@ -428,7 +482,7 @@ export default function ConfirmReceiptPage() {
         </div>
 
         <div className="col-span-1">
-          <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+          <div className="bg-white rounded-lg shadow-md p-6 sticky top-4 z-10">
             <h3 className="text-lg font-bold mb-4">Receipt Image</h3>
             <img
               src={extractedData.receiptImage}

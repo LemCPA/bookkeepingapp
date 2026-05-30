@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { createAuthenticatedFetch } from '@/lib/auth'
 
 interface RecurringTransaction {
   id: number
@@ -33,7 +34,8 @@ export default function RecurringTransactionsPage() {
 
   async function fetchTemplates() {
     try {
-      const response = await fetch('/api/recurring-transactions')
+      const authenticatedFetch = createAuthenticatedFetch()
+      const response = await authenticatedFetch('/api/recurring-transactions')
       if (response.ok) {
         const data = await response.json()
         setTemplates(data)
@@ -47,7 +49,8 @@ export default function RecurringTransactionsPage() {
 
   async function handlePauseResume(id: number, currentStatus: boolean) {
     try {
-      const response = await fetch(`/api/recurring-transactions/${id}`, {
+      const authenticatedFetch = createAuthenticatedFetch()
+      const response = await authenticatedFetch(`/api/recurring-transactions/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentStatus }),
@@ -67,7 +70,8 @@ export default function RecurringTransactionsPage() {
     }
 
     try {
-      const response = await fetch(`/api/recurring-transactions/${id}`, {
+      const authenticatedFetch = createAuthenticatedFetch()
+      const response = await authenticatedFetch(`/api/recurring-transactions/${id}`, {
         method: 'DELETE',
       })
 

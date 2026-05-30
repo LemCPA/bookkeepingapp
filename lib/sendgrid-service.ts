@@ -72,15 +72,16 @@ export async function sendBatchEmails(emails: EmailData[]): Promise<number> {
     }
 
     for (const batch of batches) {
-      const msgBatch = batch.map(email => ({
-        to: email.to,
-        from: email.from || process.env.SENDGRID_FROM_EMAIL || 'noreply@bookkeepingapp.ca',
-        subject: email.subject,
-        text: email.text,
-        html: email.html,
-      }))
-
-      await sgMail.sendMultiple(msgBatch)
+      for (const email of batch) {
+        const msg = {
+          to: email.to,
+          from: email.from || process.env.SENDGRID_FROM_EMAIL || 'noreply@bookkeepingapp.ca',
+          subject: email.subject,
+          text: email.text,
+          html: email.html,
+        }
+        await sgMail.send(msg)
+      }
       successCount += batch.length
     }
 

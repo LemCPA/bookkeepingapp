@@ -3,102 +3,116 @@ import fs from 'fs'
 import path from 'path'
 import { getDb, saveDb } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
+import { readFileSync, existsSync } from 'fs'
+import { join } from 'path'
 
 let client: any = null
 
+function getApiKey(): string | undefined {
+  if (process.env.ANTHROPIC_API_KEY) {
+    return process.env.ANTHROPIC_API_KEY
+  }
+  try {
+    const envPath = join(process.cwd(), '.env.local')
+    const envContent = readFileSync(envPath, 'utf-8')
+    const match = envContent.match(/ANTHROPIC_API_KEY=(.+)/)
+    if (match) {
+      return match[1].trim()
+    }
+  } catch (e) {
+    console.error('Could not read .env.local:', e)
+  }
+  return undefined
+}
+
 async function getClient() {
   if (!client) {
-    const Anthropic = (await import('@anthropic-ai/sdk')).default
-    client = new Anthropic()
+    const { Anthropic } = await import('@anthropic-ai/sdk')
+    const apiKey = getApiKey()
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY is not set')
+    }
+    client = new Anthropic({ apiKey })
   }
   return client
 }
 
 interface ExtractedTransaction {
-  date: string
-  amount: number
-  description: string
-  vendor_name: string
-  type: 'INVOICE' | 'RECEIPT' | 'ADJUSTMENT'
+  date: string | null
+  amount: number | null
+  description: string | null
+  vendor_name: string | null
+  type: 'INVOICE' | 'RECEIPT' | 'ADJUSTMENT' | null
   gst_hst_amount: number
   gst_hst_rate: number
 }
-
 
 async function analyzeDocument(fileBuffer: Buffer, fileName: string): Promise<ExtractedTransaction | null> {
   try {
     console.log(`[${fileName}] Starting document analysis, buffer size: ${fileBuffer.length} bytes`)
 
-    // Determine media type from file extension
     const ext = path.extname(fileName).toLowerCase()
-    console.log(`[${fileName}] File extension: ${ext}`)
-
     const base64Data = fileBuffer.toString('base64')
-    let mediaType: 'image/jpeg' | 'image/png' | 'application/pdf' = 'image/jpeg'
 
-    if (ext === '.png') {
-      console.log(`[${fileName}] PNG file detected`)
-      mediaType = 'image/png'
-    } else if (ext === '.pdf') {
-      console.log(`[${fileName}] PDF file detected, sending directly to Claude`)
-      mediaType = 'application/pdf'
-    } else {
-      console.log(`[${fileName}] Assuming JPEG format`)
+    // Only handle images, not PDFs
+    const supportedImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+    if (!supportedImageTypes.includes(ext)) {
+      console.log(`[${fileName}] Unsupported file type: ${ext}`)
+      return null
     }
 
-    console.log(`[${fileName}] Preparing Claude API request, mediaType: ${mediaType}, base64 size: ${base64Data.length} bytes`)
+    let mediaType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' = 'image/jpeg'
+    if (ext === '.png') mediaType = 'image/png'
+    if (ext === '.gif') mediaType = 'image/gif'
+    if (ext === '.webp') mediaType = 'image/webp'
 
-    // For PDFs, use the document type; for images, use the image type
-    const messageContent: any[] = []
+    console.log(`[${fileName}] Analyzing as ${mediaType}`)
 
-    if (mediaType === 'application/pdf') {
-      messageContent.push({
-        type: 'document',
-        source: {
-          type: 'base64',
-          media_type: 'application/pdf',
-          data: base64Data,
-        },
-      })
-    } else {
-      messageContent.push({
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: mediaType,
-          data: base64Data,
-        },
-      })
-    }
-
-    messageContent.push({
-      type: 'text',
-      text: `Analyze this receipt or invoice and extract the following information in JSON format:
-{
-  "date": "YYYY-MM-DD",
-  "amount": number (total amount),
-  "description": "brief description of what was purchased",
-  "vendor_name": "name of vendor/business",
-  "type": "RECEIPT or INVOICE",
-  "gst_hst_amount": number (extracted GST/HST amount, 0 if none),
-  "gst_hst_rate": number (5 for GST, 13 for HST, 0 if none)
-}
-
-If this is a receipt (you're paying), mark as RECEIPT.
-If this is an invoice (someone owes you), mark as INVOICE.
-For Canadian taxes, extract GST (5%) or HST (13%) if visible.
-Return ONLY valid JSON, no other text.`,
-    })
-
-    console.log(`[${fileName}] Calling Claude API...`)
     const anthropic = await getClient()
     const response = await anthropic.messages.create({
-      model: 'claude-opus-4-1',
+      model: 'claude-opus-4-1-20250805',
       max_tokens: 1024,
       messages: [
         {
           role: 'user',
-          content: messageContent,
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mediaType,
+                data: base64Data,
+              },
+            },
+            {
+              type: 'text',
+              text: `Analyze this receipt or invoice image and extract the following information in JSON format:
+{
+  "date": "YYYY-MM-DD (from the document, or today if not found)",
+  "amount": "numeric amount as number (e.g., 150.50) - this should be the TOTAL amount including tax",
+  "description": "brief description of what was purchased or service provided",
+  "vendor_name": "name of the vendor/company",
+  "type": "RECEIPT or INVOICE (determine from context)",
+  "gst_hst_amount": "numeric GST/HST amount extracted (0 if not found)",
+  "gst_hst_rate": "GST/HST rate as number (5 for 5% GST, 13 for 13% HST, 0 if no GST/HST)"
+}
+
+Important:
+- Extract ONLY the JSON object, nothing else
+- If a field cannot be determined, use null
+- Amount should be a number, not a string
+- Type should be either "RECEIPT" or "INVOICE"
+- GST/HST Extraction:
+  * Look for ANY mention of tax: "GST", "HST", "Sales Tax", "Total Tax", "Tax Amount", "Taxe", "Impôt"
+  * Look for subtotal + tax = total patterns to identify tax amount
+  * If you see "Subtotal" and "Total", calculate: tax amount = Total - Subtotal
+  * Extract the TOTAL GST/HST amount, not per-line taxes
+  * For 5% GST: set rate to 5 and amount to the GST total
+  * For 13% HST: set rate to 13 and amount to the HST total
+  * If no GST/HST found after thorough search: set both amount and rate to 0
+- Only Canadian tax rates are expected (0, 5, 7, 12, or 13)`,
+            },
+          ],
         },
       ],
     })
@@ -109,25 +123,27 @@ Return ONLY valid JSON, no other text.`,
       return null
     }
 
-    console.log(`[${fileName}] Claude response:`, content.text.substring(0, 200))
+    console.log(`[${fileName}] Claude response (first 300 chars):`, content.text.substring(0, 300))
 
-    // Parse the JSON response
-    const jsonMatch = content.text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      console.error(`[${fileName}] No JSON found in response:`, content.text)
-      return null
+    // Parse JSON - handle both plain JSON and markdown code blocks
+    let jsonText = content.text
+    const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+    if (jsonMatch) {
+      jsonText = jsonMatch[1].trim()
+    } else {
+      // Try to extract plain JSON object
+      const plainJsonMatch = jsonText.match(/\{[\s\S]*\}/)
+      if (!plainJsonMatch) {
+        console.error(`[${fileName}] No JSON found in response:`, content.text)
+        return null
+      }
+      jsonText = plainJsonMatch[0]
     }
 
-    try {
-      const extracted = JSON.parse(jsonMatch[0]) as ExtractedTransaction
-      return extracted
-    } catch (parseError) {
-      console.error(`Failed to parse JSON for ${fileName}:`, jsonMatch[0], parseError)
-      return null
-    }
+    const extracted = JSON.parse(jsonText) as ExtractedTransaction
+    return extracted
   } catch (error) {
     console.error(`Error analyzing ${fileName}:`, error)
-    // Return a more helpful error message
     if (error instanceof Error) {
       console.error(`  Details: ${error.message}`)
     }
@@ -169,16 +185,29 @@ export async function POST(request: NextRequest) {
         const fileBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(fileBuffer)
 
-        // Analyze document
-        const extracted = await analyzeDocument(buffer, file.name)
-        if (!extracted) {
-          errors.push(`${file.name}: Could not extract data from document`)
+        // Validate file size
+        if (buffer.length === 0) {
+          errors.push(`${file.name}: File is empty`)
           continue
         }
 
+        // Analyze document
+        const extracted = await analyzeDocument(buffer, file.name)
+        if (!extracted) {
+          errors.push(`${file.name}: Could not read document (may be too dark, blurry, or unclear). Try taking a clearer photo.`)
+          continue
+        }
+
+        // Apply defaults for null fields (matching Snap Document behavior)
+        const date = extracted.date || new Date().toISOString().split('T')[0]
+        const amount = extracted.amount ?? 0
+        const description = extracted.description || extracted.vendor_name || 'Unknown'
+        const type = (extracted.type === 'INVOICE' || extracted.type === 'RECEIPT') ? extracted.type : 'RECEIPT'
+        const vendor_name = extracted.vendor_name || 'Unknown'
+
         // Find appropriate account for this user
         let accountId: number | null = null
-        if (extracted.type === 'INVOICE') {
+        if (type === 'INVOICE') {
           const arAccount = db.chart_of_accounts.find(a => a.name.includes('Accounts Receivable') && a.user_id === userId)
           accountId = arAccount?.id || db.chart_of_accounts.find(a => a.type === 'ASSET' && a.user_id === userId)?.id || null
         } else {
@@ -192,7 +221,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Calculate due date
-        const txnDate = new Date(extracted.date)
+        const txnDate = new Date(date)
         const dueDate = new Date(txnDate)
         dueDate.setDate(dueDate.getDate() + 30)
 
@@ -202,13 +231,13 @@ export async function POST(request: NextRequest) {
           id: transactionId,
           user_id: userId,
           account_id: accountId,
-          transaction_date: extracted.date,
-          amount: extracted.amount,
-          description: extracted.description,
-          type: extracted.type,
+          transaction_date: date,
+          amount: amount,
+          description: description,
+          type: type,
           reference_number: '',
-          gst_hst_rate: extracted.gst_hst_rate,
-          gst_hst_amount: extracted.gst_hst_amount,
+          gst_hst_rate: extracted.gst_hst_rate || 0,
+          gst_hst_amount: extracted.gst_hst_amount || 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           due_date: dueDate.toISOString().split('T')[0],
@@ -240,9 +269,9 @@ export async function POST(request: NextRequest) {
         results.push({
           fileName: file.name,
           transactionId,
-          amount: extracted.amount,
-          vendor: extracted.vendor_name,
-          type: extracted.type,
+          amount: amount,
+          vendor: vendor_name,
+          type: type,
         })
 
         analyzedCount++

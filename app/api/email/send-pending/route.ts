@@ -44,8 +44,16 @@ export async function POST(req: NextRequest) {
   const errors: string[] = []
 
   try {
+    // Verify supabase client is available
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Supabase client not initialized' },
+        { status: 500 }
+      )
+    }
+
     // Fetch all users with their subscription and email data
-    const { data: users, error: usersError } = await supabase
+    const { data: users, error: usersError } = await supabase!
       .from('users')
       .select('*')
       .eq('email_verified', true) // Only send to verified users
@@ -145,7 +153,7 @@ export async function POST(req: NextRequest) {
         if (sent) {
           // Track that we sent this email
           const updatedEmailsSent = [...emailsSent, nextEmailId]
-          await supabase
+          await supabase!
             .from('users')
             .update({
               emails_sent: updatedEmailsSent,
@@ -220,7 +228,7 @@ export async function GET(req: NextRequest) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const { data: sentToday, error } = await supabase
+    const { data: sentToday, error } = await supabase!
       .from('users')
       .select('id')
       .gte('last_email_sent_at', today.toISOString())

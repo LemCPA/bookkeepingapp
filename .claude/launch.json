@@ -2,11 +2,14 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
+      "name": "bookkeeping-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000,
-      "autoPort": true
+      "port": 3005,
+      "autoPort": false,
+      "env": {
+        "PORT": "3005"
+      }
     }
   ]
 }

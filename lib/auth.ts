@@ -28,7 +28,12 @@ export function getAccessToken(): string | null {
   }
 
   try {
-    return localStorage.getItem('accessToken')
+    const token = localStorage.getItem('accessToken')
+    // Filter out invalid stored values
+    if (token === 'null' || token === 'undefined' || token === '') {
+      return null
+    }
+    return token
   } catch (error) {
     console.error('Error getting access token:', error)
     return null
@@ -44,7 +49,12 @@ export function getRefreshToken(): string | null {
   }
 
   try {
-    return localStorage.getItem('refreshToken')
+    const token = localStorage.getItem('refreshToken')
+    // Filter out invalid stored values
+    if (token === 'null' || token === 'undefined' || token === '') {
+      return null
+    }
+    return token
   } catch (error) {
     console.error('Error getting refresh token:', error)
     return null
@@ -67,6 +77,11 @@ export function createAuthenticatedFetch(accessToken?: string | null, refreshTok
   let token = accessToken || getAccessToken()
   const refresh = refreshToken || getRefreshToken()
 
+  // Validate token is not a string representation of null/undefined
+  if (token === 'null' || token === 'undefined' || token === '') {
+    token = null
+  }
+
   return async (url: string, options: RequestInit = {}) => {
     const headers = {
       ...options.headers,
@@ -77,7 +92,7 @@ export function createAuthenticatedFetch(accessToken?: string | null, refreshTok
       headers['Content-Type'] = 'application/json'
     }
 
-    if (token) {
+    if (token && token !== 'null' && token !== 'undefined') {
       headers.Authorization = `Bearer ${token}`
     }
 

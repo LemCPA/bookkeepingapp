@@ -2,10 +2,10 @@ import path from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 
 interface DbData {
-  users: { id: number; email: string; password_hash: string; name: string; email_verified?: boolean; gst_registered?: boolean; gst_number?: string; default_gst_hst_rate?: number; qbo_access_token?: string; qbo_refresh_token?: string; qbo_realm_id?: string; qbo_connected_at?: string; plan?: string; stripe_customer_id?: string | null; created_at: string }[]
+  users: { id: number; email: string; password_hash: string; name: string; email_verified?: boolean; gst_registered?: boolean; gst_number?: string; default_gst_hst_rate?: number; qbo_access_token?: string; qbo_refresh_token?: string; qbo_realm_id?: string; qbo_connected_at?: string; plan?: string; stripe_customer_id?: string | null; business_name?: string; address_street?: string; city?: string; province?: string; postal_code?: string; phone?: string; business_email?: string; created_at: string }[]
   clients: { id: number; user_id: number; name: string; email?: string; address?: string; gst_registered: boolean; gst_number?: string; created_at: string }[]
-  chart_of_accounts: { id: number; code: string; name: string; type: string; user_id?: number }[]
-  transactions: { id: number; user_id: number; client_id?: number; account_id?: number; transaction_date: string; due_date?: string; amount: number; gst_hst_rate?: number; gst_hst_amount?: number; description: string; type: string; reference_number?: string; created_at: string; updated_at?: string; reconciliation_id?: number; reconciliation_status?: string; internal_notes?: { id: number; content: string; createdAt: string; updatedAt?: string; createdBy?: string }[]; tags?: string[]; audit_trail?: { field: string; oldValue: any; newValue: any; changedAt: string; changedBy?: string }[]; project_id?: number }[]
+  chart_of_accounts: { id: number; code: string; name: string; type: string; user_id?: number; is_vehicle_expense?: boolean }[]
+  transactions: { id: number; user_id: number; client_id?: number; account_id?: number; transaction_date: string; due_date?: string; amount: number; gst_hst_rate?: number; gst_hst_amount?: number; gst_hst_included?: boolean; description: string; type: string; reference_number?: string; created_at: string; updated_at?: string; reconciliation_id?: number; reconciliation_status?: string; internal_notes?: { id: number; content: string; createdAt: string; updatedAt?: string; createdBy?: string }[]; tags?: string[]; audit_trail?: { field: string; oldValue: any; newValue: any; changedAt: string; changedBy?: string }[]; project_id?: number; is_vehicle_expense?: boolean; business_use_percentage?: number }[]
   documents: { id: number; transaction_id: number; file_name: string; file_path: string; file_size: number; uploaded_at: string }[]
   bank_reconciliations: { id: number; user_id: number; account_id: number; statement_date: string; statement_opening_balance: number; statement_closing_balance: number; reconciliation_date: string; status: string; created_at: string; updated_at: string }[]
   reconciliation_items: { id: number; reconciliation_id: number; transaction_id: number; status: string; created_at: string }[]
@@ -15,6 +15,9 @@ interface DbData {
   billing_history: { id: number; user_id: number; stripe_invoice_id: string; amount: number; currency: string; status: string; period_start: string; period_end: string; paid_at?: string; created_at: string }[]
   payment_methods: { id: number; user_id: number; stripe_payment_method_id: string; last4: string; brand: string; exp_month: number; exp_year: number; is_default: boolean; created_at: string }[]
   stripe_webhooks: { id: number; stripe_event_id: string; event_type: string; processed: boolean; created_at: string }[]
+  vehicle_baseline: { id: number; user_id: number; odometer_reading: number; setup_date: string; notes?: string; created_at: string }[]
+  mileage_trips: { id: number; user_id: number; trip_date: string; kilometers: number; destination: string; purpose: string; business_percentage: number; notes?: string; created_at: string; updated_at?: string }[]
+  odometer_readings: { id: number; user_id: number; month: string; start_odometer: number; end_odometer: number; business_use_percentage: number; notes?: string; created_at: string; updated_at: string }[]
   nextUserId: number
   nextClientId: number
   nextAccountId: number
@@ -28,6 +31,9 @@ interface DbData {
   nextBillingHistoryId: number
   nextPaymentMethodId: number
   nextStripeWebhookId: number
+  nextVehicleBaselineId: number
+  nextMileageTripId: number
+  nextOdometerReadingId: number
 }
 
 const dbPath = path.join(process.cwd(), '.data', 'bookkeeping.json')
@@ -48,7 +54,7 @@ export function getDb(): DbData {
           {
             id: 1,
             email: 'demo@bookkeeping.ca',
-            password_hash: 'demo123',
+            password_hash: '$2a$10$RF7LHKh03cOdYbEhCyOOVuY56ix696nonxD1S5SsPi4rUbnOF0BAa', // bcrypt hash of demo123
             name: 'Demo User',
             gst_registered: true,
             gst_number: '123456789RT0001',
@@ -108,6 +114,24 @@ export function getDb(): DbData {
       if (!db.nextStripeWebhookId) {
         db.nextStripeWebhookId = 1
       }
+      if (!db.vehicle_baseline) {
+        db.vehicle_baseline = []
+      }
+      if (!db.nextVehicleBaselineId) {
+        db.nextVehicleBaselineId = 1
+      }
+      if (!db.mileage_trips) {
+        db.mileage_trips = []
+      }
+      if (!db.nextMileageTripId) {
+        db.nextMileageTripId = 1
+      }
+      if (!db.odometer_readings) {
+        db.odometer_readings = []
+      }
+      if (!db.nextOdometerReadingId) {
+        db.nextOdometerReadingId = 1
+      }
       if (!db.clients) {
         db.clients = []
       }
@@ -133,7 +157,7 @@ function initializeDb(): DbData {
       {
         id: 1,
         email: 'demo@bookkeeping.ca',
-        password_hash: 'demo123', // In production, hash with bcrypt
+        password_hash: '$2a$10$RF7LHKh03cOdYbEhCyOOVuY56ix696nonxD1S5SsPi4rUbnOF0BAa', // bcrypt hash of demo123
         name: 'Demo User',
         gst_registered: true,
         gst_number: '123456789RT0001',
@@ -171,8 +195,17 @@ function initializeDb(): DbData {
       { id: 19, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE', user_id: 1 },
       { id: 20, code: '5200', name: 'Travel', type: 'EXPENSE', user_id: 1 },
       { id: 21, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE', user_id: 1 },
-      { id: 22, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE', user_id: 1 },
-      { id: 23, code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE', user_id: 1 },
+      // Motor Vehicle Expenses (T2125 - Line 9270)
+      { id: 22, code: '5220', name: 'Motor Vehicle Expenses - Fuel and Oil', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
+      { id: 23, code: '5221', name: 'Motor Vehicle Expenses - Interest (Loan)', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
+      { id: 24, code: '5222', name: 'Motor Vehicle Expenses - Insurance', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
+      { id: 25, code: '5223', name: 'Motor Vehicle Expenses - Licence and Registration', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
+      { id: 26, code: '5224', name: 'Motor Vehicle Expenses - Maintenance and Repairs', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
+      { id: 27, code: '5225', name: 'Motor Vehicle Expenses - Leasing', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
+      { id: 28, code: '5226', name: 'Motor Vehicle Expenses - Electricity (Zero-Emission Vehicles)', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
+      { id: 29, code: '5227', name: 'Motor Vehicle Expenses - Other Expenses', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
+      { id: 30, code: '5228', name: 'Motor Vehicle Expenses - Business Parking Fees', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
+      { id: 31, code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE', user_id: 1 },
     ],
     transactions: [],
     documents: [],
@@ -236,9 +269,12 @@ function initializeDb(): DbData {
     billing_history: [],
     payment_methods: [],
     stripe_webhooks: [],
+    vehicle_baseline: [],
+    mileage_trips: [],
+    odometer_readings: [],
     nextUserId: 2,
     nextClientId: 3,
-    nextAccountId: 24,
+    nextAccountId: 32,
     nextTransactionId: 1,
     nextDocumentId: 1,
     nextBankReconciliationId: 1,
@@ -249,6 +285,9 @@ function initializeDb(): DbData {
     nextBillingHistoryId: 1,
     nextPaymentMethodId: 1,
     nextStripeWebhookId: 1,
+    nextVehicleBaselineId: 1,
+    nextMileageTripId: 1,
+    nextOdometerReadingId: 1,
   }
   saveDb(db)
   return db
@@ -507,11 +546,16 @@ export function createTransaction(
   type: string,
   gstHstRate: number = 0,
   gstHstAmount: number = 0,
-  referenceNumber?: string
+  referenceNumber?: string,
+  isVehicleExpense?: boolean,
+  businessUsePercentage?: number,
+  sentDate?: string,
+  reconciliationStatus?: string,
+  gstHstIncluded?: boolean
 ) {
   const db = getDb()
   const id = db.nextTransactionId++
-  db.transactions.push({
+  const transaction: any = {
     id,
     user_id: userId,
     account_id: accountId,
@@ -519,12 +563,25 @@ export function createTransaction(
     amount,
     gst_hst_rate: gstHstRate,
     gst_hst_amount: gstHstAmount,
+    gst_hst_included: gstHstIncluded || false,
     description,
     type,
     reference_number: referenceNumber,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  })
+    is_vehicle_expense: isVehicleExpense || false,
+    business_use_percentage: businessUsePercentage || 100,
+  }
+
+  // Add optional invoice fields
+  if (sentDate) {
+    transaction.sent_date = sentDate
+  }
+  if (reconciliationStatus) {
+    transaction.reconciliation_status = reconciliationStatus
+  }
+
+  db.transactions.push(transaction)
   saveDb(db)
   return { lastID: id }
 }
@@ -537,7 +594,8 @@ export function updateTransaction(
   description?: string,
   gstHstRate?: number,
   gstHstAmount?: number,
-  referenceNumber?: string
+  referenceNumber?: string,
+  gstHstIncluded?: boolean
 ) {
   const db = getDb()
   const transaction = db.transactions.find(t => t.id === id)
@@ -549,6 +607,7 @@ export function updateTransaction(
     if (gstHstRate !== undefined) transaction.gst_hst_rate = gstHstRate
     if (gstHstAmount !== undefined) transaction.gst_hst_amount = gstHstAmount
     if (referenceNumber !== undefined) transaction.reference_number = referenceNumber
+    if (gstHstIncluded !== undefined) transaction.gst_hst_included = gstHstIncluded
     transaction.updated_at = new Date().toISOString()
     saveDb(db)
     return true
@@ -720,21 +779,39 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
   const db = getDb()
 
   // Generate list of months between start and end
-  const months: string[] = []
-  const [startYear, startM] = startMonth.split('-').map(Number)
-  const [endYear, endM] = endMonth.split('-').map(Number)
+  // Parse dates explicitly and validate format
+  const startParts = startMonth.split('-')
+  const endParts = endMonth.split('-')
 
-  let year = startYear
-  let month = startM
-  while (year < endYear || (year === endYear && month <= endM)) {
-    const monthStr = `${year}-${String(month).padStart(2, '0')}`
-    months.push(monthStr)
-    month++
-    if (month > 12) {
-      month = 1
-      year++
+  if (startParts.length !== 2 || endParts.length !== 2) {
+    throw new Error(`Invalid month format. Expected YYYY-MM, got ${startMonth} and ${endMonth}`)
+  }
+
+  const startYear = parseInt(startParts[0], 10)
+  const startM = parseInt(startParts[1], 10)
+  const endYear = parseInt(endParts[0], 10)
+  const endM = parseInt(endParts[1], 10)
+
+  if (isNaN(startYear) || isNaN(startM) || isNaN(endYear) || isNaN(endM)) {
+    throw new Error(`Invalid month values. startMonth=${startMonth}, endMonth=${endMonth}`)
+  }
+
+  console.log('Income statement: Parsing dates - startMonth:', startMonth, '[', startYear, String(startM).padStart(2, '0'), '], endMonth:', endMonth, '[', endYear, String(endM).padStart(2, '0'), ']')
+
+  // Generate months array
+  const months: string[] = []
+
+  for (let y = startYear; y <= endYear; y++) {
+    const monthStart = y === startYear ? startM : 1
+    const monthEnd = y === endYear ? endM : 12
+
+    for (let m = monthStart; m <= monthEnd; m++) {
+      const monthStr = `${y}-${String(m).padStart(2, '0')}`
+      months.push(monthStr)
     }
   }
+
+  console.log('Income statement: Generated months array:', months)
 
   // Get all income and expense accounts for this user
   const accounts = db.chart_of_accounts
@@ -750,9 +827,9 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
     })
   })
 
-  // Calculate balances
+  // Calculate balances (exclude vehicle expenses from regular accounts, they'll be calculated separately)
   db.transactions
-    .filter(t => t.user_id === userId)
+    .filter(t => t.user_id === userId && !t.is_vehicle_expense)
     .forEach(t => {
       const account = db.chart_of_accounts.find(a => a.id === t.account_id)
       const tMonth = t.transaction_date.substring(0, 7)
@@ -761,7 +838,24 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
       }
     })
 
-  // Calculate totals per month
+  // Calculate vehicle expenses separately (deductible amount only)
+  const vehicleExpensesByMonth: { [month: string]: number } = {}
+  months.forEach(m => {
+    vehicleExpensesByMonth[m] = 0
+  })
+
+  db.transactions
+    .filter(t => t.user_id === userId && t.is_vehicle_expense)
+    .forEach(t => {
+      const tMonth = t.transaction_date.substring(0, 7)
+      if (months.includes(tMonth)) {
+        const businessUsePercentage = t.business_use_percentage || 100
+        const deductibleAmount = t.amount * (businessUsePercentage / 100)
+        vehicleExpensesByMonth[tMonth] = (vehicleExpensesByMonth[tMonth] || 0) + deductibleAmount
+      }
+    })
+
+  // Calculate totals per month (including vehicle expenses)
   const monthlyTotals: { [month: string]: { income: number; expenses: number; netIncome: number } } = {}
   months.forEach(m => {
     let income = 0
@@ -771,6 +865,8 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
       if (a.type === 'INCOME') income += balance
       if (a.type === 'EXPENSE') expenses += balance
     })
+    // Add motor vehicle expenses to total expenses
+    expenses += vehicleExpensesByMonth[m] || 0
     monthlyTotals[m] = {
       income,
       expenses,
@@ -787,28 +883,163 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
   // Calculate grand totals
   let totalIncome = 0
   let totalExpenses = 0
+  let totalVehicleExpenses = 0
+
   accounts.forEach(a => {
     const total = accountTotals[a.id] || 0
     if (a.type === 'INCOME') totalIncome += total
     if (a.type === 'EXPENSE') totalExpenses += total
   })
 
-  return {
-    months,
-    accounts: accounts.map(a => ({
+  // Add motor vehicle expenses to total
+  months.forEach(m => {
+    totalVehicleExpenses += vehicleExpensesByMonth[m] || 0
+  })
+  totalExpenses += totalVehicleExpenses
+
+  // Build accounts list with motor vehicle expenses as a virtual account
+  // Exclude all motor vehicle accounts (5220-5229) from the display and show only the total
+  const accountsList = accounts
+    .filter(a => {
+      // Exclude all Motor Vehicle Expense accounts (codes 5220-5229)
+      // We'll show only the total in a single line instead
+      if (a.code && a.code >= '5220' && a.code <= '5229') {
+        return false
+      }
+      return true
+    })
+    .map(a => ({
       id: a.id,
       type: a.type,
       name: a.name,
       code: a.code,
       monthlyBalances: accountData[a.id],
       total: accountTotals[a.id] || 0,
-    })),
+    }))
+
+  // Add motor vehicle expenses as a single line item showing the total
+  if (totalVehicleExpenses > 0) {
+    accountsList.push({
+      id: 99999, // Virtual ID for motor vehicle expenses total
+      type: 'EXPENSE',
+      name: 'Total Vehicle Expenses',
+      code: 'MOTOR',
+      monthlyBalances: vehicleExpensesByMonth,
+      total: totalVehicleExpenses,
+    })
+  }
+
+  console.log('Income statement: Returning months array:', months)
+  return {
+    months,
+    accounts: accountsList,
     monthlyTotals,
     grandTotals: {
       income: totalIncome,
       expenses: totalExpenses,
       netIncome: totalIncome - totalExpenses,
     },
+  }
+}
+
+export function getExpenseByCategoryData(userId: number, startMonth: string, endMonth: string, selectedCategories: number[]) {
+  const db = getDb()
+
+  // Parse start and end months
+  const startParts = startMonth.split('-')
+  const endParts = endMonth.split('-')
+
+  if (startParts.length !== 2 || endParts.length !== 2) {
+    throw new Error(`Invalid month format. Expected YYYY-MM, got ${startMonth} and ${endMonth}`)
+  }
+
+  const startYear = parseInt(startParts[0], 10)
+  const startM = parseInt(startParts[1], 10)
+  const endYear = parseInt(endParts[0], 10)
+  const endM = parseInt(endParts[1], 10)
+
+  if (isNaN(startYear) || isNaN(startM) || isNaN(endYear) || isNaN(endM)) {
+    throw new Error(`Invalid month values. startMonth=${startMonth}, endMonth=${endMonth}`)
+  }
+
+  // Generate months array
+  const months: string[] = []
+  for (let y = startYear; y <= endYear; y++) {
+    const monthStart = y === startYear ? startM : 1
+    const monthEnd = y === endYear ? endM : 12
+
+    for (let m = monthStart; m <= monthEnd; m++) {
+      const monthStr = `${y}-${String(m).padStart(2, '0')}`
+      months.push(monthStr)
+    }
+  }
+
+  // Get all expense accounts for this user
+  const allExpenseAccounts = db.chart_of_accounts
+    .filter(a => a.user_id === userId && a.type === 'EXPENSE')
+    .sort((a, b) => a.code.localeCompare(b.code))
+
+  // Use selected categories, or all if none selected
+  const categoriesToShow = selectedCategories.length > 0
+    ? selectedCategories
+    : allExpenseAccounts.map(a => a.id)
+
+  const accounts = allExpenseAccounts.filter(a => categoriesToShow.includes(a.id))
+
+  // Initialize data structure
+  const categoryData: { [accountId: number]: { [month: string]: number } } = {}
+  accounts.forEach(a => {
+    categoryData[a.id] = {}
+    months.forEach(m => {
+      categoryData[a.id][m] = 0
+    })
+  })
+
+  // Calculate balances from transactions
+  db.transactions
+    .filter(t => t.user_id === userId && !t.is_vehicle_expense)
+    .forEach(t => {
+      const account = db.chart_of_accounts.find(a => a.id === t.account_id)
+      const tMonth = t.transaction_date.substring(0, 7)
+      if (account && months.includes(tMonth) && categoryData[account.id]) {
+        categoryData[account.id][tMonth] = (categoryData[account.id][tMonth] || 0) + t.amount
+      }
+    })
+
+  // Calculate monthly totals per month
+  const monthlyTotals: { [month: string]: number } = {}
+  months.forEach(m => {
+    let total = 0
+    accounts.forEach(a => {
+      total += categoryData[a.id][m] || 0
+    })
+    monthlyTotals[m] = total
+  })
+
+  // Calculate totals per account
+  const categoryTotals: { [accountId: number]: number } = {}
+  accounts.forEach(a => {
+    categoryTotals[a.id] = months.reduce((sum, m) => sum + (categoryData[a.id][m] || 0), 0)
+  })
+
+  // Calculate grand total
+  const grandTotal = months.reduce((sum, m) => sum + (monthlyTotals[m] || 0), 0)
+
+  // Build categories list
+  const categoriesList = accounts.map(a => ({
+    id: a.id,
+    type: a.type,
+    name: a.name,
+    code: a.code,
+    monthlyBalances: categoryData[a.id],
+    total: categoryTotals[a.id] || 0,
+  }))
+
+  return {
+    months,
+    categories: categoriesList,
+    monthlyTotals,
+    grandTotal,
   }
 }
 
@@ -872,7 +1103,7 @@ export function getBankReconciliation(id: number) {
     }
   })
 
-  const variance = recon.statement_closing_balance - matchedAmount
+  const variance = recon.statement_closing_balance - (recon.statement_opening_balance + matchedAmount)
   const unmatched = items.filter(i => i.status === 'UNMATCHED')
 
   return {
@@ -1881,4 +2112,235 @@ export function markWebhookProcessed(id: number) {
 export function getUnprocessedWebhooks() {
   // No unprocessed webhooks - Stripe handles them directly
   return []
+}
+
+// Vehicle Baseline queries (Mileage tracking for CRA deductions)
+export function getVehicleBaseline(userId: number) {
+  const db = getDb()
+  return db.vehicle_baseline.find(v => v.user_id === userId)
+}
+
+export function setVehicleBaseline(
+  userId: number,
+  odometerReading: number,
+  notes?: string,
+  setupDate?: string
+) {
+  const db = getDb()
+  const existing = db.vehicle_baseline.find(v => v.user_id === userId)
+  const dateToUse = setupDate || new Date().toISOString().split('T')[0]
+
+  if (existing) {
+    // Update existing baseline
+    existing.odometer_reading = odometerReading
+    if (notes !== undefined) existing.notes = notes
+    existing.setup_date = dateToUse
+  } else {
+    // Create new baseline
+    const id = db.nextVehicleBaselineId++
+    db.vehicle_baseline.push({
+      id,
+      user_id: userId,
+      odometer_reading: odometerReading,
+      setup_date: dateToUse,
+      notes,
+      created_at: new Date().toISOString(),
+    })
+  }
+
+  saveDb(db)
+  return true
+}
+
+// Mileage Trip queries (Per-trip tracking)
+export function getMileageTrips(userId: number, year?: number) {
+  const db = getDb()
+  let trips = db.mileage_trips.filter(t => t.user_id === userId)
+
+  if (year) {
+    trips = trips.filter(t => t.trip_date.startsWith(year.toString()))
+  }
+
+  return trips.sort((a, b) => new Date(b.trip_date).getTime() - new Date(a.trip_date).getTime())
+}
+
+export function getMileageTrip(id: number) {
+  const db = getDb()
+  console.log('[getMileageTrip] Called with id:', id)
+  console.log('[getMileageTrip] mileage_trips array exists:', !!db.mileage_trips)
+  console.log('[getMileageTrip] mileage_trips length:', db.mileage_trips?.length)
+  if (db.mileage_trips && db.mileage_trips.length > 0) {
+    console.log('[getMileageTrip] First trip:', JSON.stringify(db.mileage_trips[0]))
+  }
+  const result = db.mileage_trips.find(t => {
+    console.log('[getMileageTrip] Checking trip:', { id: t.id, comparing: id, match: t.id === id })
+    return t.id === id
+  })
+  console.log('[getMileageTrip] Result:', result ? 'FOUND' : 'NOT FOUND')
+  return result
+}
+
+export function createMileageTrip(
+  userId: number,
+  tripDate: string,
+  kilometers: number,
+  destination: string,
+  purpose: string,
+  businessPercentage?: number,
+  notes?: string
+) {
+  const db = getDb()
+  const id = db.nextMileageTripId++
+
+  // Auto-set business percentage based on purpose if not provided
+  let finalBusinessPercentage = businessPercentage ?? 100
+  if (!businessPercentage) {
+    if (purpose === 'personal') finalBusinessPercentage = 0
+    else if (purpose === 'mixed') finalBusinessPercentage = 50
+    // else default to 100 for 'business'
+  }
+
+  db.mileage_trips.push({
+    id,
+    user_id: userId,
+    trip_date: tripDate,
+    kilometers,
+    destination,
+    purpose,
+    business_percentage: finalBusinessPercentage,
+    notes,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  })
+
+  saveDb(db)
+  return { lastID: id }
+}
+
+export function updateMileageTrip(
+  id: number,
+  tripDate?: string,
+  kilometers?: number,
+  destination?: string,
+  purpose?: string,
+  businessPercentage?: number,
+  notes?: string
+) {
+  const db = getDb()
+  const trip = db.mileage_trips.find(t => t.id === id)
+
+  if (trip) {
+    if (tripDate !== undefined) trip.trip_date = tripDate
+    if (kilometers !== undefined) trip.kilometers = kilometers
+    if (destination !== undefined) trip.destination = destination
+    if (purpose !== undefined) trip.purpose = purpose
+    if (businessPercentage !== undefined) trip.business_percentage = businessPercentage
+    if (notes !== undefined) trip.notes = notes
+    trip.updated_at = new Date().toISOString()
+
+    saveDb(db)
+    return true
+  }
+
+  return false
+}
+
+export function deleteMileageTrip(id: number) {
+  const db = getDb()
+  const initialLength = db.mileage_trips.length
+  db.mileage_trips = db.mileage_trips.filter(t => t.id !== id)
+
+  if (db.mileage_trips.length < initialLength) {
+    saveDb(db)
+    return true
+  }
+
+  return false
+}
+
+// Odometer readings functions
+export function getOdometerReadings(userId: number, year?: number) {
+  const db = getDb()
+  let readings = db.odometer_readings.filter(r => r.user_id === userId)
+
+  if (year) {
+    readings = readings.filter(r => {
+      const readingYear = parseInt(r.month.split('-')[0])
+      return readingYear === year
+    })
+  }
+
+  return readings.sort((a, b) => b.month.localeCompare(a.month))
+}
+
+export function createOdometerReading(
+  userId: number,
+  month: string,
+  startOdometer: number,
+  endOdometer: number,
+  businessUsePercentage: number,
+  notes?: string
+) {
+  const db = getDb()
+  const id = db.nextOdometerReadingId++
+  const now = new Date().toISOString()
+
+  db.odometer_readings.push({
+    id,
+    user_id: userId,
+    month,
+    start_odometer: startOdometer,
+    end_odometer: endOdometer,
+    business_use_percentage: businessUsePercentage,
+    notes,
+    created_at: now,
+    updated_at: now,
+  })
+
+  saveDb(db)
+  return { lastID: id }
+}
+
+export function getOdometerReading(readingId: number) {
+  const db = getDb()
+  return db.odometer_readings.find(r => r.id === readingId)
+}
+
+export function updateOdometerReading(
+  readingId: number,
+  month?: string,
+  startOdometer?: number,
+  endOdometer?: number,
+  businessUsePercentage?: number,
+  notes?: string
+) {
+  const db = getDb()
+  const reading = db.odometer_readings.find(r => r.id === readingId)
+
+  if (reading) {
+    if (month !== undefined) reading.month = month
+    if (startOdometer !== undefined) reading.start_odometer = startOdometer
+    if (endOdometer !== undefined) reading.end_odometer = endOdometer
+    if (businessUsePercentage !== undefined) reading.business_use_percentage = businessUsePercentage
+    if (notes !== undefined) reading.notes = notes
+    reading.updated_at = new Date().toISOString()
+
+    saveDb(db)
+    return true
+  }
+
+  return false
+}
+
+export function deleteOdometerReading(readingId: number) {
+  const db = getDb()
+  const initialLength = db.odometer_readings.length
+  db.odometer_readings = db.odometer_readings.filter(r => r.id !== readingId)
+
+  if (db.odometer_readings.length < initialLength) {
+    saveDb(db)
+    return true
+  }
+
+  return false
 }

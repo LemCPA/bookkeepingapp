@@ -8,7 +8,6 @@ import { createAuthenticatedFetch, getStoredUser, getAccessToken } from '@/lib/a
 
 interface Transaction {
   id: number
-  client_name: string
   account_name: string
   transaction_date: string
   amount: number
@@ -66,9 +65,6 @@ export default function TransactionsContent() {
       if (filters.types && filters.types.length > 0) {
         filters.types.forEach(type => params.append('type', type))
       }
-      if (filters.clientIds && filters.clientIds.length > 0) {
-        filters.clientIds.forEach(id => params.append('clientIds', id.toString()))
-      }
 
       const queryString = params.toString()
       const url = `/api/transactions${queryString ? '?' + queryString : ''}`
@@ -107,9 +103,6 @@ export default function TransactionsContent() {
       if (filters.search) params.append('search', filters.search)
       if (filters.types && filters.types.length > 0) {
         filters.types.forEach(type => params.append('type', type))
-      }
-      if (filters.clientIds && filters.clientIds.length > 0) {
-        filters.clientIds.forEach(id => params.append('clientIds', id.toString()))
       }
 
       const queryString = params.toString()
@@ -156,19 +149,25 @@ export default function TransactionsContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-6 mt-4">
         <h1 className="text-3xl font-bold">Transactions</h1>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
+          <a
+            href="/receipts"
+            className="bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 flex items-center gap-1 text-sm"
+          >
+            📸 Snap Document
+          </a>
           <button
             onClick={handleExport}
             disabled={loading || transactions.length === 0}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-2"
+            className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-1 text-sm"
           >
             📥 Export CSV
           </button>
           <a
             href="/transactions/new"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-sm"
           >
             New Transaction
           </a>

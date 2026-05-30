@@ -24,10 +24,49 @@ export default function NewRecurringTransactionPage() {
   useEffect(() => {
     const authenticatedFetch = createAuthenticatedFetch()
 
-    authenticatedFetch('/api/chart-of-accounts').then(r => {
-      if (!r.ok) throw new Error('Failed to fetch accounts')
-      return r.json()
-    }).then(data => setAccounts(Array.isArray(data) ? data : [])).catch(() => setAccounts([])).finally(() => setLoading(false))
+    Promise.all([
+      authenticatedFetch('/api/chart-of-accounts'),
+      authenticatedFetch('/api/user/settings'),
+    ]).then(async ([accountsRes, settingsRes]) => {
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json()
+        setAccounts(Array.isArray(accountsData) ? accountsData : [])
+      }
+
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json()
+        const defaultRate = settingsData.default_gst_hst_rate || 0
+
+        // Map default rate back to GST/PST components
+        // If rate <= 5, it's just GST. Otherwise GST=5 and PST is the remainder
+        const gstComponent = defaultRate <= 5 ? defaultRate : 5
+        const pstComponent = defaultRate > 5 ? defaultRate - 5 : 0
+
+        // PST options mapping
+        const pstOptions: { [key: number]: string } = {
+          0: '0-ab',
+          6: '6-sk',
+          7: '7-bc',
+          8: '8-on',
+          10: '10-pe',
+          9.975: '9.975-qc',
+        }
+
+        // Find the matching PST option or set to custom
+        let pstOption = pstOptions[pstComponent] || 'custom'
+        let customPstRate = ''
+        if (pstComponent > 0 && !pstOptions[pstComponent]) {
+          customPstRate = pstComponent.toString()
+        }
+
+        setFormData(prev => ({
+          ...prev,
+          gstRate: gstComponent.toString(),
+          pstRate: pstOption,
+          customPstRate: customPstRate,
+        }))
+      }
+    }).catch(() => setAccounts([])).finally(() => setLoading(false))
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -156,11 +195,13 @@ export default function NewRecurringTransactionPage() {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Select an account</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.code} - {account.name} ({account.type})
-              </option>
-            ))}
+            {accounts
+              .filter(account => account.type === 'EXPENSE' || account.type === 'INCOME')
+              .map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
           </select>
         </div>
 

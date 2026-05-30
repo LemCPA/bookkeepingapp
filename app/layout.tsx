@@ -19,19 +19,18 @@ export default function RootLayout({
       <body className="bg-gray-50 flex flex-col min-h-screen">
         <ChatProvider>
           <Header />
-          <div className="flex flex-1 gap-6">
-            <main className="flex-1 py-8 px-4">
+          <div className="flex-1 pt-20 sm:pt-24 w-full overflow-hidden">
+            <main className="flex-1 py-8 px-4 w-full">
               <div className="max-w-7xl mx-auto">
                 {children}
               </div>
             </main>
-            <div className="flex-shrink-0">
-              <ChatAssistant />
-            </div>
           </div>
           <footer className="bg-white border-t border-gray-200 py-6 text-center text-base text-gray-600 font-medium">
             Made in Canada by a Canadian firm 🍁
           </footer>
+          {/* Chat Widget - Floating (Fixed Position) */}
+          <ChatAssistant />
         </ChatProvider>
       </body>
     </html>

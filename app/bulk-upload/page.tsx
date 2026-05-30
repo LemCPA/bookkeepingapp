@@ -118,7 +118,8 @@ export default function BulkUploadPage() {
         .filter((t) => t.errors.length === 0)
         .map(({ rowNumber, errors, ...rest }) => rest)
 
-      const response = await fetch('/api/bulk-import', {
+      const authenticatedFetch = createAuthenticatedFetch()
+      const response = await authenticatedFetch('/api/bulk-import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ transactions: cleanTransactions }),
@@ -143,7 +144,8 @@ export default function BulkUploadPage() {
 
   const handleDownloadPDF = async () => {
     try {
-      const response = await fetch('/api/bulk-import/export-pdf', {
+      const authenticatedFetch = createAuthenticatedFetch()
+      const response = await authenticatedFetch('/api/bulk-import/export-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -173,7 +175,7 @@ export default function BulkUploadPage() {
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     setDocumentFiles(files)
-    setErrorMessage(`${files.length} file(s) selected for analysis`)
+    setErrorMessage('')  // Clear any previous errors
   }
 
   const handleBulkDocumentAnalysis = async () => {
@@ -203,18 +205,21 @@ export default function BulkUploadPage() {
       const result = await response.json()
 
       if (result.errors && result.errors.length > 0) {
-        setErrorMessage(`Analyzed ${result.analyzedCount} documents. Errors: ${result.errors.join('; ')}`)
+        if (result.analyzedCount === 0) {
+          // All documents failed
+          setImportStatus('error')
+          setErrorMessage(`Failed to analyze ${result.errors.length} document(s): ${result.errors.join('; ')}`)
+        } else {
+          // Some succeeded, some failed
+          setImportStatus('success')
+          setErrorMessage(`✓ Analyzed ${result.analyzedCount} document(s). Issues with ${result.errors.length}: ${result.errors.join('; ')}`)
+        }
       } else {
         setErrorMessage('')
+        setImportStatus('success')
       }
 
       setSuccessCount(result.analyzedCount)
-      if (result.analyzedCount > 0) {
-        setImportStatus('success')
-      } else {
-        setImportStatus('error')
-        setErrorMessage('No documents could be analyzed. Please check file formats (PDF, JPG, PNG supported).')
-      }
 
       setDocumentFiles([])
       if (docInputRef.current) docInputRef.current.value = ''
@@ -270,7 +275,7 @@ export default function BulkUploadPage() {
               }`}
             >
               <div className="text-3xl mb-2">📷</div>
-              <h3 className="font-bold text-lg">Scan Receipts</h3>
+              <h3 className="font-bold text-lg">Scan Documents</h3>
               <p className="text-sm text-gray-600 mt-1">Scan receipts and invoices (PDF, JPG, PNG)</p>
             </button>
           </div>
@@ -533,14 +538,114 @@ export default function BulkUploadPage() {
         )}
 
         {importStatus === 'success' && (
-          <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg text-center">
-            <div className="text-4xl mb-2">✓</div>
-            <p className="font-bold text-green-900 text-lg mb-2">
-              {uploadMode === 'csv' ? 'Transactions Imported Successfully!' : 'Documents Analyzed Successfully!'}
-            </p>
-            <p className="text-green-800 mb-6">
-              {successCount} {uploadMode === 'csv' ? 'transaction(s) imported' : 'document(s) analyzed'}
-            </p>
+          <div className="mt-8 space-y-6">
+            {/* Success Header */}
+            <div className="p-6 bg-green-50 border border-green-200 rounded-lg text-center">
+              <div className="text-4xl mb-2">✓</div>
+              <p className="font-bold text-green-900 text-lg mb-2">
+                {uploadMode === 'csv' ? 'Transactions Imported Successfully!' : 'Documents Analyzed Successfully!'}
+              </p>
+              <p className="text-green-800">
+                {successCount} {uploadMode === 'csv' ? 'transaction(s) imported' : 'document(s) analyzed'}
+              </p>
+            </div>
+
+            {/* Transaction Details Table */}
+            {lastImportedTransactions.length > 0 && (
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <div className="p-4 bg-gray-50 border-b">
+                  <h3 className="font-bold text-gray-900">Imported Transactions - Review & Edit</h3>
+                  <p className="text-sm text-gray-600 mt-1">You can edit any fields below before finalizing</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 border-b">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Date</th>
+                        <th className="px-4 py-2 text-left">Vendor/Description</th>
+                        <th className="px-4 py-2 text-right">Amount</th>
+                        <th className="px-4 py-2 text-left">Type</th>
+                        <th className="px-4 py-2 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lastImportedTransactions.map((tx, idx) => (
+                        <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-4 py-3 border-b">
+                            <input
+                              type="date"
+                              value={tx.transaction_date || ''}
+                              onChange={(e) => {
+                                const updated = [...lastImportedTransactions]
+                                updated[idx].transaction_date = e.target.value
+                                setLastImportedTransactions(updated)
+                              }}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                            />
+                          </td>
+                          <td className="px-4 py-3 border-b">
+                            <input
+                              type="text"
+                              value={tx.description || ''}
+                              onChange={(e) => {
+                                const updated = [...lastImportedTransactions]
+                                updated[idx].description = e.target.value
+                                setLastImportedTransactions(updated)
+                              }}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                              placeholder="Description"
+                            />
+                          </td>
+                          <td className="px-4 py-3 border-b text-right">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={tx.amount || 0}
+                              onChange={(e) => {
+                                const updated = [...lastImportedTransactions]
+                                updated[idx].amount = parseFloat(e.target.value) || 0
+                                setLastImportedTransactions(updated)
+                              }}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-xs text-right"
+                            />
+                          </td>
+                          <td className="px-4 py-3 border-b">
+                            <select
+                              value={tx.type || 'RECEIPT'}
+                              onChange={(e) => {
+                                const updated = [...lastImportedTransactions]
+                                updated[idx].type = e.target.value as 'INVOICE' | 'RECEIPT' | 'ADJUSTMENT'
+                                setLastImportedTransactions(updated)
+                              }}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                            >
+                              <option value="RECEIPT">Receipt</option>
+                              <option value="INVOICE">Invoice</option>
+                              <option value="ADJUSTMENT">Adjustment</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 border-b text-center">
+                            <button
+                              onClick={() => {
+                                setLastImportedTransactions(lastImportedTransactions.filter((_, i) => i !== idx))
+                              }}
+                              className="text-red-600 hover:text-red-800 font-semibold text-xs"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="p-3 bg-gray-50 border-t text-sm text-gray-600 text-right">
+                  Total: <span className="font-bold text-gray-900">${lastImportedTransactions.reduce((sum, tx) => sum + (tx.amount || 0), 0).toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
             <div className="flex gap-4 justify-center flex-wrap">
               <button
                 onClick={handleDownloadPDF}
