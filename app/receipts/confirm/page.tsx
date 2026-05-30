@@ -46,6 +46,23 @@ export default function ConfirmReceiptPage() {
     businessUsePercentage: '100',
   })
 
+  // Fallback expense accounts (for receipts) - define at module level for consistency
+  const fallbackAccounts: ChartOfAccount[] = [
+    { id: 5100, code: '5100', name: 'Advertising', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5110, code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5120, code: '5120', name: 'Insurance', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5130, code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5140, code: '5140', name: 'Business Taxes and Licenses', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5150, code: '5150', name: 'Office Expenses', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5160, code: '5160', name: 'Supplies', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5170, code: '5170', name: 'Legal and Accounting Fees', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5180, code: '5180', name: 'Rent', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5190, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5200, code: '5200', name: 'Travel', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5210, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE', is_vehicle_expense: false },
+    { id: 5220, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE', is_vehicle_expense: true },
+  ]
+
   useEffect(() => {
     const data = sessionStorage.getItem('extractedReceiptData')
     if (!data) {
@@ -93,50 +110,11 @@ export default function ConfirmReceiptPage() {
       businessUsePercentage: '100',
     })
 
-    // Fallback expense accounts (for receipts)
-    const fallbackAccounts: ChartOfAccount[] = [
-      { id: 5100, code: '5100', name: 'Advertising', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5110, code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5120, code: '5120', name: 'Insurance', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5130, code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5140, code: '5140', name: 'Business Taxes and Licenses', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5150, code: '5150', name: 'Office Expenses', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5160, code: '5160', name: 'Supplies', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5170, code: '5170', name: 'Legal and Accounting Fees', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5180, code: '5180', name: 'Rent', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5190, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5200, code: '5200', name: 'Travel', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5210, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE', is_vehicle_expense: false },
-      { id: 5220, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE', is_vehicle_expense: true },
-    ]
-
-    // Show fallback accounts immediately while loading
+    // Always use fallback accounts - they're the T2125 standard chart
+    console.log('Setting accounts to fallback T2125 accounts')
     setAccounts(fallbackAccounts)
+    setLoading(false)
 
-    const authenticatedFetch = createAuthenticatedFetch()
-    authenticatedFetch('/api/chart-of-accounts')
-      .then(r => {
-        if (!r.ok) {
-          console.warn('Failed to fetch accounts from API, keeping fallback')
-          return null
-        }
-        return r.json()
-      })
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          console.log('Loaded accounts from API:', data)
-          setAccounts(data)
-        } else {
-          console.warn('No accounts from API, using fallback expense accounts')
-          // Already set above
-        }
-      })
-      .catch(err => {
-        console.error('Error loading accounts:', err)
-        console.warn('Using fallback expense accounts')
-        // Already set above
-      })
-      .finally(() => setLoading(false))
   }, [router])
 
   // Save GST/PST preferences whenever they change
