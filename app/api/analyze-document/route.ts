@@ -58,46 +58,42 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
           },
           {
             type: 'text',
-            text: `Analyze this receipt or invoice image and extract CRITICAL financial information in JSON format:
+            text: `CRITICAL: Extract invoice/receipt financial data. Return ONLY valid JSON, nothing else.
+
+Return format:
 {
-  "date": "YYYY-MM-DD (from the document, or today if not found)",
-  "amount": "numeric amount as number (e.g., 150.50) - this should be the TOTAL amount including tax",
-  "description": "brief description of what was purchased or service provided",
-  "vendor_name": "name of the vendor/company",
-  "type": "RECEIPT or INVOICE (determine from context)",
-  "account_type": "ASSET or EXPENSE (best guess based on content)",
-  "gst_hst_amount": "numeric GST/HST amount extracted (0 if not found)",
-  "gst_hst_rate": "GST/HST rate as number (5 for 5% GST, 13 for 13% HST, 0 if no GST/HST)"
+  "date": "YYYY-MM-DD",
+  "amount": <number, the invoice total>,
+  "description": "what was purchased",
+  "vendor_name": "company name",
+  "type": "RECEIPT or INVOICE",
+  "account_type": "ASSET or EXPENSE",
+  "gst_hst_amount": <number, 0 if not found>,
+  "gst_hst_rate": <number: 0, 5, 7, 12, or 13>
 }
 
-TOTAL AMOUNT EXTRACTION (CRITICAL - DO NOT MISS):
-1. Scan the ENTIRE document from bottom to top (totals are usually at the end)
-2. Look for these keywords: "Total", "Invoice Total", "Grand Total", "TOTAL", "Amount Due", "Total Due", "TOTAL AMOUNT", "$" with largest number
-3. The TOTAL is the LARGEST dollar amount on the document (excluding item-level prices if itemized)
-4. Must include tax/GST/HST in the total amount
-5. Return as a number: 62.15 (not "$62.15", not "62.15 CAD", not a string)
-6. If you find "Subtotal" and "Total": use the TOTAL value (the larger one)
-7. If no explicit "Total" label found: use the largest single dollar amount that appears to be a final sum
+AMOUNT EXTRACTION - HIGHEST PRIORITY:
+Step 1: Find all dollar amounts ($XX.XX pattern) on the entire document
+Step 2: Identify which line contains "Total", "Invoice Total", "TOTAL", "Amount Due", or "INVOICE TOTAL:"
+Step 3: The amount is the LARGEST dollar value on the page (usually at bottom)
+Step 4: Return as NUMBER only: 62.15 (NOT string, NOT "$", NOT "CAD")
+Step 5: MUST include tax in the total - this is the final amount owed
+Step 6: If "Subtotal: $X" and "Total: $Y", use Total (the bigger one)
+Step 7: If multiple large numbers, use the one next to "Total" or "Amount Due"
+Step 8: CRITICAL: Do not return 0 unless you literally cannot find ANY dollar amount. Return null instead of 0 if completely missing.
 
-GST/HST EXTRACTION (CRITICAL):
-- Look for ANY mention of tax: "GST", "HST", "Sales Tax", "Total Tax", "Tax Amount", "Taxe", "Impôt", "Tax", "Taxes"
-- Look for subtotal + tax = total patterns to identify tax amount
-- If you see "Subtotal" and "Total", calculate: tax amount = Total - Subtotal
-- Extract the TOTAL GST/HST amount, not per-line taxes
-- For 5% GST: set rate to 5 and amount to the GST total
-- For 13% HST: set rate to 13 and amount to the HST total
-- If both GST and PST/QST are present, add them together for the total amount, set rate to sum (e.g., 12 for 5% GST + 7% PST)
-- Search the entire document carefully for tax information - it might be in small text, at bottom, or in different sections
-- If no explicit tax found but document has multiple currencies or looks like it's a cross-border transaction, check for implicit tax
-- If no GST/HST found after thorough search: set both amount and rate to 0
-- Only Canadian tax rates are expected (0, 5, 7, 12, or 13)
+TAX EXTRACTION:
+- Find "GST", "HST", "PST", "QST", "Tax:", "Total Tax"
+- If "Subtotal: $X" and "Total: $Y": Tax = Y - X
+- Identify rate: 5% (GST), 13% (HST), 7% (PST), etc.
+- Return tax amount (numeric) and rate separately
+- If no tax found: amount=0, rate=0
 
-GENERAL RULES:
-- Extract ONLY the JSON object, nothing else - no markdown, no explanation
-- If a field cannot be determined, use null (except gst_hst_amount and gst_hst_rate, which default to 0)
-- Amount should be a number, not a string
-- Type should be either "RECEIPT" or "INVOICE"
-- Account type should be either "ASSET" (for deposits/income) or "EXPENSE" (for payments/costs)`,
+RULES:
+- Return ONLY JSON object - no markdown, no text, no explanation
+- All numeric fields must be numbers (not strings)
+- Date format: YYYY-MM-DD
+- If field missing: use null (except tax fields default to 0)`,
           },
         ],
       },
@@ -146,12 +142,24 @@ export async function POST(request: NextRequest) {
     }
 
     let jsonText = content.text
+    // Log raw response for debugging
+    console.log('Claude Vision raw response:', jsonText)
+
     const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
     if (jsonMatch) {
       jsonText = jsonMatch[1].trim()
     }
 
-    const extractedData = JSON.parse(jsonText)
+    let extractedData
+    try {
+      extractedData = JSON.parse(jsonText)
+    } catch (parseError) {
+      console.error('Failed to parse Claude response:', jsonText)
+      throw new Error('Invalid response format from Claude Vision')
+    }
+
+    // Log extracted data for debugging
+    console.log('Extracted data:', extractedData)
 
     return NextResponse.json({
       success: true,
