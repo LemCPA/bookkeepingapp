@@ -37,12 +37,22 @@ interface DbData {
 }
 
 const dbPath = path.join(process.cwd(), '.data', 'bookkeeping.json')
+let cachedDb: DbData | null = null
+let lastModifiedTime = 0
 
 export function getDb(): DbData {
   try {
     console.log('getDb called, dbPath:', dbPath)
     console.log('File exists:', existsSync(dbPath))
     if (existsSync(dbPath)) {
+      // Check if file has been modified since last load
+      const stats = require('fs').statSync(dbPath)
+      if (cachedDb && stats.mtimeMs === lastModifiedTime) {
+        console.log('Using cached database')
+        return cachedDb
+      }
+
+      lastModifiedTime = stats.mtimeMs
       const content = readFileSync(dbPath, 'utf-8')
       const db = JSON.parse(content)
       console.log('Loaded database with', db.transactions.length, 'transactions')
@@ -141,6 +151,7 @@ export function getDb(): DbData {
 
       // Save the updated database with new fields
       saveDb(db)
+      cachedDb = db  // Cache the database
       return db
     }
   } catch (e) {
