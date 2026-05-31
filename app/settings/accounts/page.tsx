@@ -121,32 +121,7 @@ export default function AccountsSettingsPage() {
     }
   }
 
-  async function handleCreateDefaults() {
-    setSaving(true)
-    setMessage('')
-    try {
-      const authenticatedFetch = createAuthenticatedFetch()
-      const res = await authenticatedFetch('/api/chart-of-accounts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initializeDefaults: true }),
-      })
-
-      if (res.ok) {
-        setMessage('✓ Default accounts created successfully!')
-        setTimeout(() => fetchData(), 1500)
-      } else {
-        setMessage('Failed to create default accounts')
-      }
-    } catch (error) {
-      console.error('Error creating accounts:', error)
-      setMessage('Error creating default accounts')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const menuItems: { id: MenuItem; label: string }[] = [
+const menuItems: { id: MenuItem; label: string }[] = [
     { id: 'gst', label: 'Default GST/HST' },
     { id: 'accounts', label: 'Chart of Accounts' },
   ]
@@ -192,15 +167,8 @@ export default function AccountsSettingsPage() {
                   )}
 
                   {accounts.length === 0 ? (
-                    <div className="p-6 bg-gray-100 rounded-lg text-center">
-                      <p className="text-gray-600 mb-4">No accounts set up yet</p>
-                      <button
-                        onClick={handleCreateDefaults}
-                        disabled={saving}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:bg-gray-400 transition"
-                      >
-                        {saving ? 'Creating...' : 'Create Default Accounts'}
-                      </button>
+                    <div className="p-6 bg-gray-50 rounded-lg text-center">
+                      <p className="text-gray-500">No accounts set up yet</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
