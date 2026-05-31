@@ -63,10 +63,13 @@ export async function POST(request: NextRequest) {
       saveDb(db)
     }
 
-    // Automatically create default accounts for new user
+    // Automatically create default accounts for new user (only accounts with codes)
     const userId = newUser.id
     DEFAULT_ACCOUNTS.forEach(acc => {
-      createAccount(acc.code, acc.name, acc.type, userId)
+      // Only create accounts that have a code (skip HOME/VEHICLE sub-accounts which have no code)
+      if (acc.code) {
+        createAccount(acc.code, acc.name, acc.type, userId)
+      }
     })
 
     // Generate tokens (use ID for JWT)
