@@ -54,7 +54,14 @@ export default function SettingsPage() {
       const settingsRes = await authenticatedFetch('/api/user/settings')
       if (settingsRes.ok) {
         const data = await settingsRes.json()
-        setDefaultGstRate(data.default_gst_hst_rate.toString())
+        // Convert numeric rate back to province code for display
+        const rateToProvince: { [key: number]: string } = {
+          5: 'ab',   // Default to Alberta for 5% GST (most common)
+          13: 'on',  // Ontario HST
+          15: 'nb',  // Default to New Brunswick for 15% HST (most common)
+        }
+        const provinceCode = rateToProvince[data.default_gst_hst_rate] || 'on'
+        setDefaultGstRate(provinceCode)
         setBusinessName(data.business_name || '')
         setAddressStreet(data.address_street || '')
         setCity(data.city || '')
@@ -119,12 +126,35 @@ export default function SettingsPage() {
     setSaving(true)
     setMessage('')
     try {
+      // Map province codes to numeric GST/HST rates
+      const provinceToGstRate: { [key: string]: number } = {
+        'ab': 5,  // Alberta: 5% GST
+        'bc': 5,  // British Columbia: 5% GST
+        'mb': 5,  // Manitoba: 5% GST
+        'sk': 5,  // Saskatchewan: 5% GST
+        'on': 13, // Ontario: 13% HST
+        'qc': 5,  // Quebec: 5% GST (separate QST)
+        'nb': 15, // New Brunswick: 15% HST
+        'ns': 15, // Nova Scotia: 15% HST
+        'pe': 15, // Prince Edward Island: 15% HST
+        'nl': 15, // Newfoundland and Labrador: 15% HST
+        'nt': 5,  // Northwest Territories: 5% GST
+        'nu': 5,  // Nunavut: 5% GST
+        'yt': 5,  // Yukon: 5% GST
+      }
+
+      const gstRate = provinceToGstRate[defaultGstRate]
+      if (gstRate === undefined) {
+        setMessage('Please select a valid province')
+        return
+      }
+
       const authenticatedFetch = createAuthenticatedFetch()
       const res = await authenticatedFetch('/api/user/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          default_gst_hst_rate: parseInt(defaultGstRate),
+          default_gst_hst_rate: gstRate,
         }),
       })
 

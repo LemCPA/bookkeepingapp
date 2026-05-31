@@ -43,7 +43,14 @@ export default function GstSettingsPage() {
       const settingsRes = await authenticatedFetch('/api/user/settings')
       if (settingsRes.ok) {
         const data = await settingsRes.json()
-        setDefaultGstRate(data.default_gst_hst_rate.toString())
+        // Convert numeric rate back to province code for display
+        const rateToProvince: { [key: number]: string } = {
+          5: 'ab',   // Default to Alberta for 5% GST (most common)
+          13: 'on',  // Ontario HST
+          15: 'nb',  // Default to New Brunswick for 15% HST (most common)
+        }
+        const provinceCode = rateToProvince[data.default_gst_hst_rate] || 'on'
+        setDefaultGstRate(provinceCode)
       }
 
       // Fetch accounts
