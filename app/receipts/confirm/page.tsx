@@ -325,6 +325,19 @@ export default function ConfirmReceiptPage() {
         </div>
       )}
 
+      {extractedData?.receiptImage && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Receipt Image</h2>
+          <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+            <img
+              src={extractedData.receiptImage}
+              alt="Receipt"
+              className="w-full max-h-96 object-contain rounded-lg"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 lg:p-8 space-y-6">
@@ -350,7 +363,7 @@ export default function ConfirmReceiptPage() {
                 ))}
               </select>
               <p className="mt-2 text-xs text-gray-600">
-                {accounts.filter(a => a.type === 'EXPENSE' && !a.code.endsWith('0')).length} account(s) available
+                {accounts.filter(a => a.type === 'EXPENSE' && a.code !== '5220').length} account(s) available
               </p>
             </div>
 
