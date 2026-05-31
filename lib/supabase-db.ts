@@ -8,6 +8,11 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_SECRET || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
+console.log('[SUPABASE] URL configured:', !!supabaseUrl, 'Key configured:', !!supabaseKey)
+if (supabaseUrl) {
+  console.log('[SUPABASE] URL:', supabaseUrl.substring(0, 30) + '...')
+}
+
 if (!supabaseUrl || !supabaseKey) {
   console.warn('Supabase credentials not configured. Using JSON fallback.')
 }
