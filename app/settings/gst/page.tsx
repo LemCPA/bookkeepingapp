@@ -47,14 +47,18 @@ export default function GstSettingsPage() {
       const settingsRes = await authenticatedFetch('/api/user/settings')
       if (settingsRes.ok) {
         const data = await settingsRes.json()
-        console.log('API returned default_gst_hst_rate:', data.default_gst_hst_rate)
-        // Convert numeric rate back to province code for display
-        const rateToProvince: { [key: number]: string } = {
-          5: 'ab',   // Default to Alberta for 5% GST (most common)
-          13: 'on',  // Ontario HST
-          15: 'nb',  // Default to New Brunswick for 15% HST (most common)
+        console.log('API returned default_gst_hst_rate:', data.default_gst_hst_rate, 'province:', data.default_gst_hst_province)
+        // Use province code if available, otherwise convert from rate
+        let provinceCode = data.default_gst_hst_province
+        if (!provinceCode) {
+          // Fallback: convert numeric rate back to province code
+          const rateToProvince: { [key: number]: string } = {
+            5: 'ab',   // Default to Alberta for 5% GST (most common)
+            13: 'on',  // Ontario HST
+            15: 'nb',  // Default to New Brunswick for 15% HST (most common)
+          }
+          provinceCode = rateToProvince[data.default_gst_hst_rate] || 'on'
         }
-        const provinceCode = rateToProvince[data.default_gst_hst_rate] || 'on'
         console.log('Setting province code to:', provinceCode)
         setDefaultGstRate(provinceCode)
       } else {
@@ -109,6 +113,7 @@ export default function GstSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           default_gst_hst_rate: gstRate,
+          default_gst_hst_province: defaultGstRate, // Send the province code
         }),
       })
 

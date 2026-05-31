@@ -18,8 +18,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // Convert stored numeric rate to province code for backward compatibility
+    const rateToProvince: { [key: number]: string } = {
+      5: 'ab',   // Default to Alberta for 5% GST
+      13: 'on',  // Ontario HST
+      15: 'nb',  // Default to New Brunswick for 15% HST
+    }
+
+    const storedRate = user.default_gst_hst_rate
+    const provinceCode = (user as any).default_gst_hst_province || (storedRate ? rateToProvince[storedRate] : 'on')
+    const displayRate = storedRate !== undefined ? storedRate : 13
+
     return NextResponse.json({
-      default_gst_hst_rate: user.default_gst_hst_rate !== undefined ? user.default_gst_hst_rate : 13, // Default to Ontario HST
+      default_gst_hst_rate: displayRate,
+      default_gst_hst_province: provinceCode,
       gst_registered: user.gst_registered || false,
       gst_number: user.gst_number || '',
       business_name: user.business_name || '',
@@ -76,6 +88,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       default_gst_hst_rate,
+      default_gst_hst_province,
       gst_registered,
       gst_number,
       business_name,
@@ -101,6 +114,7 @@ export async function POST(request: NextRequest) {
 
     // Update fields
     if (default_gst_hst_rate !== undefined) user.default_gst_hst_rate = default_gst_hst_rate
+    if (default_gst_hst_province !== undefined) (user as any).default_gst_hst_province = default_gst_hst_province
     if (gst_registered !== undefined) user.gst_registered = gst_registered
     if (gst_number !== undefined) user.gst_number = gst_number
     if (business_name !== undefined) user.business_name = business_name
@@ -116,6 +130,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       default_gst_hst_rate: user.default_gst_hst_rate,
+      default_gst_hst_province: (user as any).default_gst_hst_province,
       gst_registered: user.gst_registered,
       gst_number: user.gst_number,
       business_name: user.business_name,
