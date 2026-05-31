@@ -3,6 +3,7 @@ import { getDb, saveDb } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
+import { supabase, getUserFromSupabase } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,8 +12,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const db = getDb()
-    const user = db.users.find(u => u.id === userId)
+    let user = null
+
+    // Try Supabase first (production)
+    if (supabase) {
+      user = await getUserFromSupabase(userId)
+    }
+
+    // Fall back to JSON (development)
+    if (!user) {
+      const db = getDb()
+      user = db.users.find(u => u.id === userId)
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -112,20 +123,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid GST/HST rate. Must be 0, 5, 13, or 15.' }, { status: 400 })
     }
 
-    // Update fields
-    if (default_gst_hst_rate !== undefined) user.default_gst_hst_rate = default_gst_hst_rate
-    if (default_gst_hst_province !== undefined) (user as any).default_gst_hst_province = default_gst_hst_province
-    if (gst_registered !== undefined) user.gst_registered = gst_registered
-    if (gst_number !== undefined) user.gst_number = gst_number
-    if (business_name !== undefined) user.business_name = business_name
-    if (address_street !== undefined) user.address_street = address_street
-    if (city !== undefined) user.city = city
-    if (province !== undefined) user.province = province
-    if (postal_code !== undefined) user.postal_code = postal_code
-    if (phone !== undefined) user.phone = phone
-    if (business_email !== undefined) user.business_email = business_email
+    // Prepare update object
+    const updateData: any = {}
+    if (default_gst_hst_rate !== undefined) updateData.default_gst_hst_rate = default_gst_hst_rate
+    if (default_gst_hst_province !== undefined) updateData.default_gst_hst_province = default_gst_hst_province
+    if (gst_registered !== undefined) updateData.gst_registered = gst_registered
+    if (gst_number !== undefined) updateData.gst_number = gst_number
+    if (business_name !== undefined) updateData.business_name = business_name
+    if (address_street !== undefined) updateData.address_street = address_street
+    if (city !== undefined) updateData.city = city
+    if (province !== undefined) updateData.province = province
+    if (postal_code !== undefined) updateData.postal_code = postal_code
+    if (phone !== undefined) updateData.phone = phone
+    if (business_email !== undefined) updateData.business_email = business_email
 
-    saveDb(db)
+    // Update Supabase (production)
+    if (supabase && Object.keys(updateData).length > 0) {
+      const { data: supabaseUser, error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Supabase update error:', error)
+        // Fall back to JSON
+        Object.assign(user, updateData)
+        saveDb(db)
+      } else if (supabaseUser) {
+        // Update local copy with response
+        Object.assign(user, supabaseUser)
+      }
+    } else {
+      // Update JSON (development)
+      Object.assign(user, updateData)
+      saveDb(db)
+    }
 
     return NextResponse.json({
       success: true,
