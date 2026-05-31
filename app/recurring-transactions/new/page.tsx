@@ -196,7 +196,7 @@ export default function NewRecurringTransactionPage() {
           >
             <option value="">Select an account</option>
             {accounts
-              .filter(account => account.type === 'EXPENSE' || account.type === 'INCOME')
+              .filter(account => (account.type === 'EXPENSE' || account.type === 'INCOME') && !account.code.endsWith('0'))
               .map((account) => (
                 <option key={account.id} value={account.id}>
                   {account.name}
