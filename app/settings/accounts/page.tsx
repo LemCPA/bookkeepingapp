@@ -173,16 +173,19 @@ export default function AccountsSettingsPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">Chart of Accounts</h3>
                       <p className="text-gray-600 text-sm mt-1">Manage your business accounts for categorizing transactions</p>
+                      {accounts.length > 0 && accounts.length < 31 && (
+                        <p className="text-xs text-orange-600 mt-2">⚠️ Missing {31 - accounts.length} accounts (Income, Assets, Liabilities, Equity)</p>
+                      )}
                     </div>
-                    {accounts.length === 0 && (
+                    {accounts.length <= 1 || (accounts.length > 0 && accounts.length < 31) ? (
                       <button
                         onClick={handleCreateDefaults}
                         disabled={saving}
                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:bg-gray-400 transition"
                       >
-                        {saving ? 'Creating...' : 'Create Default Accounts'}
+                        {saving ? 'Creating...' : (accounts.length === 0 ? 'Create Default Accounts' : 'Add Missing Accounts')}
                       </button>
-                    )}
+                    ) : null}
                   </div>
 
                   {message && (
