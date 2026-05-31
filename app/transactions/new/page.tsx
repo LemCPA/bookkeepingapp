@@ -35,7 +35,6 @@ function NewTransactionContent() {
     type: 'RECEIPT',
     reference: '',
     taxIncluded: false, // true = amount includes tax, false = amount is before tax
-    isVehicleExpense: false,
     businessUsePercentage: 100,
     invoiceStatus: 'DRAFT', // Only used for INVOICE type: DRAFT, TO_BE_SENT, PAID
   })
@@ -165,8 +164,6 @@ function NewTransactionContent() {
         description: formData.description,
         type: formData.type,
         reference_number: formData.reference,
-        is_vehicle_expense: formData.isVehicleExpense,
-        business_use_percentage: formData.isVehicleExpense ? formData.businessUsePercentage : undefined,
       }
 
       // Add invoice-specific fields if this is an invoice
@@ -217,7 +214,6 @@ function NewTransactionContent() {
         type: 'RECEIPT',
         reference: '',
         taxIncluded: false,
-        isVehicleExpense: false,
         businessUsePercentage: 100,
         invoiceStatus: 'DRAFT',
       })
@@ -243,13 +239,7 @@ function NewTransactionContent() {
             required
             value={formData.type}
             onChange={(e) => {
-              const newType = e.target.value
-              // Reset vehicle expense flag if switching away from RECEIPT
-              if (newType !== 'RECEIPT') {
-                setFormData({ ...formData, type: newType, isVehicleExpense: false })
-              } else {
-                setFormData({ ...formData, type: newType })
-              }
+              setFormData({ ...formData, type: e.target.value })
             }}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -352,21 +342,6 @@ function NewTransactionContent() {
           </div>
         </div>
 
-        {formData.type === 'RECEIPT' && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Is this a vehicle expense?</label>
-            <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-              <input
-                type="checkbox"
-                checked={formData.isVehicleExpense}
-                onChange={() => setFormData({ ...formData, isVehicleExpense: !formData.isVehicleExpense })}
-                className="w-4 h-4 text-blue-600"
-              />
-              <span className="ml-3 font-medium text-gray-900">Flag as vehicle/motor expense (for T2125 tracking)</span>
-            </label>
-          </div>
-        )}
-
         <div>
           <label className="block text-sm font-medium text-red-600 mb-1">Account *</label>
           <select
@@ -378,14 +353,10 @@ function NewTransactionContent() {
             <option value="">Select an account</option>
             {accounts
               .filter(account => {
-                // If vehicle expense is selected, only show vehicle-specific accounts
-                if (formData.isVehicleExpense) {
-                  return account.is_vehicle_expense === true
-                }
-                // Otherwise filter accounts based on transaction type and exclude vehicle accounts
-                if (formData.type === 'INVOICE') return account.type === 'INCOME' && !account.is_vehicle_expense
-                if (formData.type === 'RECEIPT') return account.type === 'EXPENSE' && !account.is_vehicle_expense
-                return !account.is_vehicle_expense // ADJUSTMENT can use any non-vehicle account
+                // Filter accounts based on transaction type
+                if (formData.type === 'INVOICE') return account.type === 'INCOME'
+                if (formData.type === 'RECEIPT') return account.type === 'EXPENSE'
+                return account.type === 'EXPENSE' // ADJUSTMENT uses expense accounts
               })
               .map((account) => {
                 // Strip "Motor Vehicle Expenses - " prefix from vehicle expense account names
