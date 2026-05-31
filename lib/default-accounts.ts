@@ -44,7 +44,7 @@ export const DEFAULT_ACCOUNTS: DefaultAccount[] = [
 
   // Motor Vehicle Expenses (standardized T2125 format)
   { code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE' },
-  { code: '5221', name: 'Motor Vehicle Expenses - Fuel and Oil', type: 'EXPENSE' },
+  { code: '5221', name: 'Motor Vehicle Expenses - Fuel', type: 'EXPENSE' },
   { code: '5222', name: 'Motor Vehicle Expenses - Interest (Loan)', type: 'EXPENSE' },
   { code: '5223', name: 'Motor Vehicle Expenses - Insurance', type: 'EXPENSE' },
   { code: '5224', name: 'Motor Vehicle Expenses - Licence and Registration', type: 'EXPENSE' },
