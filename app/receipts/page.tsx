@@ -46,10 +46,10 @@ export default function ReceiptsPage() {
 
   // Fallback accounts from shared Chart of Accounts (source of truth)
   const fallbackAccounts: Account[] = DEFAULT_ACCOUNTS.filter(
-    acc => acc.type === 'EXPENSE'
+    acc => acc.code && acc.type === 'EXPENSE'
   ).map(acc => ({
-    id: parseInt(acc.code),
-    code: acc.code,
+    id: parseInt(acc.code!),
+    code: acc.code!,
     name: acc.name,
     type: acc.type
   }))
