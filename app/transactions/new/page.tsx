@@ -25,7 +25,9 @@ function NewTransactionContent() {
   const [defaultGstRate, setDefaultGstRate] = useState('0')
 
   const [formData, setFormData] = useState({
+    category: 'BUSINESS',
     accountId: '',
+    subAccountName: '',
     date: new Date().toISOString().split('T')[0],
     amount: '',
     gstRate: '0',
@@ -155,7 +157,6 @@ function NewTransactionContent() {
 
       // Build request body
       const requestBody: any = {
-        account_id: parseInt(formData.accountId),
         transaction_date: formData.date,
         amount: baseAmount, // Use the base amount (before tax)
         gst_hst_rate: totalRate,
@@ -164,6 +165,16 @@ function NewTransactionContent() {
         description: formData.description,
         type: formData.type,
         reference_number: formData.reference,
+        category: formData.category,
+      }
+
+      // Set account based on category
+      if (formData.category === 'BUSINESS' && formData.accountId) {
+        requestBody.account_id = parseInt(formData.accountId)
+      } else if (formData.category === 'HOME') {
+        requestBody.sub_account_name = formData.subAccountName
+      } else if (formData.category === 'VEHICLE') {
+        requestBody.sub_account_name = formData.subAccountName
       }
 
       // Add invoice-specific fields if this is an invoice
@@ -204,7 +215,9 @@ function NewTransactionContent() {
 
       // Reset form and redirect
       setFormData({
+        category: 'BUSINESS',
         accountId: '',
+        subAccountName: '',
         date: new Date().toISOString().split('T')[0],
         amount: '',
         gstRate: defaultGstRate,
@@ -342,39 +355,95 @@ function NewTransactionContent() {
           </div>
         </div>
 
+        {/* Category Selector */}
         <div>
-          <label className="block text-sm font-medium text-red-600 mb-1">Account *</label>
+          <label className="block text-sm font-medium text-red-600 mb-1">Category *</label>
           <select
             required
-            value={formData.accountId}
-            onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value as 'BUSINESS' | 'HOME' | 'VEHICLE', accountId: '', subAccountName: '' })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="">Select an account</option>
-            {accounts
-              .filter(account => {
-                // Filter accounts based on transaction type
-                if (formData.type === 'INVOICE') return account.type === 'INCOME'
-                if (formData.type === 'RECEIPT') return account.type === 'EXPENSE'
-                return account.type === 'EXPENSE' // ADJUSTMENT uses expense accounts
-              })
-              .filter(account => {
-                // Exclude parent/group accounts (5220 is the parent for Motor Vehicle Expenses)
-                return account.code !== '9281'
-              })
-              .map((account) => {
-                // Strip "Motor Vehicle Expenses - " prefix from vehicle expense account names
-                const displayName = account.name.startsWith('Motor Vehicle Expenses - ')
-                  ? account.name.replace('Motor Vehicle Expenses - ', '')
-                  : account.name
-                return (
-                  <option key={account.id} value={account.id}>
-                    {account.code} - {displayName} ({account.type})
-                  </option>
-                )
-              })}
+            <option value="BUSINESS">Business</option>
+            {formData.type === 'RECEIPT' && <option value="HOME">Home</option>}
+            {formData.type === 'RECEIPT' && <option value="VEHICLE">Vehicle</option>}
           </select>
         </div>
+
+        {/* Account Selector - Only for BUSINESS category */}
+        {formData.category === 'BUSINESS' && (
+          <div>
+            <label className="block text-sm font-medium text-red-600 mb-1">Account *</label>
+            <select
+              required
+              value={formData.accountId}
+              onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select an account</option>
+              {accounts
+                .filter(account => {
+                  // Filter by category and type
+                  if (!account.category) return false
+                  if (account.category !== 'BUSINESS') return false
+                  if (formData.type === 'INVOICE') return account.type === 'INCOME'
+                  if (formData.type === 'RECEIPT') return account.type === 'EXPENSE'
+                  return account.type === 'EXPENSE'
+                })
+                .map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.code ? `${account.code} - ` : ''}{account.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+        )}
+
+        {/* Sub-Account Selector - For HOME category */}
+        {formData.category === 'HOME' && (
+          <div>
+            <label className="block text-sm font-medium text-red-600 mb-1">Expense Type *</label>
+            <select
+              required
+              value={formData.subAccountName}
+              onChange={(e) => setFormData({ ...formData, subAccountName: e.target.value, accountId: 'HOME' })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select expense type</option>
+              <option value="Heat">Heat</option>
+              <option value="Electricity">Electricity</option>
+              <option value="Insurance">Insurance</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Mortgage Interest">Mortgage Interest</option>
+              <option value="Property Taxes">Property Taxes</option>
+              <option value="Other Expenses">Other Expenses</option>
+            </select>
+          </div>
+        )}
+
+        {/* Sub-Account Selector - For VEHICLE category */}
+        {formData.category === 'VEHICLE' && (
+          <div>
+            <label className="block text-sm font-medium text-red-600 mb-1">Vehicle Expense Type *</label>
+            <select
+              required
+              value={formData.subAccountName}
+              onChange={(e) => setFormData({ ...formData, subAccountName: e.target.value, accountId: 'VEHICLE' })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select vehicle expense type</option>
+              <option value="Fuel & Oil">Fuel & Oil</option>
+              <option value="Interest">Interest</option>
+              <option value="Insurance">Insurance</option>
+              <option value="License and Registration">License and Registration</option>
+              <option value="Maintenance and Repairs">Maintenance and Repairs</option>
+              <option value="Leasing">Leasing</option>
+              <option value="Electricity for Zero-Emission Vehicles">Electricity for Zero-Emission Vehicles</option>
+              <option value="Other Vehicle Expenses">Other Vehicle Expenses</option>
+              <option value="Business Parking Fees">Business Parking Fees</option>
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
