@@ -144,20 +144,9 @@ const menuItems: { id: MenuItem; label: string }[] = [
             {/* Chart of Accounts Section */}
             <div className="space-y-6">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Chart of Accounts</h3>
-                      <p className="text-gray-600 text-sm mt-1">Manage your business accounts for categorizing transactions</p>
-                    </div>
-                    {accounts.length === 0 ? (
-                      <button
-                        onClick={handleCreateDefaults}
-                        disabled={saving}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:bg-gray-400 transition"
-                      >
-                        {saving ? 'Creating...' : 'Create Default Accounts'}
-                      </button>
-                    ) : null}
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Chart of Accounts</h3>
+                    <p className="text-gray-600 text-sm mt-1">Manage your business accounts for categorizing transactions</p>
                   </div>
 
                   {message && (
