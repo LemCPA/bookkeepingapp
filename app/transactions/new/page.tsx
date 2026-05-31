@@ -7,14 +7,15 @@ import { createAuthenticatedFetch } from '@/lib/auth'
 import { DEFAULT_ACCOUNTS } from '@/lib/default-accounts'
 
 // Fallback accounts from Chart of Accounts (imported from shared source of truth)
-const fallbackAccounts: ChartOfAccount[] = DEFAULT_ACCOUNTS.filter(
+const fallbackAccounts: (ChartOfAccount & { category?: string })[] = DEFAULT_ACCOUNTS.filter(
   (acc) => acc.code && acc.type === 'EXPENSE'
 ).map((acc) => ({
   id: parseInt(acc.code!),
   code: acc.code!,
   name: acc.name,
   type: acc.type as any,
-  is_vehicle_expense: acc.code!.startsWith('52')
+  is_vehicle_expense: acc.code!.startsWith('52'),
+  category: acc.category
 }))
 
 function NewTransactionContent() {

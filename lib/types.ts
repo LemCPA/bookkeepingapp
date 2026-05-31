@@ -18,6 +18,7 @@ export interface ChartOfAccount {
   type: AccountType
   client_id?: number
   is_vehicle_expense?: boolean
+  category?: 'BUSINESS' | 'HOME' | 'VEHICLE'
 }
 
 export interface AuditEntry {

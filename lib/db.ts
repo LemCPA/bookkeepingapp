@@ -342,13 +342,16 @@ export function createUser(email: string, password_hash: string, name: string, g
   // Add default accounts for this user
   let nextAccountId = db.nextAccountId
   defaultAccounts.forEach(acc => {
-    db.chart_of_accounts.push({
-      id: nextAccountId++,
-      code: acc.code,
-      name: acc.name,
-      type: acc.type,
-      user_id: id,
-    })
+    // Only create accounts that have a code (skip HOME/VEHICLE sub-accounts which have no code)
+    if (acc.code) {
+      db.chart_of_accounts.push({
+        id: nextAccountId++,
+        code: acc.code,
+        name: acc.name,
+        type: acc.type,
+        user_id: id,
+      })
+    }
   })
   db.nextAccountId = nextAccountId
 
@@ -430,6 +433,14 @@ export function getChartOfAccounts(userId: number) {
   return db.chart_of_accounts
     .filter(a => a.user_id === userId)
     .sort((a, b) => a.code.localeCompare(b.code))
+    .map(account => {
+      // Add category from DEFAULT_ACCOUNTS based on code
+      const defaultAccount = DEFAULT_ACCOUNTS.find(acc => acc.code === account.code)
+      return {
+        ...account,
+        category: defaultAccount?.category
+      } as any
+    })
 }
 
 export function getAccount(id: number) {
