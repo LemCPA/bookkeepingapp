@@ -5,6 +5,7 @@ import { createDocument, getTransaction } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
+import { supabase } from '@/lib/supabase-db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,6 +63,43 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = await file.arrayBuffer()
+    const timestamp = Date.now()
+    const originalName = file.name || `receipt-${timestamp}`
+    const fileName = `${timestamp}-${originalName}`
+    const storagePath = `receipts/${userId}/${transactionId}/${fileName}`
+
+    // Try Supabase Storage first (production)
+    if (supabase) {
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(storagePath, new Uint8Array(buffer), {
+          contentType: file.type,
+          upsert: false,
+        })
+
+      if (uploadError) {
+        console.error('Supabase storage upload error:', uploadError)
+        throw new Error(`Supabase upload failed: ${uploadError.message}`)
+      }
+
+      const actualSize = new Uint8Array(buffer).length
+
+      createDocument(
+        parseInt(transactionId),
+        file.name,
+        storagePath,
+        actualSize
+      )
+
+      return NextResponse.json({
+        path: storagePath,
+        size: actualSize,
+        originalSize: file.size,
+        storage: 'supabase',
+      })
+    }
+
+    // Fall back to filesystem (development)
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', transactionId)
 
     try {
@@ -70,18 +108,11 @@ export async function POST(request: NextRequest) {
       // Directory might already exist
     }
 
-    // Generate filename with timestamp
-    const timestamp = Date.now()
-    // Use original filename or fallback to type-based name
-    const originalName = file.name || `receipt-${timestamp}`
-    const fileName = `${timestamp}-${originalName}`
     const filePath = path.join(uploadDir, fileName)
     const relativeFilePath = `/uploads/${transactionId}/${fileName}`
 
-    // Write compressed or original file
     writeFileSync(filePath, new Uint8Array(buffer))
 
-    // Get actual stored file size (may differ from original if compressed)
     const actualSize = new Uint8Array(buffer).length
 
     createDocument(
@@ -95,7 +126,7 @@ export async function POST(request: NextRequest) {
       path: relativeFilePath,
       size: actualSize,
       originalSize: file.size,
-      compressed: actualSize < file.size,
+      storage: 'filesystem',
     })
   } catch (error: any) {
     console.error('Upload error:', error)
