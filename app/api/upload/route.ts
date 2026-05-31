@@ -69,34 +69,39 @@ export async function POST(request: NextRequest) {
     const storagePath = `receipts/${userId}/${transactionId}/${fileName}`
 
     // Try Supabase Storage first (production)
-    if (supabase) {
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(storagePath, new Uint8Array(buffer), {
-          contentType: file.type,
-          upsert: false,
+    if (supabase !== null) {
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(storagePath, new Uint8Array(buffer), {
+            contentType: file.type,
+            upsert: false,
+          })
+
+        if (uploadError) {
+          console.error('Supabase storage upload error:', uploadError)
+          throw new Error(`Supabase upload failed: ${uploadError.message}`)
+        }
+
+        const actualSize = new Uint8Array(buffer).length
+
+        createDocument(
+          parseInt(transactionId),
+          file.name,
+          storagePath,
+          actualSize
+        )
+
+        return NextResponse.json({
+          path: storagePath,
+          size: actualSize,
+          originalSize: file.size,
+          storage: 'supabase',
         })
-
-      if (uploadError) {
-        console.error('Supabase storage upload error:', uploadError)
-        throw new Error(`Supabase upload failed: ${uploadError.message}`)
+      } catch (supabaseError) {
+        console.error('Supabase upload failed, falling back to filesystem:', supabaseError)
+        // Fall through to filesystem backup below
       }
-
-      const actualSize = new Uint8Array(buffer).length
-
-      createDocument(
-        parseInt(transactionId),
-        file.name,
-        storagePath,
-        actualSize
-      )
-
-      return NextResponse.json({
-        path: storagePath,
-        size: actualSize,
-        originalSize: file.size,
-        storage: 'supabase',
-      })
     }
 
     // Fall back to filesystem (development)
