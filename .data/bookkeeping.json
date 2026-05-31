@@ -124,105 +124,91 @@
     },
     {
       "id": 10,
-      "code": "5100",
+      "code": "8910",
       "name": "Advertising",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 11,
-      "code": "5110",
+      "code": "8523",
       "name": "Meals and Entertainment (50% rule)",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 12,
-      "code": "5120",
+      "code": "8690",
       "name": "Insurance",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 13,
-      "code": "5130",
+      "code": "8710",
       "name": "Interest and Bank Charges",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 14,
-      "code": "5140",
+      "code": "8760",
       "name": "Business Taxes and Licenses",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 15,
-      "code": "5150",
+      "code": "8810",
       "name": "Office Expenses",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 16,
-      "code": "5160",
+      "code": "8811",
       "name": "Supplies",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 17,
-      "code": "5170",
+      "code": "8860",
       "name": "Legal and Accounting Fees",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
-      "id": 18,
-      "code": "5180",
-      "name": "Rent",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
       "id": 19,
-      "code": "5190",
+      "code": "9060",
       "name": "Salaries and Wages",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 20,
-      "code": "5200",
+      "code": "9200",
       "name": "Travel",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 21,
-      "code": "5210",
-      "name": "Telephone and Utilities",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 21,
-      "code": "5210",
+      "code": "9220",
       "name": "Telephone and Utilities",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 31,
-      "code": "5230",
+      "code": "9936",
       "name": "Capital Cost Allowance (CCA)",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 63,
-      "code": "5240",
+      "code": "9270",
       "name": "Other Expenses",
       "type": "EXPENSE",
       "user_id": 1
@@ -292,365 +278,185 @@
     },
     {
       "id": 41,
-      "code": "5100",
+      "code": "8910",
       "name": "Advertising",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 42,
-      "code": "5110",
+      "code": "8523",
       "name": "Meals and Entertainment (50% rule)",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 43,
-      "code": "5120",
+      "code": "8690",
       "name": "Insurance",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 44,
-      "code": "5130",
+      "code": "8710",
       "name": "Interest and Bank Charges",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 45,
-      "code": "5140",
+      "code": "8760",
       "name": "Business Taxes and Licenses",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 46,
-      "code": "5150",
+      "code": "8810",
       "name": "Office Expenses",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 47,
-      "code": "5160",
+      "code": "8811",
       "name": "Supplies",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 48,
-      "code": "5170",
+      "code": "8860",
       "name": "Legal and Accounting Fees",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
-      "id": 49,
-      "code": "5180",
-      "name": "Rent",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
       "id": 50,
-      "code": "5190",
+      "code": "9060",
       "name": "Salaries and Wages",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 51,
-      "code": "5200",
+      "code": "9200",
       "name": "Travel",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 52,
-      "code": "5210",
+      "code": "9220",
       "name": "Telephone and Utilities",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 55,
-      "code": "5223",
+      "code": "9281",
       "name": "Motor Vehicle Expenses - Insurance",
-      "type": "EXPENSE",
-      "user_id": 2,
-      "is_vehicle_expense": true
-    },
-    {
-      "id": 56,
-      "code": "5225",
-      "name": "Motor Vehicle Expenses - Maintenance and Repairs",
-      "type": "EXPENSE",
-      "user_id": 2,
-      "is_vehicle_expense": true
-    },
-    {
-      "id": 57,
-      "code": "5224",
-      "name": "Motor Vehicle Expenses - Licence and Registration",
-      "type": "EXPENSE",
-      "user_id": 2,
-      "is_vehicle_expense": true
-    },
-    {
-      "id": 58,
-      "code": "5222",
-      "name": "Motor Vehicle Expenses - Interest (Loan)",
-      "type": "EXPENSE",
-      "user_id": 2,
-      "is_vehicle_expense": true
-    },
-    {
-      "id": 59,
-      "code": "5226",
-      "name": "Motor Vehicle Expenses - Parking and Tolls",
-      "type": "EXPENSE",
-      "user_id": 2,
-      "is_vehicle_expense": true
-    },
-    {
-      "id": 60,
-      "code": "5227",
-      "name": "Motor Vehicle Expenses - Other",
       "type": "EXPENSE",
       "user_id": 2,
       "is_vehicle_expense": true
     },
     {
       "id": 54,
-      "code": "5230",
+      "code": "9936",
       "name": "Capital Cost Allowance (CCA)",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 65,
-      "code": "5240",
+      "code": "9270",
       "name": "Other Expenses",
       "type": "EXPENSE",
       "user_id": 2
     },
     {
       "id": 31,
-      "code": "5180",
+      "code": "8910",
       "name": "Rent",
       "type": "EXPENSE",
       "user_id": 4
     },
     {
       "id": 32,
-      "code": "5190",
+      "code": "9060",
       "name": "Salaries and Wages",
       "type": "EXPENSE",
       "user_id": 4
     },
     {
       "id": 33,
-      "code": "5200",
+      "code": "9200",
       "name": "Travel",
       "type": "EXPENSE",
       "user_id": 4
     },
     {
       "id": 34,
-      "code": "5210",
+      "code": "9220",
       "name": "Telephone and Utilities",
       "type": "EXPENSE",
       "user_id": 4
     },
     {
-      "id": 35,
-      "code": "5220",
-      "name": "Motor Vehicle Expenses",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
       "id": 66,
-      "code": "5221",
+      "code": "9281",
       "name": "Motor Vehicle Expenses - Fuel",
       "type": "EXPENSE",
       "user_id": 4
     },
     {
-      "id": 37,
-      "code": "5222",
-      "name": "Motor Vehicle Expenses - Interest (Loan)",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 38,
-      "code": "5223",
-      "name": "Motor Vehicle Expenses - Insurance",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 39,
-      "code": "5224",
-      "name": "Motor Vehicle Expenses - Licence and Registration",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 40,
-      "code": "5225",
-      "name": "Motor Vehicle Expenses - Maintenance and Repairs",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 41,
-      "code": "5226",
-      "name": "Motor Vehicle Expenses - Parking and Tolls",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 42,
-      "code": "5227",
-      "name": "Motor Vehicle Expenses - Other",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
       "id": 43,
-      "code": "5230",
+      "code": "9936",
       "name": "Capital Cost Allowance (CCA)",
       "type": "EXPENSE",
       "user_id": 4
     },
     {
       "id": 64,
-      "code": "5240",
+      "code": "9270",
       "name": "Other Expenses",
       "type": "EXPENSE",
       "user_id": 4
     },
     {
-      "id": 67,
-      "code": "5220",
-      "name": "Motor Vehicle Expenses",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
       "id": 68,
-      "code": "5221",
+      "code": "9281",
       "name": "Motor Vehicle Expenses - Fuel",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 69,
-      "code": "5220",
-      "name": "Motor Vehicle Expenses",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 70,
-      "code": "5221",
-      "name": "Motor Vehicle Expenses - Fuel",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 71,
-      "code": "5222",
-      "name": "Motor Vehicle Expenses - Interest (Loan)",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 72,
-      "code": "5223",
-      "name": "Motor Vehicle Expenses - Insurance",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 73,
-      "code": "5224",
-      "name": "Motor Vehicle Expenses - Licence and Registration",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 74,
-      "code": "5225",
-      "name": "Motor Vehicle Expenses - Maintenance and Repairs",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 75,
-      "code": "5226",
-      "name": "Motor Vehicle Expenses - Parking and Tolls",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 76,
-      "code": "5227",
-      "name": "Motor Vehicle Expenses - Other",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 79,
       "user_id": 4,
-      "code": "5000",
+      "code": "8523",
       "name": "Meals and Entertainment",
       "type": "EXPENSE"
     },
     {
       "id": 80,
       "user_id": 4,
-      "code": "5010",
+      "code": "8811",
       "name": "Office Supplies",
-      "type": "EXPENSE"
-    },
-    {
-      "id": 81,
-      "user_id": 4,
-      "code": "5020",
-      "name": "Telephone and Internet",
-      "type": "EXPENSE"
-    },
-    {
-      "id": 82,
-      "user_id": 4,
-      "code": "5030",
-      "name": "Utilities",
       "type": "EXPENSE"
     },
     {
       "id": 83,
       "user_id": 4,
-      "code": "5040",
+      "code": "8860",
       "name": "Professional Services",
       "type": "EXPENSE"
     },
     {
       "id": 84,
       "user_id": 4,
-      "code": "5050",
+      "code": "8521",
       "name": "Advertising and Marketing",
-      "type": "EXPENSE"
-    },
-    {
-      "id": 85,
-      "user_id": 4,
-      "code": "5100",
-      "name": "Office Rent",
       "type": "EXPENSE"
     },
     {

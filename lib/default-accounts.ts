@@ -1,5 +1,6 @@
 /**
  * Default T2125 Chart of Accounts for Canadian Sole Proprietors
+ * Uses official CRA T2125 form line numbers as account codes
  * Single source of truth for all default account definitions
  * Used by API, database initialization, and UI fallbacks
  */
@@ -11,41 +12,30 @@ export interface DefaultAccount {
 }
 
 export const DEFAULT_ACCOUNTS: DefaultAccount[] = [
-  // Income (T2125 Line 10400)
-  { code: '8000', name: 'Gross Income', type: 'INCOME' },
+  // Income (T2125 Lines)
+  { code: '8000', name: 'Gross Business Income', type: 'INCOME' },
   { code: '8230', name: 'Other Income', type: 'INCOME' },
 
-  // Expenses
-  { code: '5000', name: 'Meals and Entertainment', type: 'EXPENSE' },
-  { code: '5010', name: 'Office Supplies', type: 'EXPENSE' },
-  { code: '5020', name: 'Telephone and Internet', type: 'EXPENSE' },
-  { code: '5030', name: 'Utilities', type: 'EXPENSE' },
-  { code: '5040', name: 'Professional Services', type: 'EXPENSE' },
-  { code: '5050', name: 'Advertising and Marketing', type: 'EXPENSE' },
-  { code: '5100', name: 'Office Rent', type: 'EXPENSE' },
-  { code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE' },
-  { code: '5120', name: 'Insurance', type: 'EXPENSE' },
-  { code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE' },
-  { code: '5140', name: 'Business Taxes and Licenses', type: 'EXPENSE' },
-  { code: '5150', name: 'Office Expenses', type: 'EXPENSE' },
-  { code: '5160', name: 'Supplies', type: 'EXPENSE' },
-  { code: '5170', name: 'Legal and Accounting Fees', type: 'EXPENSE' },
-  { code: '5180', name: 'Rent', type: 'EXPENSE' },
-  { code: '5190', name: 'Salaries and Wages', type: 'EXPENSE' },
-  { code: '5200', name: 'Travel', type: 'EXPENSE' },
-  { code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE' },
-
-  // Motor Vehicle Expenses (standardized T2125 format)
-  { code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE' },
-  { code: '5221', name: 'Motor Vehicle Expenses - Fuel', type: 'EXPENSE' },
-  { code: '5222', name: 'Motor Vehicle Expenses - Interest (Loan)', type: 'EXPENSE' },
-  { code: '5223', name: 'Motor Vehicle Expenses - Insurance', type: 'EXPENSE' },
-  { code: '5224', name: 'Motor Vehicle Expenses - Licence and Registration', type: 'EXPENSE' },
-  { code: '5225', name: 'Motor Vehicle Expenses - Maintenance and Repairs', type: 'EXPENSE' },
-  { code: '5226', name: 'Motor Vehicle Expenses - Parking and Tolls', type: 'EXPENSE' },
-  { code: '5227', name: 'Motor Vehicle Expenses - Other', type: 'EXPENSE' },
-
-  // Other Expenses
-  { code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE' },
-  { code: '5240', name: 'Other Expenses', type: 'EXPENSE' },
+  // Expenses (T2125 Line Numbers)
+  { code: '8521', name: 'Advertising', type: 'EXPENSE' },
+  { code: '8523', name: 'Meals and Entertainment', type: 'EXPENSE' },
+  { code: '8590', name: 'Bad Debts', type: 'EXPENSE' },
+  { code: '8690', name: 'Insurance', type: 'EXPENSE' },
+  { code: '8710', name: 'Interest and Bank Charges', type: 'EXPENSE' },
+  { code: '8760', name: 'Business Taxes, Fees, Licenses, and Memberships', type: 'EXPENSE' },
+  { code: '8810', name: 'Office Expenses', type: 'EXPENSE' },
+  { code: '8811', name: 'Office Stationery and Supplies', type: 'EXPENSE' },
+  { code: '8860', name: 'Professional Fees (Accounting, Legal)', type: 'EXPENSE' },
+  { code: '8871', name: 'Management and Administration Fees', type: 'EXPENSE' },
+  { code: '8910', name: 'Rent', type: 'EXPENSE' },
+  { code: '8960', name: 'Repairs and Maintenance', type: 'EXPENSE' },
+  { code: '9060', name: 'Salaries, Wages, and Benefits', type: 'EXPENSE' },
+  { code: '9180', name: 'Property Taxes', type: 'EXPENSE' },
+  { code: '9200', name: 'Travel Expenses', type: 'EXPENSE' },
+  { code: '9220', name: 'Utilities', type: 'EXPENSE' },
+  { code: '9224', name: 'Fuel Costs (Excluding Motor Vehicles)', type: 'EXPENSE' },
+  { code: '9275', name: 'Delivery, Freight, and Express', type: 'EXPENSE' },
+  { code: '9281', name: 'Motor Vehicle Expenses', type: 'EXPENSE' },
+  { code: '9270', name: 'Other Expenses', type: 'EXPENSE' },
+  { code: '9936', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE' },
 ]
