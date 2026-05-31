@@ -7,29 +7,24 @@
 export interface DefaultAccount {
   code: string
   name: string
-  type: 'ASSET' | 'LIABILITY' | 'EQUITY' | 'INCOME' | 'EXPENSE'
+  type: 'INCOME' | 'EXPENSE'
 }
 
 export const DEFAULT_ACCOUNTS: DefaultAccount[] = [
-  // Assets
-  { code: '1000', name: 'Cash', type: 'ASSET' },
-  { code: '1010', name: 'Checking Account', type: 'ASSET' },
-  { code: '1020', name: 'Savings Account', type: 'ASSET' },
-  { code: '1030', name: 'Accounts Receivable', type: 'ASSET' },
-
-  // Liabilities
-  { code: '2000', name: 'Accounts Payable', type: 'LIABILITY' },
-  { code: '2010', name: 'Credit Card', type: 'LIABILITY' },
-
-  // Equity
-  { code: '3000', name: 'Retained Earnings', type: 'EQUITY' },
-
   // Income
   { code: '4000', name: 'Service Revenue', type: 'INCOME' },
   { code: '4010', name: 'Product Revenue', type: 'INCOME' },
+  { code: '4100', name: 'Service Income', type: 'INCOME' },
+  { code: '4200', name: 'Product Sales', type: 'INCOME' },
 
   // Expenses
-  { code: '5100', name: 'Advertising', type: 'EXPENSE' },
+  { code: '5000', name: 'Meals and Entertainment', type: 'EXPENSE' },
+  { code: '5010', name: 'Office Supplies', type: 'EXPENSE' },
+  { code: '5020', name: 'Telephone and Internet', type: 'EXPENSE' },
+  { code: '5030', name: 'Utilities', type: 'EXPENSE' },
+  { code: '5040', name: 'Professional Services', type: 'EXPENSE' },
+  { code: '5050', name: 'Advertising and Marketing', type: 'EXPENSE' },
+  { code: '5100', name: 'Office Rent', type: 'EXPENSE' },
   { code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE' },
   { code: '5120', name: 'Insurance', type: 'EXPENSE' },
   { code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE' },

@@ -41,6 +41,13 @@ const dbPath = path.join(process.cwd(), '.data', 'bookkeeping.json')
 let cachedDb: DbData | null = null
 let lastModifiedTime = 0
 
+// Export cache clearing function for production reloads
+export function clearDbCache() {
+  console.log('Clearing database cache')
+  cachedDb = null
+  lastModifiedTime = 0
+}
+
 export function getDb(): DbData {
   try {
     console.log('getDb called, dbPath:', dbPath)
@@ -207,17 +214,16 @@ function initializeDb(): DbData {
       { id: 19, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE', user_id: 1 },
       { id: 20, code: '5200', name: 'Travel', type: 'EXPENSE', user_id: 1 },
       { id: 21, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE', user_id: 1 },
-      // Motor Vehicle Expenses (T2125 - Line 9270)
-      { id: 22, code: '5220', name: 'Motor Vehicle Expenses - Fuel and Oil', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
-      { id: 23, code: '5221', name: 'Motor Vehicle Expenses - Interest (Loan)', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
-      { id: 24, code: '5222', name: 'Motor Vehicle Expenses - Insurance', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
-      { id: 25, code: '5223', name: 'Motor Vehicle Expenses - Licence and Registration', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
-      { id: 26, code: '5224', name: 'Motor Vehicle Expenses - Maintenance and Repairs', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
-      { id: 27, code: '5225', name: 'Motor Vehicle Expenses - Leasing', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
-      { id: 28, code: '5226', name: 'Motor Vehicle Expenses - Electricity (Zero-Emission Vehicles)', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
-      { id: 29, code: '5227', name: 'Motor Vehicle Expenses - Other Expenses', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
-      { id: 30, code: '5228', name: 'Motor Vehicle Expenses - Business Parking Fees', type: 'EXPENSE', user_id: 1, is_vehicle_expense: true },
-      { id: 31, code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE', user_id: 1 },
+      // Motor Vehicle Expenses (T2125 compliant - from DEFAULT_ACCOUNTS)
+      { id: 22, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE', user_id: 1 },
+      { id: 23, code: '5221', name: 'Motor Vehicle Expenses - Fuel', type: 'EXPENSE', user_id: 1 },
+      { id: 24, code: '5222', name: 'Motor Vehicle Expenses - Interest (Loan)', type: 'EXPENSE', user_id: 1 },
+      { id: 25, code: '5223', name: 'Motor Vehicle Expenses - Insurance', type: 'EXPENSE', user_id: 1 },
+      { id: 26, code: '5224', name: 'Motor Vehicle Expenses - Licence and Registration', type: 'EXPENSE', user_id: 1 },
+      { id: 27, code: '5225', name: 'Motor Vehicle Expenses - Maintenance and Repairs', type: 'EXPENSE', user_id: 1 },
+      { id: 28, code: '5226', name: 'Motor Vehicle Expenses - Parking and Tolls', type: 'EXPENSE', user_id: 1 },
+      { id: 29, code: '5227', name: 'Motor Vehicle Expenses - Other', type: 'EXPENSE', user_id: 1 },
+      { id: 30, code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE', user_id: 1 },
     ],
     transactions: [],
     documents: [],

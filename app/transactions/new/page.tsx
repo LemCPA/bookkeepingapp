@@ -8,17 +8,12 @@ import { DEFAULT_ACCOUNTS } from '@/lib/default-accounts'
 
 // Fallback accounts from Chart of Accounts (imported from shared source of truth)
 const fallbackAccounts: ChartOfAccount[] = DEFAULT_ACCOUNTS.filter(
-  (acc): acc is ChartOfAccount =>
-    acc.type === 'EXPENSE' && {
-      ...acc,
-      id: parseInt(acc.code),
-      is_vehicle_expense: acc.code.startsWith('52')
-    } as any
-).map((acc, idx) => ({
+  (acc) => acc.type === 'EXPENSE'
+).map((acc) => ({
   id: parseInt(acc.code),
   code: acc.code,
   name: acc.name,
-  type: acc.type,
+  type: acc.type as any,
   is_vehicle_expense: acc.code.startsWith('52')
 }))
 
