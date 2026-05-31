@@ -38,7 +38,6 @@ export default function ReceiptsPage() {
   const [error, setError] = useState("")
   const [defaultGstRate, setDefaultGstRate] = useState<number>(0)
   const [selectedAccountId, setSelectedAccountId] = useState<number>(5210) // Default to Telephone and Utilities
-  const [businessUsePercentage, setBusinessUsePercentage] = useState<number>(100) // For vehicle expenses
   const [accounts, setAccounts] = useState<Account[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -439,15 +438,9 @@ export default function ReceiptsPage() {
         return
       }
 
-      // Validate business use percentage for motor vehicle expenses
+      // Validate account selection
       const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
-      const isVehicleExpense = selectedAccount?.code === '5220' || selectedAccount?.name.includes('Motor Vehicle')
-
-      if (isVehicleExpense && !businessUsePercentage) {
-        setError("Please enter the business use percentage for vehicle expenses")
-        setSaving(false)
-        return
-      }
+      const isVehicleExpense = selectedAccount?.code?.startsWith('52') || selectedAccount?.name.includes('Motor Vehicle')
 
       const txResponse = await authenticatedFetch("/api/transactions", {
         method: "POST",
@@ -462,7 +455,6 @@ export default function ReceiptsPage() {
           gst_hst_amount: extractedData.gst_hst_amount || 0,
           gst_hst_included: extractedData.gst_hst_included || false,
           is_vehicle_expense: isVehicleExpense,
-          business_use_percentage: isVehicleExpense ? businessUsePercentage : undefined,
         }),
       })
 
@@ -734,33 +726,6 @@ export default function ReceiptsPage() {
                 {(accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.type === 'EXPENSE').length} T2125 accounts available
               </p>
             </div>
-
-            {/* Motor Vehicle Expenses - require business use percentage */}
-            {(() => {
-              const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
-              return selectedAccount?.code === '5220' || selectedAccount?.name.includes('Motor Vehicle')
-            })() && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <label className="block text-sm font-medium mb-2 text-blue-900">
-                  🚗 Business Use Percentage *required for vehicle expenses
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={businessUsePercentage}
-                    onChange={(e) => setBusinessUsePercentage(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
-                    className="flex-1 px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-blue-900 font-medium">%</span>
-                </div>
-                <p className="mt-2 text-xs text-blue-800">
-                  Enter the percentage of this vehicle expense that is for business use (0-100%). CRA requires this for T2125 filing.
-                </p>
-              </div>
-            )}
 
             <div>
               <label className="block text-sm font-medium mb-1">Description / Vendor</label>
