@@ -9,8 +9,10 @@ export default function NewRecurringTransactionPage() {
   const [loading, setLoading] = useState(true)
 
   const [formData, setFormData] = useState({
+    category: 'BUSINESS',
     templateName: '',
     accountId: '',
+    subAccountName: '',
     amount: '',
     description: '',
     frequency: 'MONTHLY',
@@ -89,20 +91,31 @@ export default function NewRecurringTransactionPage() {
       const taxAmount = amount * (totalRate / 100)
 
       const authenticatedFetch = createAuthenticatedFetch()
+
+      // Build request body
+      const requestBody: any = {
+        template_name: formData.templateName,
+        amount: amount,
+        description: formData.description,
+        frequency: formData.frequency,
+        start_date: formData.startDate,
+        end_date: formData.endDate || null,
+        gst_hst_rate: totalRate,
+        gst_hst_amount: taxAmount,
+        category: formData.category,
+      }
+
+      // Add account or sub-account based on category
+      if (formData.category === 'BUSINESS' && formData.accountId) {
+        requestBody.account_id = parseInt(formData.accountId)
+      } else if (formData.category === 'HOME' || formData.category === 'VEHICLE') {
+        requestBody.sub_account_name = formData.subAccountName
+      }
+
       const response = await authenticatedFetch('/api/recurring-transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          template_name: formData.templateName,
-          account_id: parseInt(formData.accountId),
-          amount: amount,
-          description: formData.description,
-          frequency: formData.frequency,
-          start_date: formData.startDate,
-          end_date: formData.endDate || null,
-          gst_hst_rate: totalRate,
-          gst_hst_amount: taxAmount,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) throw new Error('Failed to create recurring transaction')
@@ -187,23 +200,82 @@ export default function NewRecurringTransactionPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Account *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
           <select
-            required
-            value={formData.accountId}
-            onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value as 'BUSINESS' | 'HOME' | 'VEHICLE', accountId: '', subAccountName: '' })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="">Select an account</option>
-            {accounts
-              .filter(account => (account.type === 'EXPENSE' || account.type === 'INCOME') && account.code !== '9281')
-              .map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
+            <option value="BUSINESS">Business</option>
+            <option value="HOME">Home</option>
+            <option value="VEHICLE">Vehicle</option>
           </select>
         </div>
+
+        {formData.category === 'BUSINESS' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Account *</label>
+            <select
+              required
+              value={formData.accountId}
+              onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select an account</option>
+              {accounts
+                .filter(account => account.category === 'BUSINESS' && (account.type === 'EXPENSE' || account.type === 'INCOME'))
+                .map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+        )}
+
+        {formData.category === 'HOME' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Expense Type *</label>
+            <select
+              required
+              value={formData.subAccountName}
+              onChange={(e) => setFormData({ ...formData, subAccountName: e.target.value, accountId: 'HOME' })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select expense type</option>
+              <option value="Heat">Heat</option>
+              <option value="Electricity">Electricity</option>
+              <option value="Insurance">Insurance</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Mortgage Interest">Mortgage Interest</option>
+              <option value="Property Taxes">Property Taxes</option>
+              <option value="Other Expenses">Other Expenses</option>
+            </select>
+          </div>
+        )}
+
+        {formData.category === 'VEHICLE' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Expense Type *</label>
+            <select
+              required
+              value={formData.subAccountName}
+              onChange={(e) => setFormData({ ...formData, subAccountName: e.target.value, accountId: 'VEHICLE' })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select vehicle expense type</option>
+              <option value="Fuel & Oil">Fuel & Oil</option>
+              <option value="Interest">Interest</option>
+              <option value="Insurance">Insurance</option>
+              <option value="License and Registration">License and Registration</option>
+              <option value="Maintenance and Repairs">Maintenance and Repairs</option>
+              <option value="Leasing">Leasing</option>
+              <option value="Electricity for Zero-Emission Vehicles">Electricity for Zero-Emission Vehicles</option>
+              <option value="Other Vehicle Expenses">Other Vehicle Expenses</option>
+              <option value="Business Parking Fees">Business Parking Fees</option>
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>

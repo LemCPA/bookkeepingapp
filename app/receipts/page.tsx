@@ -38,7 +38,9 @@ export default function ReceiptsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [defaultGstRate, setDefaultGstRate] = useState<number>(0)
-  const [selectedAccountId, setSelectedAccountId] = useState<number>(5210) // Default to Telephone and Utilities
+  const [selectedCategory, setSelectedCategory] = useState<'BUSINESS' | 'HOME' | 'VEHICLE'>('BUSINESS')
+  const [selectedAccountId, setSelectedAccountId] = useState<number | string>('') // For BUSINESS
+  const [selectedSubAccount, setSelectedSubAccount] = useState<string>('') // For HOME/VEHICLE
   const [accounts, setAccounts] = useState<Account[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -432,31 +434,43 @@ export default function ReceiptsPage() {
         submissionAmount = extractedData.amount - extractedData.gst_hst_amount
       }
 
-      // Validate account selection
-      if (!selectedAccountId) {
+      // Validate selection based on category
+      if (selectedCategory === 'BUSINESS' && !selectedAccountId) {
         setError("Please select an account")
         setSaving(false)
         return
       }
+      if ((selectedCategory === 'HOME' || selectedCategory === 'VEHICLE') && !selectedSubAccount) {
+        setError("Please select an expense type")
+        setSaving(false)
+        return
+      }
 
-      // Validate account selection
-      const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
-      const isVehicleExpense = selectedAccount?.code?.startsWith('52') || selectedAccount?.name.includes('Motor Vehicle')
+      // Build request body
+      const requestBody: any = {
+        transaction_date: extractedData.date,
+        amount: submissionAmount,
+        description: extractedData.description,
+        type: extractedData.type,
+        gst_hst_rate: extractedData.gst_hst_rate || 0,
+        gst_hst_amount: extractedData.gst_hst_amount || 0,
+        gst_hst_included: extractedData.gst_hst_included || false,
+        category: selectedCategory,
+      }
+
+      // Add account or sub-account based on category
+      if (selectedCategory === 'BUSINESS') {
+        requestBody.account_id = selectedAccountId
+        const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
+        requestBody.is_vehicle_expense = selectedAccount?.code?.startsWith('52') || selectedAccount?.name.includes('Motor Vehicle')
+      } else if (selectedCategory === 'HOME' || selectedCategory === 'VEHICLE') {
+        requestBody.sub_account_name = selectedSubAccount
+      }
 
       const txResponse = await authenticatedFetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          transaction_date: extractedData.date,
-          amount: submissionAmount,
-          description: extractedData.description,
-          type: extractedData.type,
-          account_id: selectedAccountId,
-          gst_hst_rate: extractedData.gst_hst_rate || 0,
-          gst_hst_amount: extractedData.gst_hst_amount || 0,
-          gst_hst_included: extractedData.gst_hst_included || false,
-          is_vehicle_expense: isVehicleExpense,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       if (!txResponse.ok) throw new Error("Failed to create transaction")
@@ -707,26 +721,90 @@ export default function ReceiptsPage() {
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                Expense Account <span className="text-red-600">*required</span>
+                Category <span className="text-red-600">*required</span>
               </label>
               <select
-                value={selectedAccountId}
-                onChange={(e) => setSelectedAccountId(parseInt(e.target.value))}
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value as 'BUSINESS' | 'HOME' | 'VEHICLE')
+                  setSelectedAccountId('')
+                  setSelectedSubAccount('')
+                }}
                 className="w-full px-3 py-2 border rounded-lg"
               >
-                <option value={0}>📁 Select an account...</option>
-                {(accounts.length > 0 ? accounts : fallbackAccounts)
-                  .filter(account => account.type === 'EXPENSE' && account.code !== '9281')
-                  .map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.code} - {account.name}
-                    </option>
-                  ))}
+                <option value="BUSINESS">Business</option>
+                <option value="HOME">Home</option>
+                <option value="VEHICLE">Vehicle</option>
               </select>
-              <p className="mt-1 text-xs text-gray-600">
-                {(accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.type === 'EXPENSE' && !a.code.endsWith('0')).length} T2125 accounts available
-              </p>
             </div>
+
+            {selectedCategory === 'BUSINESS' && (
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Expense Account <span className="text-red-600">*required</span>
+                </label>
+                <select
+                  value={selectedAccountId}
+                  onChange={(e) => setSelectedAccountId(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="">📁 Select an account...</option>
+                  {(accounts.length > 0 ? accounts : fallbackAccounts)
+                    .filter(account => account.type === 'EXPENSE' && account.category === 'BUSINESS')
+                    .map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.code} - {account.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {selectedCategory === 'HOME' && (
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Expense Type <span className="text-red-600">*required</span>
+                </label>
+                <select
+                  value={selectedSubAccount}
+                  onChange={(e) => setSelectedSubAccount(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="">Select expense type...</option>
+                  <option value="Heat">Heat</option>
+                  <option value="Electricity">Electricity</option>
+                  <option value="Insurance">Insurance</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Mortgage Interest">Mortgage Interest</option>
+                  <option value="Property Taxes">Property Taxes</option>
+                  <option value="Other Expenses">Other Expenses</option>
+                </select>
+              </div>
+            )}
+
+            {selectedCategory === 'VEHICLE' && (
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Vehicle Expense Type <span className="text-red-600">*required</span>
+                </label>
+                <select
+                  value={selectedSubAccount}
+                  onChange={(e) => setSelectedSubAccount(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="">Select vehicle expense type...</option>
+                  <option value="Fuel & Oil">Fuel & Oil</option>
+                  <option value="Interest">Interest</option>
+                  <option value="Insurance">Insurance</option>
+                  <option value="License and Registration">License and Registration</option>
+                  <option value="Maintenance and Repairs">Maintenance and Repairs</option>
+                  <option value="Leasing">Leasing</option>
+                  <option value="Electricity for Zero-Emission Vehicles">Electricity for Zero-Emission Vehicles</option>
+                  <option value="Other Vehicle Expenses">Other Vehicle Expenses</option>
+                  <option value="Business Parking Fees">Business Parking Fees</option>
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium mb-1">Description / Vendor</label>
