@@ -35,6 +35,7 @@ const DEFAULT_ACCOUNTS = [
   { code: '5225', name: 'Motor Vehicle Expenses - Parking and Tolls', type: 'EXPENSE' },
   { code: '5226', name: 'Motor Vehicle Expenses - Other', type: 'EXPENSE' },
   { code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE' },
+  { code: '5240', name: 'Other Expenses', type: 'EXPENSE' },
 ]
 
 export async function POST(request: NextRequest) {

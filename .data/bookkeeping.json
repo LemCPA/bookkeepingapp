@@ -655,6 +655,41 @@
       "name": "Capital Cost Allowance (CCA)",
       "type": "EXPENSE",
       "user_id": 2
+    },
+    {
+      "id": 61,
+      "code": "4000",
+      "name": "Service Revenue",
+      "type": "INCOME",
+      "user_id": 4
+    },
+    {
+      "id": 62,
+      "code": "4010",
+      "name": "Product Revenue",
+      "type": "INCOME",
+      "user_id": 4
+    },
+    {
+      "id": 63,
+      "code": "5240",
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 64,
+      "code": "5240",
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 65,
+      "code": "5240",
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "user_id": 2
     }
   ],
   "transactions": [
