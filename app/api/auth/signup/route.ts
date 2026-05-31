@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
         name,
         email_verified: true, // In production, set to false and send verification email
         gst_registered: false,
+        default_gst_hst_rate: 13, // Default to Ontario HST
         created_at: new Date().toISOString(),
       }
       db.users.push(newUser)

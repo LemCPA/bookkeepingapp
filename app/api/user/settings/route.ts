@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      default_gst_hst_rate: user.default_gst_hst_rate || 0,
+      default_gst_hst_rate: user.default_gst_hst_rate !== undefined ? user.default_gst_hst_rate : 13, // Default to Ontario HST
       gst_registered: user.gst_registered || false,
       gst_number: user.gst_number || '',
       business_name: user.business_name || '',
