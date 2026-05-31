@@ -437,20 +437,6 @@
       "user_id": 2
     },
     {
-      "id": 61,
-      "code": "4000",
-      "name": "Service Revenue",
-      "type": "INCOME",
-      "user_id": 4
-    },
-    {
-      "id": 62,
-      "code": "4010",
-      "name": "Product Revenue",
-      "type": "INCOME",
-      "user_id": 4
-    },
-    {
       "id": 31,
       "code": "5180",
       "name": "Rent",
@@ -619,20 +605,6 @@
       "user_id": 1
     },
     {
-      "id": 77,
-      "user_id": 4,
-      "code": "4100",
-      "name": "Service Income",
-      "type": "INCOME"
-    },
-    {
-      "id": 78,
-      "user_id": 4,
-      "code": "4200",
-      "name": "Product Sales",
-      "type": "INCOME"
-    },
-    {
       "id": 79,
       "user_id": 4,
       "code": "5000",
@@ -680,6 +652,20 @@
       "code": "5100",
       "name": "Office Rent",
       "type": "EXPENSE"
+    },
+    {
+      "id": 86,
+      "user_id": 4,
+      "code": "8000",
+      "name": "Gross Income",
+      "type": "INCOME"
+    },
+    {
+      "id": 87,
+      "user_id": 4,
+      "code": "8230",
+      "name": "Other Income",
+      "type": "INCOME"
     }
   ],
   "transactions": [
