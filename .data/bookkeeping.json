@@ -368,172 +368,333 @@
       "user_id": 2
     },
     {
-      "id": 69,
-      "code": "8000",
+      "id": 66,
       "name": "Gross Business Income",
       "type": "INCOME",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8000"
+    },
+    {
+      "id": 67,
+      "name": "Other Income",
+      "type": "INCOME",
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8230"
+    },
+    {
+      "id": 68,
+      "name": "Advertising",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8521"
+    },
+    {
+      "id": 69,
+      "name": "Meals and Entertainment",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8523"
     },
     {
       "id": 70,
-      "code": "8230",
-      "name": "Other Income",
-      "type": "INCOME",
-      "user_id": 4
+      "name": "Bad Debts",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8590"
     },
     {
       "id": 71,
-      "code": "8521",
-      "name": "Advertising",
+      "name": "Insurance",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8690"
     },
     {
       "id": 72,
-      "code": "8523",
-      "name": "Meals and Entertainment",
+      "name": "Interest and Bank Charges",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8710"
     },
     {
       "id": 73,
-      "code": "8590",
-      "name": "Bad Debts",
+      "name": "Business Taxes, Fees, Licenses, and Memberships",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8760"
     },
     {
       "id": 74,
-      "code": "8690",
-      "name": "Insurance",
+      "name": "Office Expenses",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8810"
     },
     {
       "id": 75,
-      "code": "8710",
-      "name": "Interest and Bank Charges",
+      "name": "Office Stationery and Supplies",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8811"
     },
     {
       "id": 76,
-      "code": "8760",
-      "name": "Business Taxes, Fees, Licenses, and Memberships",
+      "name": "Professional Fees (Accounting, Legal)",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8860"
     },
     {
       "id": 77,
-      "code": "8810",
-      "name": "Office Expenses",
+      "name": "Management and Administration Fees",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8871"
     },
     {
       "id": 78,
-      "code": "8811",
-      "name": "Office Stationery and Supplies",
+      "name": "Rent",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8910"
     },
     {
       "id": 79,
-      "code": "8860",
-      "name": "Professional Fees (Accounting, Legal)",
+      "name": "Repairs and Maintenance",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "8960"
     },
     {
       "id": 80,
-      "code": "8871",
-      "name": "Management and Administration Fees",
+      "name": "Salaries, Wages, and Benefits",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "9060"
     },
     {
       "id": 81,
-      "code": "8910",
-      "name": "Rent",
+      "name": "Property Taxes",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "9180"
     },
     {
       "id": 82,
-      "code": "8960",
-      "name": "Repairs and Maintenance",
+      "name": "Travel Expenses",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "9200"
     },
     {
       "id": 83,
-      "code": "9060",
-      "name": "Salaries, Wages, and Benefits",
+      "name": "Utilities",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "9220"
     },
     {
       "id": 84,
-      "code": "9180",
-      "name": "Property Taxes",
+      "name": "Fuel Costs (Excluding Motor Vehicles)",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "9224"
     },
     {
       "id": 85,
-      "code": "9200",
-      "name": "Travel Expenses",
+      "name": "Other Expenses",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "9270"
     },
     {
       "id": 86,
-      "code": "9220",
-      "name": "Utilities",
+      "name": "Delivery, Freight, and Express",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "9275"
     },
     {
       "id": 87,
-      "code": "9224",
-      "name": "Fuel Costs (Excluding Motor Vehicles)",
+      "name": "Capital Cost Allowance (CCA)",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "9936"
     },
     {
       "id": 88,
-      "code": "9275",
-      "name": "Delivery, Freight, and Express",
+      "name": "Business-Use-of-Home Expenses",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "BUSINESS",
+      "user_id": 4,
+      "code": "9945"
+    },
+    {
+      "id": 89,
+      "name": "Business-Use-of-Home Expenses",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "user_id": 4,
+      "isParent": true
     },
     {
       "id": 90,
-      "code": "9270",
-      "name": "Other Expenses",
+      "name": "Heat",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "HOME",
+      "user_id": 4,
+      "parentName": "Business-Use-of-Home Expenses"
     },
     {
       "id": 91,
-      "code": "9936",
-      "name": "Capital Cost Allowance (CCA)",
+      "name": "Electricity",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "HOME",
+      "user_id": 4,
+      "parentName": "Business-Use-of-Home Expenses"
     },
     {
       "id": 92,
-      "code": "9281",
-      "name": "Motor Vehicle Expenses",
+      "name": "Insurance",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "HOME",
+      "user_id": 4,
+      "parentName": "Business-Use-of-Home Expenses"
     },
     {
       "id": 93,
-      "code": "9945",
-      "name": "Business-Use-of-Home Expenses",
+      "name": "Maintenance",
       "type": "EXPENSE",
-      "user_id": 4
+      "category": "HOME",
+      "user_id": 4,
+      "parentName": "Business-Use-of-Home Expenses"
+    },
+    {
+      "id": 94,
+      "name": "Mortgage Interest",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "user_id": 4,
+      "parentName": "Business-Use-of-Home Expenses"
+    },
+    {
+      "id": 95,
+      "name": "Property Taxes",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "user_id": 4,
+      "parentName": "Business-Use-of-Home Expenses"
+    },
+    {
+      "id": 96,
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "user_id": 4,
+      "parentName": "Business-Use-of-Home Expenses"
+    },
+    {
+      "id": 97,
+      "name": "Motor Vehicle Expenses",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "code": "9281",
+      "isParent": true
+    },
+    {
+      "id": 98,
+      "name": "Fuel & Oil",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "parentCode": "9281"
+    },
+    {
+      "id": 99,
+      "name": "Interest",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "parentCode": "9281"
+    },
+    {
+      "id": 100,
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "parentCode": "9281"
+    },
+    {
+      "id": 101,
+      "name": "License and Registration",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "parentCode": "9281"
+    },
+    {
+      "id": 102,
+      "name": "Maintenance and Repairs",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "parentCode": "9281"
+    },
+    {
+      "id": 103,
+      "name": "Leasing",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "parentCode": "9281"
+    },
+    {
+      "id": 104,
+      "name": "Electricity for Zero-Emission Vehicles",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "parentCode": "9281"
+    },
+    {
+      "id": 105,
+      "name": "Other Vehicle Expenses",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "parentCode": "9281"
+    },
+    {
+      "id": 106,
+      "name": "Business Parking Fees",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 4,
+      "parentCode": "9281"
     }
   ],
   "transactions": [
