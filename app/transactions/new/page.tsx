@@ -387,6 +387,7 @@ function NewTransactionContent() {
                   // Filter by category and type
                   if (!account.category) return false
                   if (account.category !== 'BUSINESS') return false
+                  if (account.code === '9945') return false // Exclude HOME parent account
                   if (formData.type === 'INVOICE') return account.type === 'INCOME'
                   if (formData.type === 'RECEIPT') return account.type === 'EXPENSE'
                   return account.type === 'EXPENSE'
