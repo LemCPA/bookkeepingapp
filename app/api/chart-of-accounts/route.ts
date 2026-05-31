@@ -87,17 +87,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { initializeDefaults, code, name, type } = body
 
-    // Initialize default accounts if requested and user has none
+    // Initialize default accounts if requested
     if (initializeDefaults) {
       const existingAccounts = getChartOfAccounts(userId)
-      if (existingAccounts.length === 0) {
-        DEFAULT_ACCOUNTS.forEach(acc => {
+      const existingCodes = new Set(existingAccounts.map(acc => acc.code))
+      let addedCount = 0
+
+      // Add any missing default accounts
+      DEFAULT_ACCOUNTS.forEach(acc => {
+        if (!existingCodes.has(acc.code)) {
           createAccount(acc.code, acc.name, acc.type, userId)
-        })
-        const accounts = getChartOfAccounts(userId)
-        return NextResponse.json({ message: 'Default accounts created', accounts })
-      }
-      return NextResponse.json({ message: 'Accounts already exist', accounts: existingAccounts })
+          addedCount++
+        }
+      })
+
+      const accounts = getChartOfAccounts(userId)
+      return NextResponse.json({
+        message: addedCount > 0 ? `Added ${addedCount} missing accounts` : 'All default accounts exist',
+        accounts,
+        addedCount
+      })
     }
 
     if (!code || !name || !type) {
