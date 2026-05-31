@@ -35,6 +35,10 @@ export default function GstSettingsPage() {
     fetchData()
   }, [pathname])
 
+  useEffect(() => {
+    console.log('defaultGstRate changed to:', defaultGstRate)
+  }, [defaultGstRate])
+
   async function fetchData() {
     try {
       const authenticatedFetch = createAuthenticatedFetch()
@@ -43,6 +47,7 @@ export default function GstSettingsPage() {
       const settingsRes = await authenticatedFetch('/api/user/settings')
       if (settingsRes.ok) {
         const data = await settingsRes.json()
+        console.log('API returned default_gst_hst_rate:', data.default_gst_hst_rate)
         // Convert numeric rate back to province code for display
         const rateToProvince: { [key: number]: string } = {
           5: 'ab',   // Default to Alberta for 5% GST (most common)
@@ -50,7 +55,10 @@ export default function GstSettingsPage() {
           15: 'nb',  // Default to New Brunswick for 15% HST (most common)
         }
         const provinceCode = rateToProvince[data.default_gst_hst_rate] || 'on'
+        console.log('Setting province code to:', provinceCode)
         setDefaultGstRate(provinceCode)
+      } else {
+        console.error('Failed to fetch settings:', settingsRes.status)
       }
 
       // Fetch accounts
