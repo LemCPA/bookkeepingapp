@@ -355,7 +355,7 @@ export default function ConfirmReceiptPage() {
               >
                 <option value="">📁 Select an account...</option>
                 {accounts
-                  .filter(account => account.type === 'EXPENSE' && account.code !== '5220')
+                  .filter(account => account.type === 'EXPENSE' && account.code !== '9281')
                   .map((account) => (
                   <option key={account.id} value={account.id}>
                     {account.code} - {account.name}

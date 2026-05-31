@@ -520,6 +520,13 @@
       "name": "Capital Cost Allowance (CCA)",
       "type": "EXPENSE",
       "user_id": 4
+    },
+    {
+      "id": 92,
+      "code": "9281",
+      "name": "Motor Vehicle Expenses",
+      "type": "EXPENSE",
+      "user_id": 4
     }
   ],
   "transactions": [

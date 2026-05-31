@@ -360,7 +360,7 @@ function NewTransactionContent() {
               })
               .filter(account => {
                 // Exclude parent/group accounts (5220 is the parent for Motor Vehicle Expenses)
-                return account.code !== '5220'
+                return account.code !== '9281'
               })
               .map((account) => {
                 // Strip "Motor Vehicle Expenses - " prefix from vehicle expense account names

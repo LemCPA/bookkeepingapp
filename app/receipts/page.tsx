@@ -716,7 +716,7 @@ export default function ReceiptsPage() {
               >
                 <option value={0}>📁 Select an account...</option>
                 {(accounts.length > 0 ? accounts : fallbackAccounts)
-                  .filter(account => account.type === 'EXPENSE' && account.code !== '5220')
+                  .filter(account => account.type === 'EXPENSE' && account.code !== '9281')
                   .map((account) => (
                     <option key={account.id} value={account.id}>
                       {account.code} - {account.name}
