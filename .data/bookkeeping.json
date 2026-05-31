@@ -376,55 +376,6 @@
       "user_id": 2
     },
     {
-      "id": 31,
-      "code": "8910",
-      "name": "Rent",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 32,
-      "code": "9060",
-      "name": "Salaries and Wages",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 33,
-      "code": "9200",
-      "name": "Travel",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 34,
-      "code": "9220",
-      "name": "Telephone and Utilities",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 66,
-      "code": "9281",
-      "name": "Motor Vehicle Expenses - Fuel",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 43,
-      "code": "9936",
-      "name": "Capital Cost Allowance (CCA)",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 64,
-      "code": "9270",
-      "name": "Other Expenses",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
       "id": 68,
       "code": "9281",
       "name": "Motor Vehicle Expenses - Fuel",
@@ -432,46 +383,165 @@
       "user_id": 1
     },
     {
-      "id": 79,
-      "user_id": 4,
+      "id": 69,
+      "code": "8000",
+      "name": "Gross Business Income",
+      "type": "INCOME",
+      "user_id": 4
+    },
+    {
+      "id": 70,
+      "code": "8230",
+      "name": "Other Income",
+      "type": "INCOME",
+      "user_id": 4
+    },
+    {
+      "id": 71,
+      "code": "8521",
+      "name": "Advertising",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 72,
       "code": "8523",
       "name": "Meals and Entertainment",
-      "type": "EXPENSE"
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 73,
+      "code": "8590",
+      "name": "Bad Debts",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 74,
+      "code": "8690",
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 75,
+      "code": "8710",
+      "name": "Interest and Bank Charges",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 76,
+      "code": "8760",
+      "name": "Business Taxes, Fees, Licenses, and Memberships",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 77,
+      "code": "8810",
+      "name": "Office Expenses",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 78,
+      "code": "8811",
+      "name": "Office Stationery and Supplies",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 79,
+      "code": "8860",
+      "name": "Professional Fees (Accounting, Legal)",
+      "type": "EXPENSE",
+      "user_id": 4
     },
     {
       "id": 80,
-      "user_id": 4,
-      "code": "8811",
-      "name": "Office Supplies",
-      "type": "EXPENSE"
+      "code": "8871",
+      "name": "Management and Administration Fees",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 81,
+      "code": "8910",
+      "name": "Rent",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 82,
+      "code": "8960",
+      "name": "Repairs and Maintenance",
+      "type": "EXPENSE",
+      "user_id": 4
     },
     {
       "id": 83,
-      "user_id": 4,
-      "code": "8860",
-      "name": "Professional Services",
-      "type": "EXPENSE"
+      "code": "9060",
+      "name": "Salaries, Wages, and Benefits",
+      "type": "EXPENSE",
+      "user_id": 4
     },
     {
       "id": 84,
-      "user_id": 4,
-      "code": "8521",
-      "name": "Advertising and Marketing",
-      "type": "EXPENSE"
+      "code": "9180",
+      "name": "Property Taxes",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 85,
+      "code": "9200",
+      "name": "Travel Expenses",
+      "type": "EXPENSE",
+      "user_id": 4
     },
     {
       "id": 86,
-      "user_id": 4,
-      "code": "8000",
-      "name": "Gross Income",
-      "type": "INCOME"
+      "code": "9220",
+      "name": "Utilities",
+      "type": "EXPENSE",
+      "user_id": 4
     },
     {
       "id": 87,
-      "user_id": 4,
-      "code": "8230",
-      "name": "Other Income",
-      "type": "INCOME"
+      "code": "9224",
+      "name": "Fuel Costs (Excluding Motor Vehicles)",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 88,
+      "code": "9275",
+      "name": "Delivery, Freight, and Express",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 89,
+      "code": "9281",
+      "name": "Motor Vehicle Expenses",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 90,
+      "code": "9270",
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "user_id": 4
+    },
+    {
+      "id": 91,
+      "code": "9936",
+      "name": "Capital Cost Allowance (CCA)",
+      "type": "EXPENSE",
+      "user_id": 4
     }
   ],
   "transactions": [
