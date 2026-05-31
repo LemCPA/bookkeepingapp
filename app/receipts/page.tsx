@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { compressImage, getCompressionRatio } from "@/lib/image-compression"
 import { createAuthenticatedFetch } from "@/lib/auth"
+import { DEFAULT_ACCOUNTS } from "@/lib/default-accounts"
 
 interface ExtractedData {
   date: string
@@ -41,30 +42,15 @@ export default function ReceiptsPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Fallback T2125 expense accounts (Canadian sole proprietor standard)
-  const fallbackAccounts: Account[] = [
-    { id: 5100, code: '5100', name: 'Advertising', type: 'EXPENSE' },
-    { id: 5110, code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE' },
-    { id: 5120, code: '5120', name: 'Insurance', type: 'EXPENSE' },
-    { id: 5130, code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE' },
-    { id: 5140, code: '5140', name: 'Business Taxes and Licenses', type: 'EXPENSE' },
-    { id: 5150, code: '5150', name: 'Office Expenses', type: 'EXPENSE' },
-    { id: 5160, code: '5160', name: 'Supplies', type: 'EXPENSE' },
-    { id: 5170, code: '5170', name: 'Legal and Accounting Fees', type: 'EXPENSE' },
-    { id: 5180, code: '5180', name: 'Rent', type: 'EXPENSE' },
-    { id: 5190, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE' },
-    { id: 5200, code: '5200', name: 'Travel', type: 'EXPENSE' },
-    { id: 5210, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE' },
-    { id: 5220, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE' },
-    { id: 5221, code: '5221', name: 'Motor Vehicle Expenses - Fuel and Oil', type: 'EXPENSE' },
-    { id: 5222, code: '5222', name: 'Motor Vehicle Expenses - Interest (Loan)', type: 'EXPENSE' },
-    { id: 5223, code: '5223', name: 'Motor Vehicle Expenses - Insurance', type: 'EXPENSE' },
-    { id: 5224, code: '5224', name: 'Motor Vehicle Expenses - Licence and Registration', type: 'EXPENSE' },
-    { id: 5225, code: '5225', name: 'Motor Vehicle Expenses - Maintenance and Repairs', type: 'EXPENSE' },
-    { id: 5226, code: '5226', name: 'Motor Vehicle Expenses - Parking and Tolls', type: 'EXPENSE' },
-    { id: 5227, code: '5227', name: 'Motor Vehicle Expenses - Other', type: 'EXPENSE' },
-    { id: 5230, code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE' },
-  ]
+  // Fallback accounts from shared Chart of Accounts (source of truth)
+  const fallbackAccounts: Account[] = DEFAULT_ACCOUNTS.filter(
+    acc => acc.type === 'EXPENSE'
+  ).map(acc => ({
+    id: parseInt(acc.code),
+    code: acc.code,
+    name: acc.name,
+    type: acc.type
+  }))
 
   // Fetch user's default GST/HST rate and accounts on mount
   useEffect(() => {
