@@ -359,8 +359,8 @@ function NewTransactionContent() {
                 return account.type === 'EXPENSE' // ADJUSTMENT uses expense accounts
               })
               .filter(account => {
-                // Exclude parent/group accounts (those ending in 0)
-                return !account.code.endsWith('0')
+                // Exclude parent/group accounts (5220 is the parent for Motor Vehicle Expenses)
+                return account.code !== '5220'
               })
               .map((account) => {
                 // Strip "Motor Vehicle Expenses - " prefix from vehicle expense account names
