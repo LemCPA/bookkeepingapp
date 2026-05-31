@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         console.log('Attempting Supabase upload to bucket: documents, path:', storagePath)
 
         const { error: uploadError } = await supabase.storage
-          .from('documents')
+          .from('T2125')
           .upload(storagePath, new Uint8Array(buffer), {
             contentType: file.type,
             upsert: false,
