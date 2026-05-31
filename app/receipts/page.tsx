@@ -362,16 +362,29 @@ export default function ReceiptsPage() {
       const finalGstRate = (analysis.gst_hst_rate && analysis.gst_hst_rate > 0) ? analysis.gst_hst_rate : currentDefaultGstRate
       console.log("Final GST rate being used:", finalGstRate)
 
+      // Calculate GST/HST amount: if we have amount and rate, calculate the GST
+      // Default assumption: GST is INCLUDED in the receipt total (most Canadian receipts)
+      const finalAmount = analysis.amount ?? 0
+      let calculatedGstAmount = 0
+      if (finalAmount > 0 && finalGstRate > 0) {
+        // For included GST: amount / (1 + rate%) = subtotal, then subtotal * rate% = gst
+        calculatedGstAmount = (finalAmount / (1 + finalGstRate / 100)) * (finalGstRate / 100)
+      }
+      const finalGstAmount = analysis.gst_hst_amount && analysis.gst_hst_amount > 0 ? analysis.gst_hst_amount : parseFloat(calculatedGstAmount.toFixed(2))
+
+      console.log(`Calculated GST: Amount $${finalAmount} with ${finalGstRate}% rate = $${finalGstAmount}`)
+
       // Set extracted data with sensible defaults
       setExtractedData({
         date: analysis.date || new Date().toISOString().split('T')[0],
-        amount: analysis.amount ?? 0,
+        amount: finalAmount,
         description: analysis.description || analysis.vendor_name || "Receipt",
         vendor: analysis.vendor_name,
         gst_hst_rate: finalGstRate,
-        gst_hst_amount: analysis.gst_hst_amount !== undefined ? analysis.gst_hst_amount : 0,
+        gst_hst_amount: finalGstAmount,
+        gst_hst_included: finalGstRate > 0 ? true : false,  // Default to "included" if we have a rate
+        gst_hst_applicable: finalGstRate > 0,
         type: analysis.type || "RECEIPT",
-        // Let user decide - don't pre-select
       })
       setStep("confirm")
     } catch (err: any) {
@@ -386,7 +399,8 @@ export default function ReceiptsPage() {
         type: "RECEIPT",
         gst_hst_rate: currentDefaultGstRate,
         gst_hst_amount: 0,
-        // Let user decide on GST/HST status
+        gst_hst_included: currentDefaultGstRate > 0,
+        gst_hst_applicable: currentDefaultGstRate > 0,
       })
       setStep("confirm")
     } finally {
