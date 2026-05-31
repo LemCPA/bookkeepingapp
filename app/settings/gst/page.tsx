@@ -106,7 +106,11 @@ export default function GstSettingsPage() {
 
       if (res.ok) {
         setMessage('✓ GST/HST settings saved successfully!')
-        setTimeout(() => setMessage(''), 5000)
+        // Refresh data to confirm save and update UI
+        setTimeout(() => {
+          fetchData()
+          setMessage('')
+        }, 1500)
       } else {
         const errorData = await res.json()
         setMessage(errorData.error || 'Failed to save settings')
