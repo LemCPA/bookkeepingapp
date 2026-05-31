@@ -527,6 +527,13 @@
       "name": "Motor Vehicle Expenses",
       "type": "EXPENSE",
       "user_id": 4
+    },
+    {
+      "id": 93,
+      "code": "9945",
+      "name": "Business-Use-of-Home Expenses",
+      "type": "EXPENSE",
+      "user_id": 4
     }
   ],
   "transactions": [
