@@ -35,7 +35,6 @@ export const DEFAULT_ACCOUNTS: DefaultAccount[] = [
   { code: '9220', name: 'Utilities', type: 'EXPENSE' },
   { code: '9224', name: 'Fuel Costs (Excluding Motor Vehicles)', type: 'EXPENSE' },
   { code: '9275', name: 'Delivery, Freight, and Express', type: 'EXPENSE' },
-  { code: '9281', name: 'Motor Vehicle Expenses', type: 'EXPENSE' },
   { code: '9270', name: 'Other Expenses', type: 'EXPENSE' },
   { code: '9936', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE' },
 ]

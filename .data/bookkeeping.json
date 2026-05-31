@@ -354,14 +354,6 @@
       "user_id": 2
     },
     {
-      "id": 55,
-      "code": "9281",
-      "name": "Motor Vehicle Expenses - Insurance",
-      "type": "EXPENSE",
-      "user_id": 2,
-      "is_vehicle_expense": true
-    },
-    {
       "id": 54,
       "code": "9936",
       "name": "Capital Cost Allowance (CCA)",
@@ -374,13 +366,6 @@
       "name": "Other Expenses",
       "type": "EXPENSE",
       "user_id": 2
-    },
-    {
-      "id": 68,
-      "code": "9281",
-      "name": "Motor Vehicle Expenses - Fuel",
-      "type": "EXPENSE",
-      "user_id": 1
     },
     {
       "id": 69,
@@ -519,13 +504,6 @@
       "id": 88,
       "code": "9275",
       "name": "Delivery, Freight, and Express",
-      "type": "EXPENSE",
-      "user_id": 4
-    },
-    {
-      "id": 89,
-      "code": "9281",
-      "name": "Motor Vehicle Expenses",
       "type": "EXPENSE",
       "user_id": 4
     },
