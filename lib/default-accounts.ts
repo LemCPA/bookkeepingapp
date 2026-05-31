@@ -11,11 +11,9 @@ export interface DefaultAccount {
 }
 
 export const DEFAULT_ACCOUNTS: DefaultAccount[] = [
-  // Income
-  { code: '4000', name: 'Service Revenue', type: 'INCOME' },
-  { code: '4010', name: 'Product Revenue', type: 'INCOME' },
-  { code: '4100', name: 'Service Income', type: 'INCOME' },
-  { code: '4200', name: 'Product Sales', type: 'INCOME' },
+  // Income (T2125 Line 10400)
+  { code: '8000', name: 'Gross Income', type: 'INCOME' },
+  { code: '8230', name: 'Other Income', type: 'INCOME' },
 
   // Expenses
   { code: '5000', name: 'Meals and Entertainment', type: 'EXPENSE' },
