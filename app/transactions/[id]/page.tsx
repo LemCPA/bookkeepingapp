@@ -5,6 +5,21 @@ import { useParams, useRouter } from 'next/navigation'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { createAuthenticatedFetch, getAccessToken, getRefreshToken } from '@/lib/auth'
 
+// Helper function to generate Supabase public URL
+function getSupabasePublicUrl(storagePath: string): string {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!supabaseUrl || !storagePath) return ''
+
+  // Remove leading slash if present
+  const path = storagePath.startsWith('/') ? storagePath.slice(1) : storagePath
+
+  // Extract bucket and file path
+  // storagePath format: receipts/{userId}/{transactionId}/{fileName}
+  const bucket = 'T2125'
+
+  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`
+}
+
 interface NoteEntry {
   id: number
   content: string
@@ -62,6 +77,8 @@ export default function TransactionDetailPage() {
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
   const [editingNoteContent, setEditingNoteContent] = useState('')
   const [showNoteForm, setShowNoteForm] = useState(false)
+  const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(null)
+  const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
     fetchTransactionDetails()
@@ -212,9 +229,22 @@ export default function TransactionDetailPage() {
       {/* Header Card */}
       <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
         <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold">{transaction?.description}</h1>
-            <p className="text-gray-600">Transaction #{transaction?.id}</p>
+          <div className="flex items-start gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold">{transaction?.description}</h1>
+                {documents.length > 0 && (
+                  <button
+                    onClick={() => setSelectedDocumentId(documents[0].id)}
+                    className="text-2xl hover:scale-110 transition-transform cursor-pointer"
+                    title="View receipt"
+                  >
+                    📷
+                  </button>
+                )}
+              </div>
+              <p className="text-gray-600">Transaction #{transaction?.id}</p>
+            </div>
           </div>
           <div className="text-right">
             <div className="text-4xl font-bold text-blue-600">{formatCurrency(total)}</div>
@@ -411,27 +441,27 @@ export default function TransactionDetailPage() {
 
           {/* Documents Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-bold mb-4">Supporting Documents</h2>
+            <h2 className="text-lg font-bold mb-4">Receipt Images</h2>
             {documents.length > 0 ? (
               <div className="space-y-2">
                 {documents.map((doc) => (
-                  <a
+                  <button
                     key={doc.id}
-                    href={doc.file_path}
-                    className="block p-3 bg-gray-50 rounded hover:bg-gray-100 border border-gray-200"
+                    onClick={() => setSelectedDocumentId(doc.id)}
+                    className="w-full text-left p-3 bg-gray-50 rounded hover:bg-blue-50 border border-gray-200 hover:border-blue-300 transition-colors"
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-medium text-gray-900">{doc.file_name}</p>
+                        <p className="font-medium text-gray-900">📸 {doc.file_name}</p>
                         <p className="text-xs text-gray-600">{(doc.file_size / 1024).toFixed(2)} KB • Uploaded {formatDate(doc.uploaded_at)}</p>
                       </div>
-                      <span className="text-blue-600">↓</span>
+                      <span className="text-blue-600 text-lg">→</span>
                     </div>
-                  </a>
+                  </button>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">No documents uploaded yet</p>
+              <p className="text-gray-500 text-center py-4">No receipt images uploaded yet</p>
             )}
           </div>
         </div>
@@ -470,6 +500,61 @@ export default function TransactionDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Image Viewer Modal */}
+      {selectedDocumentId && documents.length > 0 && (
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-96 overflow-auto flex flex-col">
+            {/* Header */}
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-bold">Receipt</h3>
+              <button
+                onClick={() => {
+                  setSelectedDocumentId(null)
+                  setImageError(false)
+                }}
+                className="text-2xl hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Image */}
+            <div className="flex-1 flex items-center justify-center bg-gray-100 p-4 overflow-auto">
+              {imageError ? (
+                <div className="text-center text-gray-600">
+                  <p className="text-lg mb-2">Unable to load image</p>
+                  <p className="text-sm text-gray-500">The image file may be corrupted or unavailable</p>
+                </div>
+              ) : (
+                <img
+                  src={getSupabasePublicUrl(
+                    documents.find(d => d.id === selectedDocumentId)?.file_path || ''
+                  )}
+                  alt="Receipt"
+                  className="max-w-full max-h-full object-contain"
+                  onError={() => setImageError(true)}
+                />
+              )}
+            </div>
+
+            {/* Footer with file info */}
+            <div className="p-4 border-t bg-gray-50 text-sm text-gray-600">
+              {documents.find(d => d.id === selectedDocumentId) && (
+                <>
+                  <p className="font-medium text-gray-900">
+                    {documents.find(d => d.id === selectedDocumentId)?.file_name}
+                  </p>
+                  <p className="text-xs">
+                    {documents.find(d => d.id === selectedDocumentId) &&
+                      `${(documents.find(d => d.id === selectedDocumentId)!.file_size / 1024).toFixed(2)} KB`}
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
