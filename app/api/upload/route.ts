@@ -69,8 +69,10 @@ export async function POST(request: NextRequest) {
     const storagePath = `receipts/${userId}/${transactionId}/${fileName}`
 
     // Try Supabase Storage first (production)
-    if (supabase !== null) {
+    if (supabase !== null && process.env.NEXT_PUBLIC_SUPABASE_URL) {
       try {
+        console.log('Attempting Supabase upload to bucket: documents, path:', storagePath)
+
         const { error: uploadError } = await supabase.storage
           .from('documents')
           .upload(storagePath, new Uint8Array(buffer), {
@@ -80,9 +82,12 @@ export async function POST(request: NextRequest) {
 
         if (uploadError) {
           console.error('Supabase storage upload error:', uploadError)
+          // Log more details for debugging
+          console.error('Error status:', uploadError.status, 'Message:', uploadError.message)
           throw new Error(`Supabase upload failed: ${uploadError.message}`)
         }
 
+        console.log('Supabase upload successful')
         const actualSize = new Uint8Array(buffer).length
 
         createDocument(
@@ -98,10 +103,17 @@ export async function POST(request: NextRequest) {
           originalSize: file.size,
           storage: 'supabase',
         })
-      } catch (supabaseError) {
-        console.error('Supabase upload failed, falling back to filesystem:', supabaseError)
+      } catch (supabaseError: any) {
+        console.error('Supabase upload failed:', {
+          error: supabaseError?.message,
+          status: supabaseError?.status,
+          details: supabaseError?.toString(),
+        })
+        console.error('Stack:', supabaseError?.stack)
         // Fall through to filesystem backup below
       }
+    } else {
+      console.log('Supabase not configured, using filesystem fallback')
     }
 
     // Fall back to filesystem (development)
