@@ -358,6 +358,10 @@ function NewTransactionContent() {
                 if (formData.type === 'RECEIPT') return account.type === 'EXPENSE'
                 return account.type === 'EXPENSE' // ADJUSTMENT uses expense accounts
               })
+              .filter(account => {
+                // Exclude parent/group accounts (those ending in 0)
+                return !account.code.endsWith('0')
+              })
               .map((account) => {
                 // Strip "Motor Vehicle Expenses - " prefix from vehicle expense account names
                 const displayName = account.name.startsWith('Motor Vehicle Expenses - ')

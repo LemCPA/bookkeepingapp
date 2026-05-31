@@ -716,7 +716,7 @@ export default function ReceiptsPage() {
               >
                 <option value={0}>📁 Select an account...</option>
                 {(accounts.length > 0 ? accounts : fallbackAccounts)
-                  .filter(account => account.type === 'EXPENSE')
+                  .filter(account => account.type === 'EXPENSE' && !account.code.endsWith('0'))
                   .map((account) => (
                     <option key={account.id} value={account.id}>
                       {account.code} - {account.name}
@@ -724,7 +724,7 @@ export default function ReceiptsPage() {
                   ))}
               </select>
               <p className="mt-1 text-xs text-gray-600">
-                {(accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.type === 'EXPENSE').length} T2125 accounts available
+                {(accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.type === 'EXPENSE' && !a.code.endsWith('0')).length} T2125 accounts available
               </p>
             </div>
 
