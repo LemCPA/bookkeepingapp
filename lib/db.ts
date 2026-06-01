@@ -5,7 +5,7 @@ import { DEFAULT_ACCOUNTS } from './default-accounts'
 interface DbData {
   users: { id: number; email: string; password_hash: string; name: string; email_verified?: boolean; gst_registered?: boolean; gst_number?: string; default_gst_hst_rate?: number; qbo_access_token?: string; qbo_refresh_token?: string; qbo_realm_id?: string; qbo_connected_at?: string; plan?: string; stripe_customer_id?: string | null; business_name?: string; address_street?: string; city?: string; province?: string; postal_code?: string; phone?: string; business_email?: string; created_at: string }[]
   clients: { id: number; user_id: number; name: string; email?: string; address?: string; gst_registered: boolean; gst_number?: string; created_at: string }[]
-  chart_of_accounts: { id: number; code: string; name: string; type: string; user_id?: number; is_vehicle_expense?: boolean }[]
+  chart_of_accounts: { id: number; code?: string; name: string; type: string; user_id?: number; is_vehicle_expense?: boolean; parent_account_id?: number; category?: string }[]
   transactions: { id: number; user_id: number; client_id?: number; account_id?: number; transaction_date: string; due_date?: string; amount: number; gst_hst_rate?: number; gst_hst_amount?: number; gst_hst_included?: boolean; description: string; type: string; reference_number?: string; created_at: string; updated_at?: string; reconciliation_id?: number; reconciliation_status?: string; internal_notes?: { id: number; content: string; createdAt: string; updatedAt?: string; createdBy?: string }[]; tags?: string[]; audit_trail?: { field: string; oldValue: any; newValue: any; changedAt: string; changedBy?: string }[]; project_id?: number; is_vehicle_expense?: boolean; business_use_percentage?: number }[]
   documents: { id: number; transaction_id: number; file_name: string; file_path: string; file_size: number; uploaded_at: string }[]
   bank_reconciliations: { id: number; user_id: number; account_id: number; statement_date: string; statement_opening_balance: number; statement_closing_balance: number; reconciliation_date: string; status: string; created_at: string; updated_at: string }[]
@@ -156,6 +156,9 @@ export function getDb(): DbData {
       if (!db.nextClientId) {
         db.nextClientId = 1
       }
+
+      // Establish parent-child relationships for account hierarchies
+      establishAccountHierarchies(db)
 
       // Save the updated database with new fields
       saveDb(db)
@@ -2364,4 +2367,33 @@ export function deleteOdometerReading(readingId: number) {
   }
 
   return false
+}
+
+/**
+ * Establish parent-child relationships for account hierarchies
+ * Links HOME category accounts to 9945 (Business-Use-of-Home Expenses)
+ * Links VEHICLE category accounts to 9281 (Motor Vehicle Expenses)
+ */
+function establishAccountHierarchies(db: DbData) {
+  // Find parent account IDs
+  const homeParent = db.chart_of_accounts.find(a => a.code === '9945')
+  const vehicleParent = db.chart_of_accounts.find(a => a.code === '9281')
+
+  // Link HOME category accounts to 9945
+  if (homeParent) {
+    db.chart_of_accounts.forEach(account => {
+      if (account.category === 'HOME' && account.code !== '9945') {
+        account.parent_account_id = homeParent.id
+      }
+    })
+  }
+
+  // Link VEHICLE category accounts to 9281
+  if (vehicleParent) {
+    db.chart_of_accounts.forEach(account => {
+      if (account.category === 'VEHICLE' && account.code !== '9281') {
+        account.parent_account_id = vehicleParent.id
+      }
+    })
+  }
 }

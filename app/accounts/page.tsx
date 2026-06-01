@@ -53,6 +53,17 @@ export default function AccountsPage() {
     EXPENSE: accounts.filter(a => a.type === 'EXPENSE'),
   }
 
+  // Get parent expense accounts (9945, 9281) and filter out their children from main list
+  const parentAccountCodes = ['9945', '9281']
+  const parentAccountIds = accounts
+    .filter(a => parentAccountCodes.includes(a.code))
+    .map(a => a.id)
+
+  // For display, show only parent accounts in main list, not their children
+  const expenseAccountsForDisplay = accountsByType.EXPENSE.filter(
+    a => !a.parent_account_id || parentAccountIds.includes(a.id)
+  )
+
   if (loading) {
     return <div className="text-center py-8">Loading accounts...</div>
   }
@@ -114,39 +125,33 @@ export default function AccountsPage() {
               <h3 className="font-semibold text-gray-900">EXPENSE</h3>
             </div>
             <div className="p-4">
-              {accountsByType.EXPENSE.length > 0 ? (
+              {expenseAccountsForDisplay.length > 0 ? (
                 <div className="space-y-2">
-                  {accountsByType.EXPENSE.map(acc => {
-                    // Get sub-accounts for 9945 (Business-Use-of-Home) and 9281 (Motor Vehicle)
-                    let hasSubAccounts = false
-                    let subAccounts: string[] = []
-
-                    if (acc.code === '9945') {
-                      subAccounts = ['Heat', 'Electricity', 'Insurance', 'Maintenance', 'Mortgage Interest', 'Property Taxes', 'Other Expenses']
-                      hasSubAccounts = true
-                    } else if (acc.code === '9281') {
-                      subAccounts = ['Fuel & Oil', 'Interest', 'Insurance', 'License and Registration', 'Maintenance and Repairs', 'Leasing', 'Electricity for Zero-Emission Vehicles', 'Other Vehicle Expenses', 'Business Parking Fees']
-                      hasSubAccounts = true
-                    }
+                  {expenseAccountsForDisplay.map(acc => {
+                    // Get child accounts for this parent
+                    const childAccounts = accounts.filter(a => a.parent_account_id === acc.id)
+                    const hasChildren = childAccounts.length > 0
 
                     return (
                       <div key={acc.id}>
                         {/* Parent Account */}
                         <div className="flex gap-3">
-                          <span className="text-gray-900 font-semibold flex-shrink-0 min-w-fit">
-                            {acc.code}
-                          </span>
+                          {acc.code && (
+                            <span className="text-gray-900 font-semibold flex-shrink-0 min-w-fit">
+                              {acc.code}
+                            </span>
+                          )}
                           <span className="text-gray-700 text-sm break-words">
                             {acc.name}
                           </span>
                         </div>
 
-                        {/* Sub-accounts (indented) */}
-                        {hasSubAccounts && (
+                        {/* Child accounts (indented, no codes) */}
+                        {hasChildren && (
                           <div className="mt-1 ml-6 space-y-1 border-l-2 border-gray-300 pl-3">
-                            {subAccounts.map((subName) => (
-                              <div key={subName} className="text-gray-600 text-sm">
-                                {subName}
+                            {childAccounts.map((child) => (
+                              <div key={child.id} className="text-gray-600 text-sm">
+                                {child.name}
                               </div>
                             ))}
                           </div>
