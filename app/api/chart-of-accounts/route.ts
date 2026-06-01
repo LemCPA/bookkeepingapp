@@ -4,6 +4,7 @@ import { getUserIdFromRequest } from '@/lib/auth-server'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
 import { DEFAULT_ACCOUNTS } from '@/lib/default-accounts'
+import { getCached, setCached, invalidateCache } from '@/lib/cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,12 +17,25 @@ export async function GET(request: NextRequest) {
     // Get optional type filter from query parameter
     const typeFilter = request.nextUrl.searchParams.get('type')
 
+    // Create cache key based on userId and typeFilter
+    const cacheKey = `accounts-${userId}-${typeFilter || 'all'}`
+
+    // Check cache first
+    const cachedAccounts = getCached(cacheKey)
+    if (cachedAccounts) {
+      console.log(`Cache hit for ${cacheKey}`)
+      return NextResponse.json(cachedAccounts)
+    }
+
     let accounts = getChartOfAccounts(userId)
 
     // Filter by type if provided (e.g., ?type=EXPENSE)
     if (typeFilter) {
       accounts = accounts.filter(a => a.type === typeFilter)
     }
+
+    // Cache the result for 5 minutes
+    setCached(cacheKey, accounts, 5 * 60 * 1000)
 
     return NextResponse.json(accounts)
   } catch (error) {
@@ -71,6 +85,9 @@ export async function POST(request: NextRequest) {
         }
       })
 
+      // Invalidate cache for this user
+      invalidateCache(`accounts-${userId}`)
+
       const accounts = getChartOfAccounts(userId)
       return NextResponse.json({
         message: addedCount > 0 ? `Added ${addedCount} missing accounts` : 'All default accounts exist',
@@ -87,6 +104,10 @@ export async function POST(request: NextRequest) {
     }
 
     const result = createAccount(code, name, type, userId)
+
+    // Invalidate cache for this user
+    invalidateCache(`accounts-${userId}`)
+
     return NextResponse.json(result)
   } catch (error: any) {
     console.error('Create account error:', error)
@@ -146,6 +167,10 @@ export async function PUT(request: NextRequest) {
     }
 
     updateAccount(id, code, name, type, userId)
+
+    // Invalidate cache for this user
+    invalidateCache(`accounts-${userId}`)
+
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Update account error:', error)
@@ -205,6 +230,10 @@ export async function DELETE(request: NextRequest) {
     }
 
     deleteAccount(id)
+
+    // Invalidate cache for this user
+    invalidateCache(`accounts-${userId}`)
+
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Delete account error:', error)
