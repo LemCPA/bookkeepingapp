@@ -93,8 +93,8 @@ export default function AccountsPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
-          {/* Left Column: INCOME (1/2 width) */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+          {/* Column 1: INCOME */}
           <div className="lg:col-span-1">
             <div className="border-b border-gray-200">
               <div className="p-4 bg-gray-50">
@@ -121,47 +121,108 @@ export default function AccountsPage() {
             </div>
           </div>
 
-          {/* Right Column: EXPENSE with Hierarchy (2/2 width) */}
+          {/* Column 2: BUSINESS EXPENSES */}
           <div className="lg:col-span-1">
             <div className="border-b border-gray-200">
               <div className="p-4 bg-gray-50">
-                <h3 className="font-semibold text-gray-900">EXPENSE</h3>
+                <h3 className="font-semibold text-gray-900">BUSINESS</h3>
               </div>
               <div className="p-4">
-                {expenseAccountsForDisplay.length > 0 ? (
-                  <div className="space-y-2">
-                    {expenseAccountsForDisplay.map(acc => {
-                      const childAccounts = accounts.filter(a => a.parent_account_id === acc.id && a.user_id === acc.user_id)
-                      const hasChildren = childAccounts.length > 0
-
-                      return (
-                        <div key={acc.id}>
-                          <div className="flex gap-3">
-                            {acc.code && (
-                              <span className="text-gray-900 font-semibold flex-shrink-0 min-w-fit">
-                                {acc.code}
-                              </span>
-                            )}
-                            <span className="text-gray-700 text-sm break-words">
-                              {acc.name}
-                            </span>
-                          </div>
-                          {hasChildren && (
-                            <div className="mt-1 ml-6 space-y-1 border-l-2 border-gray-300 pl-3">
-                              {childAccounts.map((child) => (
-                                <div key={child.id} className="text-gray-600 text-sm">
-                                  {child.name}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                {(() => {
+                  const businessExpenses = accountsByType.EXPENSE.filter(a => a.category === 'BUSINESS')
+                  return businessExpenses.length > 0 ? (
+                    <div className="space-y-2">
+                      {businessExpenses.map(acc => (
+                        <div key={acc.id} className="flex gap-3">
+                          <span className="text-gray-900 font-semibold flex-shrink-0">
+                            {acc.code}
+                          </span>
+                          <span className="text-gray-700 text-sm break-words">
+                            {acc.name}
+                          </span>
                         </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-gray-600 text-sm">No accounts yet</p>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm">No accounts yet</p>
+                  )
+                })()}
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3: VEHICLE EXPENSES with Hierarchy */}
+          <div className="lg:col-span-1">
+            <div className="border-b border-gray-200">
+              <div className="p-4 bg-gray-50">
+                <h3 className="font-semibold text-gray-900">VEHICLE</h3>
+              </div>
+              <div className="p-4">
+                {(() => {
+                  const vehicleParent = accountsByType.EXPENSE.find(a => a.code === '9281')
+                  if (!vehicleParent) return <p className="text-gray-600 text-sm">No accounts yet</p>
+
+                  const vehicleChildren = accounts.filter(a => a.parent_account_id === vehicleParent.id && a.user_id === vehicleParent.user_id)
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex gap-3">
+                        <span className="text-gray-900 font-semibold flex-shrink-0">
+                          {vehicleParent.code}
+                        </span>
+                        <span className="text-gray-700 text-sm break-words">
+                          {vehicleParent.name}
+                        </span>
+                      </div>
+                      {vehicleChildren.length > 0 && (
+                        <div className="mt-1 ml-6 space-y-1 border-l-2 border-gray-300 pl-3">
+                          {vehicleChildren.map((child) => (
+                            <div key={child.id} className="text-gray-600 text-sm">
+                              {child.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
+              </div>
+            </div>
+          </div>
+
+          {/* Column 4: HOME EXPENSES with Hierarchy */}
+          <div className="lg:col-span-1">
+            <div className="border-b border-gray-200">
+              <div className="p-4 bg-gray-50">
+                <h3 className="font-semibold text-gray-900">HOME</h3>
+              </div>
+              <div className="p-4">
+                {(() => {
+                  const homeParent = accountsByType.EXPENSE.find(a => a.code === '9945')
+                  if (!homeParent) return <p className="text-gray-600 text-sm">No accounts yet</p>
+
+                  const homeChildren = accounts.filter(a => a.parent_account_id === homeParent.id && a.user_id === homeParent.user_id)
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex gap-3">
+                        <span className="text-gray-900 font-semibold flex-shrink-0">
+                          {homeParent.code}
+                        </span>
+                        <span className="text-gray-700 text-sm break-words">
+                          {homeParent.name}
+                        </span>
+                      </div>
+                      {homeChildren.length > 0 && (
+                        <div className="mt-1 ml-6 space-y-1 border-l-2 border-gray-300 pl-3">
+                          {homeChildren.map((child) => (
+                            <div key={child.id} className="text-gray-600 text-sm">
+                              {child.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </div>
