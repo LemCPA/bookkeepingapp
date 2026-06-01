@@ -432,7 +432,10 @@ export function getChartOfAccounts(userId: number) {
   const db = getDb()
   return db.chart_of_accounts
     .filter(a => a.user_id === userId)
-    .sort((a, b) => a.code.localeCompare(b.code))
+    .sort((a, b) => {
+      if (!a.code || !b.code) return (a.code ? -1 : b.code ? 1 : 0)
+      return a.code.localeCompare(b.code)
+    })
     .map(account => {
       // Add category from DEFAULT_ACCOUNTS based on code
       const defaultAccount = DEFAULT_ACCOUNTS.find(acc => acc.code === account.code)
@@ -687,7 +690,10 @@ export function getBalanceSheetData(userId: number, month: string) {
       code: a.code,
       balance: accountBalances[a.id] || 0,
     }))
-    .sort((a, b) => a.code.localeCompare(b.code))
+    .sort((a, b) => {
+      if (!a.code || !b.code) return (a.code ? -1 : b.code ? 1 : 0)
+      return a.code.localeCompare(b.code)
+    })
 }
 
 export function getIncomeStatementData(userId: number, month: string) {
@@ -721,7 +727,10 @@ export function getIncomeStatementData(userId: number, month: string) {
       code: a.code,
       balance: accountBalances[a.id] || 0,
     }))
-    .sort((a, b) => a.code.localeCompare(b.code))
+    .sort((a, b) => {
+      if (!a.code || !b.code) return (a.code ? -1 : b.code ? 1 : 0)
+      return a.code.localeCompare(b.code)
+    })
 }
 
 export function getGstFilingData(userId: number, startMonth?: string, endMonth?: string) {
@@ -821,7 +830,11 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
   // Get all income and expense accounts for this user
   const accounts = db.chart_of_accounts
     .filter(a => a.user_id === userId && a.type && ['INCOME', 'EXPENSE'].includes(a.type))
-    .sort((a, b) => a.code.localeCompare(b.code))
+    .sort((a, b) => {
+      // Handle undefined codes (HOME/VEHICLE parent accounts)
+      if (!a.code || !b.code) return (a.code ? -1 : b.code ? 1 : 0)
+      return a.code.localeCompare(b.code)
+    })
 
   // Initialize data structure: account -> month -> balance
   const accountData: { [accountId: number]: { [month: string]: number } } = {}
@@ -982,7 +995,10 @@ export function getExpenseByCategoryData(userId: number, startMonth: string, end
   // Get all expense accounts for this user
   const allExpenseAccounts = db.chart_of_accounts
     .filter(a => a.user_id === userId && a.type === 'EXPENSE')
-    .sort((a, b) => a.code.localeCompare(b.code))
+    .sort((a, b) => {
+      if (!a.code || !b.code) return (a.code ? -1 : b.code ? 1 : 0)
+      return a.code.localeCompare(b.code)
+    })
 
   // Use selected categories, or all if none selected
   const categoriesToShow = selectedCategories.length > 0
