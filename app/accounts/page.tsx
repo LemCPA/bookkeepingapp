@@ -130,8 +130,8 @@ export default function AccountsPage() {
               {expenseAccountsForDisplay.length > 0 ? (
                 <div className="space-y-2">
                   {expenseAccountsForDisplay.map(acc => {
-                    // Get child accounts for this parent
-                    const childAccounts = accounts.filter(a => a.parent_account_id === acc.id)
+                    // Get child accounts for this parent (same user only)
+                    const childAccounts = accounts.filter(a => a.parent_account_id === acc.id && a.user_id === acc.user_id)
                     const hasChildren = childAccounts.length > 0
 
                     return (
