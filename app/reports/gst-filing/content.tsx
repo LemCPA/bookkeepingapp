@@ -21,6 +21,8 @@ export default function GstFilingContent() {
   const [endMonthNum, setEndMonthNum] = useState<string>('12')
   const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()))
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     const currentYear = new Date().getFullYear()
@@ -35,17 +37,29 @@ export default function GstFilingContent() {
 
     try {
       setLoading(true)
+      setError(null)
       const authenticatedFetch = createAuthenticatedFetch()
       const url = `/api/reports/gst-filing?startMonth=${start}&endMonth=${end}`
       const response = await authenticatedFetch(url)
       if (response.ok) {
         const data = await response.json()
         setFilingData(data)
+        setError(null)
+      } else if (response.status === 404) {
+        setFilingData(null)
+        setError('No GST/HST registration found. Please ensure your business is GST/HST registered.')
+      } else {
+        const errorData = await response.json()
+        setFilingData(null)
+        setError(errorData.error || 'Failed to load GST filing data')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching GST filing data:', error)
+      setFilingData(null)
+      setError('Error loading GST filing data')
     } finally {
       setLoading(false)
+      setLoaded(true)
     }
   }
 
@@ -57,8 +71,19 @@ export default function GstFilingContent() {
     }
   }
 
-  if (loading || !filingData) {
+  if (loading) {
     return <div className="text-center py-8">Loading GST filing data...</div>
+  }
+
+  if (error || !filingData) {
+    return (
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6">GST/HST Filing</h1>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-blue-800">
+          {error || 'No GST/HST filing data available for the selected period.'}
+        </div>
+      </div>
+    )
   }
 
   return (
