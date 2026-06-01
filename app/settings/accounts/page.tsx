@@ -161,11 +161,6 @@ const menuItems: { id: MenuItem; label: string }[] = [
             {/* Chart of Accounts Section */}
             <div className="space-y-6">
                 <div>
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Chart of Accounts</h3>
-                    <p className="text-gray-600 text-sm mt-1">Manage your business accounts for categorizing transactions</p>
-                  </div>
-
                   {message && (
                     <div className={`p-4 rounded-lg mb-4 ${message.includes('✓') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
                       {message}
