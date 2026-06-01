@@ -172,32 +172,8 @@ const menuItems: { id: MenuItem; label: string }[] = [
                       <p className="text-gray-500">No accounts set up yet</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-                      {/* Column 1: INCOME */}
-                      <div>
-                        <div className="bg-gray-50 p-4 border-b border-gray-200">
-                          <h3 className="font-semibold text-gray-900 text-sm uppercase">INCOME</h3>
-                        </div>
-                        <div className="p-4">
-                          {(() => {
-                            const incomeAccounts = accounts.filter(a => a.type === 'INCOME')
-                            return incomeAccounts.length > 0 ? (
-                              <div className="space-y-2">
-                                {incomeAccounts.map(acc => (
-                                  <div key={acc.id} className="flex gap-2 text-sm">
-                                    <span className="text-gray-900 font-semibold flex-shrink-0 min-w-max">{acc.code}</span>
-                                    <span className="text-gray-600 text-xs">{acc.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-gray-500 text-sm">No accounts</p>
-                            )
-                          })()}
-                        </div>
-                      </div>
-
-                      {/* Column 2: BUSINESS EXPENSES */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                      {/* Column 1: BUSINESS EXPENSES */}
                       <div>
                         <div className="bg-gray-50 p-4 border-b border-gray-200">
                           <h3 className="font-semibold text-gray-900 text-sm uppercase">BUSINESS</h3>
