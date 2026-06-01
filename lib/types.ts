@@ -19,6 +19,7 @@ export interface ChartOfAccount {
   client_id?: number
   is_vehicle_expense?: boolean
   category?: 'BUSINESS' | 'HOME' | 'VEHICLE'
+  parent_account_id?: number
 }
 
 export interface AuditEntry {
