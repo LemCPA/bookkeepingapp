@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { createAuthenticatedFetch } from '@/lib/auth'
 
+// Cache-bust: Force reload to display hierarchy with correct parent_account_id references
+
 interface Account {
   id: number
   code: string
