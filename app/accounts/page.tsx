@@ -91,9 +91,9 @@ export default function AccountsPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
-          {/* Left Column: INCOME */}
-          <div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+          {/* Left Column: INCOME (1/3 width) */}
+          <div className="lg:col-span-1">
             <div className="border-b border-gray-200">
               <div className="p-4 bg-gray-50">
                 <h3 className="font-semibold text-gray-900">INCOME</h3>
@@ -119,8 +119,8 @@ export default function AccountsPage() {
             </div>
           </div>
 
-          {/* Right Column: Expenses with Hierarchy */}
-          <div>
+          {/* Right Column: Expenses with Hierarchy (2/3 width) */}
+          <div className="lg:col-span-2">
             <div className="p-4 bg-gray-50">
               <h3 className="font-semibold text-gray-900">EXPENSE</h3>
             </div>
