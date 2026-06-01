@@ -574,7 +574,7 @@
       "name": "Motor Vehicle Expenses",
       "type": "EXPENSE",
       "user_id": 1,
-      "category": "BUSINESS"
+      "category": "VEHICLE"
     },
     {
       "id": 109,
