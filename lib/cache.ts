@@ -31,7 +31,7 @@ export function invalidateCache(pattern?: string): void {
     return
   }
 
-  for (const key of cache.keys()) {
+  for (const key of Array.from(cache.keys())) {
     if (key.includes(pattern)) {
       cache.delete(key)
     }
