@@ -557,7 +557,8 @@
       "type": "EXPENSE",
       "category": "HOME",
       "user_id": 4,
-      "isParent": true
+      "isParent": true,
+      "parent_account_id": 88
     },
     {
       "id": 90,
@@ -565,7 +566,8 @@
       "type": "EXPENSE",
       "category": "HOME",
       "user_id": 4,
-      "parentName": "Business-Use-of-Home Expenses"
+      "parentName": "Business-Use-of-Home Expenses",
+      "parent_account_id": 88
     },
     {
       "id": 91,
@@ -573,7 +575,8 @@
       "type": "EXPENSE",
       "category": "HOME",
       "user_id": 4,
-      "parentName": "Business-Use-of-Home Expenses"
+      "parentName": "Business-Use-of-Home Expenses",
+      "parent_account_id": 88
     },
     {
       "id": 92,
@@ -581,7 +584,8 @@
       "type": "EXPENSE",
       "category": "HOME",
       "user_id": 4,
-      "parentName": "Business-Use-of-Home Expenses"
+      "parentName": "Business-Use-of-Home Expenses",
+      "parent_account_id": 88
     },
     {
       "id": 93,
@@ -589,7 +593,8 @@
       "type": "EXPENSE",
       "category": "HOME",
       "user_id": 4,
-      "parentName": "Business-Use-of-Home Expenses"
+      "parentName": "Business-Use-of-Home Expenses",
+      "parent_account_id": 88
     },
     {
       "id": 94,
@@ -597,7 +602,8 @@
       "type": "EXPENSE",
       "category": "HOME",
       "user_id": 4,
-      "parentName": "Business-Use-of-Home Expenses"
+      "parentName": "Business-Use-of-Home Expenses",
+      "parent_account_id": 88
     },
     {
       "id": 95,
@@ -605,7 +611,8 @@
       "type": "EXPENSE",
       "category": "HOME",
       "user_id": 4,
-      "parentName": "Business-Use-of-Home Expenses"
+      "parentName": "Business-Use-of-Home Expenses",
+      "parent_account_id": 88
     },
     {
       "id": 96,
@@ -613,7 +620,8 @@
       "type": "EXPENSE",
       "category": "HOME",
       "user_id": 4,
-      "parentName": "Business-Use-of-Home Expenses"
+      "parentName": "Business-Use-of-Home Expenses",
+      "parent_account_id": 88
     },
     {
       "id": 97,
@@ -630,7 +638,8 @@
       "type": "EXPENSE",
       "category": "VEHICLE",
       "user_id": 4,
-      "parentCode": "9281"
+      "parentCode": "9281",
+      "parent_account_id": 97
     },
     {
       "id": 99,
@@ -638,7 +647,8 @@
       "type": "EXPENSE",
       "category": "VEHICLE",
       "user_id": 4,
-      "parentCode": "9281"
+      "parentCode": "9281",
+      "parent_account_id": 97
     },
     {
       "id": 100,
@@ -646,7 +656,8 @@
       "type": "EXPENSE",
       "category": "VEHICLE",
       "user_id": 4,
-      "parentCode": "9281"
+      "parentCode": "9281",
+      "parent_account_id": 97
     },
     {
       "id": 101,
@@ -654,7 +665,8 @@
       "type": "EXPENSE",
       "category": "VEHICLE",
       "user_id": 4,
-      "parentCode": "9281"
+      "parentCode": "9281",
+      "parent_account_id": 97
     },
     {
       "id": 102,
@@ -662,7 +674,8 @@
       "type": "EXPENSE",
       "category": "VEHICLE",
       "user_id": 4,
-      "parentCode": "9281"
+      "parentCode": "9281",
+      "parent_account_id": 97
     },
     {
       "id": 103,
@@ -670,7 +683,8 @@
       "type": "EXPENSE",
       "category": "VEHICLE",
       "user_id": 4,
-      "parentCode": "9281"
+      "parentCode": "9281",
+      "parent_account_id": 97
     },
     {
       "id": 104,
@@ -678,7 +692,8 @@
       "type": "EXPENSE",
       "category": "VEHICLE",
       "user_id": 4,
-      "parentCode": "9281"
+      "parentCode": "9281",
+      "parent_account_id": 97
     },
     {
       "id": 105,
@@ -686,7 +701,8 @@
       "type": "EXPENSE",
       "category": "VEHICLE",
       "user_id": 4,
-      "parentCode": "9281"
+      "parentCode": "9281",
+      "parent_account_id": 97
     },
     {
       "id": 106,
@@ -694,7 +710,152 @@
       "type": "EXPENSE",
       "category": "VEHICLE",
       "user_id": 4,
-      "parentCode": "9281"
+      "parentCode": "9281",
+      "parent_account_id": 97
+    },
+    {
+      "id": 107,
+      "code": "9945",
+      "name": "Business-Use-of-Home Expenses",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 108,
+      "code": "9281",
+      "name": "Motor Vehicle Expenses",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 109,
+      "name": "Heat",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "HOME",
+      "parent_account_id": 88
+    },
+    {
+      "id": 110,
+      "name": "Electricity",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "HOME",
+      "parent_account_id": 88
+    },
+    {
+      "id": 111,
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "HOME",
+      "parent_account_id": 88
+    },
+    {
+      "id": 112,
+      "name": "Maintenance",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "HOME",
+      "parent_account_id": 88
+    },
+    {
+      "id": 113,
+      "name": "Mortgage Interest",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "HOME",
+      "parent_account_id": 88
+    },
+    {
+      "id": 114,
+      "name": "Property Taxes",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "HOME",
+      "parent_account_id": 88
+    },
+    {
+      "id": 115,
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "HOME",
+      "parent_account_id": 88
+    },
+    {
+      "id": 116,
+      "name": "Fuel & Oil",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "VEHICLE",
+      "parent_account_id": 97
+    },
+    {
+      "id": 117,
+      "name": "Interest",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "VEHICLE",
+      "parent_account_id": 97
+    },
+    {
+      "id": 118,
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "VEHICLE",
+      "parent_account_id": 97
+    },
+    {
+      "id": 119,
+      "name": "License and Registration",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "VEHICLE",
+      "parent_account_id": 97
+    },
+    {
+      "id": 120,
+      "name": "Maintenance and Repairs",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "VEHICLE",
+      "parent_account_id": 97
+    },
+    {
+      "id": 121,
+      "name": "Leasing",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "VEHICLE",
+      "parent_account_id": 97
+    },
+    {
+      "id": 122,
+      "name": "Electricity for Zero-Emission Vehicles",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "VEHICLE",
+      "parent_account_id": 97
+    },
+    {
+      "id": 123,
+      "name": "Other Vehicle Expenses",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "VEHICLE",
+      "parent_account_id": 97
+    },
+    {
+      "id": 124,
+      "name": "Business Parking Fees",
+      "type": "EXPENSE",
+      "user_id": 1,
+      "category": "VEHICLE",
+      "parent_account_id": 97
     }
   ],
   "transactions": [
