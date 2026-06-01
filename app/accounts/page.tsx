@@ -80,19 +80,23 @@ export default function AccountsPage() {
           )}
         </div>
 
-        <div className="divide-y divide-gray-200">
-          {['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'].map(type => (
-            <div key={type}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+          {/* Left Column: INCOME */}
+          <div>
+            <div className="border-b border-gray-200">
               <div className="p-4 bg-gray-50">
-                <h3 className="font-semibold text-gray-900">{type}</h3>
+                <h3 className="font-semibold text-gray-900">INCOME</h3>
               </div>
               <div className="p-4">
-                {accountsByType[type as keyof typeof accountsByType].length > 0 ? (
+                {accountsByType.INCOME.length > 0 ? (
                   <div className="space-y-2">
-                    {accountsByType[type as keyof typeof accountsByType].map(acc => (
-                      <div key={acc.id} className="flex justify-between items-center">
-                        <span className="text-gray-900">
-                          <strong>{acc.code}</strong> - {acc.name}
+                    {accountsByType.INCOME.map(acc => (
+                      <div key={acc.id} className="flex gap-3">
+                        <span className="text-gray-900 font-semibold flex-shrink-0">
+                          {acc.code}
+                        </span>
+                        <span className="text-gray-700 text-sm break-words">
+                          {acc.name}
                         </span>
                       </div>
                     ))}
@@ -102,7 +106,60 @@ export default function AccountsPage() {
                 )}
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Right Column: Expenses with Hierarchy */}
+          <div>
+            <div className="p-4 bg-gray-50">
+              <h3 className="font-semibold text-gray-900">EXPENSE</h3>
+            </div>
+            <div className="p-4">
+              {accountsByType.EXPENSE.length > 0 ? (
+                <div className="space-y-2">
+                  {accountsByType.EXPENSE.map(acc => {
+                    // Get sub-accounts for 9945 (Business-Use-of-Home) and 9281 (Motor Vehicle)
+                    let hasSubAccounts = false
+                    let subAccounts: string[] = []
+
+                    if (acc.code === '9945') {
+                      subAccounts = ['Heat', 'Electricity', 'Insurance', 'Maintenance', 'Mortgage Interest', 'Property Taxes', 'Other Expenses']
+                      hasSubAccounts = true
+                    } else if (acc.code === '9281') {
+                      subAccounts = ['Fuel & Oil', 'Interest', 'Insurance', 'License and Registration', 'Maintenance and Repairs', 'Leasing', 'Electricity for Zero-Emission Vehicles', 'Other Vehicle Expenses', 'Business Parking Fees']
+                      hasSubAccounts = true
+                    }
+
+                    return (
+                      <div key={acc.id}>
+                        {/* Parent Account */}
+                        <div className="flex gap-3">
+                          <span className="text-gray-900 font-semibold flex-shrink-0 min-w-fit">
+                            {acc.code}
+                          </span>
+                          <span className="text-gray-700 text-sm break-words">
+                            {acc.name}
+                          </span>
+                        </div>
+
+                        {/* Sub-accounts (indented) */}
+                        {hasSubAccounts && (
+                          <div className="mt-1 ml-6 space-y-1 border-l-2 border-gray-300 pl-3">
+                            {subAccounts.map((subName) => (
+                              <div key={subName} className="text-gray-600 text-sm">
+                                {subName}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-gray-600 text-sm">No accounts yet</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

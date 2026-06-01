@@ -39,40 +39,8 @@ export const DEFAULT_ACCOUNTS: DefaultAccount[] = [
   { code: '9270', name: 'Other Expenses', type: 'EXPENSE', category: 'BUSINESS' },
   { code: '9275', name: 'Delivery, Freight, and Express', type: 'EXPENSE', category: 'BUSINESS' },
   { code: '9936', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE', category: 'BUSINESS' },
+
+  // GROUP ACCOUNTS (parent accounts for hierarchical display - no direct transactions)
   { code: '9945', name: 'Business-Use-of-Home Expenses', type: 'EXPENSE', category: 'BUSINESS' },
-
-  // HOME - Business-Use-of-Home Expenses (no codes, only sub-accounts)
-  {
-    name: 'Business-Use-of-Home Expenses',
-    type: 'EXPENSE',
-    category: 'HOME',
-    subAccounts: [
-      { name: 'Heat', type: 'EXPENSE', category: 'HOME' },
-      { name: 'Electricity', type: 'EXPENSE', category: 'HOME' },
-      { name: 'Insurance', type: 'EXPENSE', category: 'HOME' },
-      { name: 'Maintenance', type: 'EXPENSE', category: 'HOME' },
-      { name: 'Mortgage Interest', type: 'EXPENSE', category: 'HOME' },
-      { name: 'Property Taxes', type: 'EXPENSE', category: 'HOME' },
-      { name: 'Other Expenses', type: 'EXPENSE', category: 'HOME' },
-    ],
-  },
-
-  // VEHICLE - Motor Vehicle Expenses (code 9281, with sub-items without codes)
-  {
-    code: '9281',
-    name: 'Motor Vehicle Expenses',
-    type: 'EXPENSE',
-    category: 'VEHICLE',
-    subAccounts: [
-      { name: 'Fuel & Oil', type: 'EXPENSE', category: 'VEHICLE' },
-      { name: 'Interest', type: 'EXPENSE', category: 'VEHICLE' },
-      { name: 'Insurance', type: 'EXPENSE', category: 'VEHICLE' },
-      { name: 'License and Registration', type: 'EXPENSE', category: 'VEHICLE' },
-      { name: 'Maintenance and Repairs', type: 'EXPENSE', category: 'VEHICLE' },
-      { name: 'Leasing', type: 'EXPENSE', category: 'VEHICLE' },
-      { name: 'Electricity for Zero-Emission Vehicles', type: 'EXPENSE', category: 'VEHICLE' },
-      { name: 'Other Vehicle Expenses', type: 'EXPENSE', category: 'VEHICLE' },
-      { name: 'Business Parking Fees', type: 'EXPENSE', category: 'VEHICLE' },
-    ],
-  },
+  { code: '9281', name: 'Motor Vehicle Expenses', type: 'EXPENSE', category: 'BUSINESS' },
 ]
