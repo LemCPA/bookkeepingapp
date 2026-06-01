@@ -740,7 +740,7 @@ export function getGstFilingData(userId: number, startMonth?: string, endMonth?:
   const db = getDb()
   const user = db.users.find(u => u.id === userId)
 
-  if (!user || !user.gst_registered) {
+  if (!user) {
     return null
   }
 
@@ -767,6 +767,12 @@ export function getGstFilingData(userId: number, startMonth?: string, endMonth?:
       gstPaid += t.gst_hst_amount ?? 0
     }
   })
+
+  // If user has no GST transactions and is not explicitly registered, return null
+  const hasGstTransactions = gstCollected > 0 || gstPaid > 0
+  if (!hasGstTransactions && !user.gst_registered) {
+    return null
+  }
 
   const netGst = gstCollected - gstPaid
 
