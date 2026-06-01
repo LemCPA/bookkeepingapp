@@ -13,16 +13,38 @@ export async function GET(request: NextRequest) {
     }
 
     let user = null
+    let supabaseUser = null
 
     // Try Supabase first (production)
     if (supabase) {
-      user = await getUserFromSupabase(userId)
+      supabaseUser = await getUserFromSupabase(userId)
+      user = supabaseUser
     }
 
-    // Fall back to JSON (development)
-    if (!user) {
+    // Always check JSON database as primary source for profile fields
+    // (Supabase may not have all columns if table wasn't fully migrated)
+    let jsonUser = null
+    if (!user || !user.gst_number) {
       const db = getDb()
-      user = db.users.find(u => u.id === userId)
+      jsonUser = db.users.find(u => u.id === userId)
+      if (!user) {
+        user = jsonUser
+      } else if (jsonUser && !user.gst_number) {
+        // Merge profile fields from JSON if Supabase is missing them
+        user = {
+          ...user,
+          gst_number: jsonUser.gst_number,
+          gst_registered: user.gst_registered ?? jsonUser.gst_registered,
+          business_name: user.business_name || jsonUser.business_name,
+          address_street: user.address_street || jsonUser.address_street,
+          city: user.city || jsonUser.city,
+          province: user.province || jsonUser.province,
+          postal_code: user.postal_code || jsonUser.postal_code,
+          phone: user.phone || jsonUser.phone,
+          business_email: user.business_email || jsonUser.business_email,
+          default_gst_hst_rate: user.default_gst_hst_rate ?? jsonUser.default_gst_hst_rate,
+        }
+      }
     }
 
     if (!user) {
@@ -137,28 +159,32 @@ export async function POST(request: NextRequest) {
     if (phone !== undefined) updateData.phone = phone
     if (business_email !== undefined) updateData.business_email = business_email
 
-    // Update Supabase (production)
-    if (supabase && Object.keys(updateData).length > 0) {
-      const { data: supabaseUser, error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('id', userId)
-        .select()
-        .single()
+    // Always update JSON database (reliable, works offline)
+    Object.assign(user, updateData)
+    saveDb(db)
 
-      if (error) {
-        console.error('Supabase update error:', error)
-        // Fall back to JSON
-        Object.assign(user, updateData)
-        saveDb(db)
-      } else if (supabaseUser) {
-        // Update local copy with response
-        Object.assign(user, supabaseUser)
+    // Also try to update Supabase (production)
+    if (supabase && Object.keys(updateData).length > 0) {
+      try {
+        const { data: supabaseUser, error } = await supabase
+          .from('users')
+          .update(updateData)
+          .eq('id', userId)
+          .select()
+          .single()
+
+        if (error) {
+          console.warn('Supabase update warning:', error.message)
+          // JSON update already happened, this is just a secondary sync
+          // Don't fail the request - user's data is already saved in JSON
+        } else if (supabaseUser) {
+          // Update local copy with response
+          Object.assign(user, supabaseUser)
+        }
+      } catch (supabaseError) {
+        console.warn('Supabase update error (non-fatal):', supabaseError)
+        // Don't fail - JSON update already succeeded
       }
-    } else {
-      // Update JSON (development)
-      Object.assign(user, updateData)
-      saveDb(db)
     }
 
     return NextResponse.json({
