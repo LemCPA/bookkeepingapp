@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { createAuthenticatedFetch } from '@/lib/auth'
 import { ChartOfAccount } from '@/lib/types'
 
+// Force redeploy: Database fix 42fa139 - Hierarchical account display
+
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
   const [loading, setLoading] = useState(true)
