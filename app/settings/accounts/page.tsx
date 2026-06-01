@@ -42,28 +42,41 @@ export default function AccountsSettingsPage() {
       const authenticatedFetch = createAuthenticatedFetch()
 
       // Fetch GST settings
-      const settingsRes = await authenticatedFetch('/api/user/settings')
-      if (settingsRes.ok) {
-        const data = await settingsRes.json()
-        // Convert numeric rate back to province code for display
-        const rateToProvince: { [key: number]: string } = {
-          5: 'ab',   // Default to Alberta for 5% GST (most common)
-          13: 'on',  // Ontario HST
-          15: 'nb',  // Default to New Brunswick for 15% HST (most common)
+      try {
+        const settingsRes = await authenticatedFetch('/api/user/settings')
+        if (settingsRes.ok) {
+          const data = await settingsRes.json()
+          // Convert numeric rate back to province code for display
+          const rateToProvince: { [key: number]: string } = {
+            5: 'ab',   // Default to Alberta for 5% GST (most common)
+            13: 'on',  // Ontario HST
+            15: 'nb',  // Default to New Brunswick for 15% HST (most common)
+          }
+          const provinceCode = rateToProvince[data.default_gst_hst_rate] || 'on'
+          setDefaultGstRate(provinceCode)
         }
-        const provinceCode = rateToProvince[data.default_gst_hst_rate] || 'on'
-        setDefaultGstRate(provinceCode)
+      } catch (error) {
+        console.error('Error fetching user settings:', error)
       }
 
       // Fetch accounts
-      const accountsRes = await authenticatedFetch('/api/chart-of-accounts')
-      if (accountsRes.ok) {
-        const accountsData = await accountsRes.json()
-        setAccounts(Array.isArray(accountsData) ? accountsData : [])
+      try {
+        const accountsRes = await authenticatedFetch('/api/chart-of-accounts')
+        if (accountsRes.ok) {
+          const accountsData = await accountsRes.json()
+          setAccounts(Array.isArray(accountsData) ? accountsData : [])
+        } else {
+          console.error('API error fetching accounts:', accountsRes.status)
+          setAccounts([])
+        }
+      } catch (error) {
+        console.error('Error fetching accounts:', error)
+        setAccounts([])
       }
     } catch (error) {
       console.error('Error fetching settings:', error)
       setMessage('Failed to load settings')
+      setAccounts([])
     } finally {
       setLoading(false)
     }
