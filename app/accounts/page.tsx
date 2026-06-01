@@ -93,8 +93,8 @@ export default function AccountsPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
-          {/* Left Column: INCOME (1/3 width) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+          {/* Left Column: INCOME (1/2 width) */}
           <div className="lg:col-span-1">
             <div className="border-b border-gray-200">
               <div className="p-4 bg-gray-50">
@@ -121,7 +121,7 @@ export default function AccountsPage() {
             </div>
           </div>
 
-          {/* Middle Column: Other Expenses (1/3 width) */}
+          {/* Right Column: EXPENSE with Hierarchy (2/2 width) */}
           <div className="lg:col-span-1">
             <div className="border-b border-gray-200">
               <div className="p-4 bg-gray-50">
@@ -130,51 +130,22 @@ export default function AccountsPage() {
               <div className="p-4">
                 {expenseAccountsForDisplay.length > 0 ? (
                   <div className="space-y-2">
-                    {expenseAccountsForDisplay.filter(a => !['9945', '9281'].includes(a.code)).map(acc => (
-                      <div key={acc.id} className="flex gap-3">
-                        <span className="text-gray-900 font-semibold flex-shrink-0 min-w-fit">
-                          {acc.code}
-                        </span>
-                        <span className="text-gray-700 text-sm break-words">
-                          {acc.name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600 text-sm">No accounts yet</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Home & Vehicle Expenses with Hierarchy (1/3 width) */}
-          <div className="lg:col-span-1">
-            <div className="border-b border-gray-200">
-              <div className="p-4 bg-gray-50">
-                <h3 className="font-semibold text-gray-900">HOME & VEHICLE</h3>
-              </div>
-              <div className="p-4">
-                {expenseAccountsForDisplay.filter(a => ['9945', '9281'].includes(a.code)).length > 0 ? (
-                  <div className="space-y-3">
-                    {expenseAccountsForDisplay.filter(a => ['9945', '9281'].includes(a.code)).map(acc => {
-                      // Get child accounts for this parent (same user only)
+                    {expenseAccountsForDisplay.map(acc => {
                       const childAccounts = accounts.filter(a => a.parent_account_id === acc.id && a.user_id === acc.user_id)
                       const hasChildren = childAccounts.length > 0
 
                       return (
                         <div key={acc.id}>
-                          {/* Parent Account */}
                           <div className="flex gap-3">
-                            <span className="text-gray-900 font-semibold flex-shrink-0 min-w-fit">
-                              {acc.code}
-                            </span>
+                            {acc.code && (
+                              <span className="text-gray-900 font-semibold flex-shrink-0 min-w-fit">
+                                {acc.code}
+                              </span>
+                            )}
                             <span className="text-gray-700 text-sm break-words">
                               {acc.name}
                             </span>
                           </div>
-
-                          {/* Child accounts (indented) */}
                           {hasChildren && (
                             <div className="mt-1 ml-6 space-y-1 border-l-2 border-gray-300 pl-3">
                               {childAccounts.map((child) => (
