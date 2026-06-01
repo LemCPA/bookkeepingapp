@@ -719,6 +719,182 @@
       "category": "VEHICLE",
       "parent_account_id": 97,
       "code": "9281-09"
+    },
+    {
+      "id": 125,
+      "code": "9945-01",
+      "name": "Heat",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "parent_account_id": 107,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 126,
+      "code": "9945-02",
+      "name": "Electricity",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "parent_account_id": 107,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 127,
+      "code": "9945-03",
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "parent_account_id": 107,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 128,
+      "code": "9945-04",
+      "name": "Maintenance",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "parent_account_id": 107,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 129,
+      "code": "9945-05",
+      "name": "Mortgage Interest",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "parent_account_id": 107,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 130,
+      "code": "9945-06",
+      "name": "Property Taxes",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "parent_account_id": 107,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 131,
+      "code": "9945-07",
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "parent_account_id": 107,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 132,
+      "code": "9281-01",
+      "name": "Fuel & Oil",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "parent_account_id": 108,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 133,
+      "code": "9281-02",
+      "name": "Interest",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "parent_account_id": 108,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 134,
+      "code": "9281-03",
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "parent_account_id": 108,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 135,
+      "code": "9281-04",
+      "name": "License and Registration",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "parent_account_id": 108,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 136,
+      "code": "9281-05",
+      "name": "Maintenance and Repairs",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "parent_account_id": 108,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 137,
+      "code": "9281-06",
+      "name": "Leasing",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "parent_account_id": 108,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 138,
+      "code": "9281-07",
+      "name": "Electricity for Zero-Emission Vehicles",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "parent_account_id": 108,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 139,
+      "code": "9281-08",
+      "name": "Other Vehicle Expenses",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "parent_account_id": 108,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": 140,
+      "code": "9281-09",
+      "name": "Business Parking Fees",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "parent_account_id": 108,
+      "user_id": 1,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
     }
   ],
   "transactions": [
