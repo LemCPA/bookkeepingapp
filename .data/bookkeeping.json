@@ -582,7 +582,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "HOME",
-      "parent_account_id": 107
+      "parent_account_id": 88,
+      "code": "9945-01"
     },
     {
       "id": 110,
@@ -590,7 +591,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "HOME",
-      "parent_account_id": 107
+      "parent_account_id": 88,
+      "code": "9945-02"
     },
     {
       "id": 111,
@@ -598,7 +600,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "HOME",
-      "parent_account_id": 107
+      "parent_account_id": 88,
+      "code": "9945-03"
     },
     {
       "id": 112,
@@ -606,7 +609,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "HOME",
-      "parent_account_id": 107
+      "parent_account_id": 88,
+      "code": "9945-04"
     },
     {
       "id": 113,
@@ -614,7 +618,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "HOME",
-      "parent_account_id": 107
+      "parent_account_id": 88,
+      "code": "9945-05"
     },
     {
       "id": 114,
@@ -622,7 +627,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "HOME",
-      "parent_account_id": 107
+      "parent_account_id": 88,
+      "code": "9945-06"
     },
     {
       "id": 115,
@@ -630,7 +636,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "HOME",
-      "parent_account_id": 107
+      "parent_account_id": 88,
+      "code": "9945-07"
     },
     {
       "id": 116,
@@ -638,7 +645,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "VEHICLE",
-      "parent_account_id": 108
+      "parent_account_id": 97,
+      "code": "9281-01"
     },
     {
       "id": 117,
@@ -646,7 +654,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "VEHICLE",
-      "parent_account_id": 108
+      "parent_account_id": 97,
+      "code": "9281-02"
     },
     {
       "id": 118,
@@ -654,7 +663,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "VEHICLE",
-      "parent_account_id": 108
+      "parent_account_id": 97,
+      "code": "9281-03"
     },
     {
       "id": 119,
@@ -662,7 +672,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "VEHICLE",
-      "parent_account_id": 108
+      "parent_account_id": 97,
+      "code": "9281-04"
     },
     {
       "id": 120,
@@ -670,7 +681,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "VEHICLE",
-      "parent_account_id": 108
+      "parent_account_id": 97,
+      "code": "9281-05"
     },
     {
       "id": 121,
@@ -678,7 +690,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "VEHICLE",
-      "parent_account_id": 108
+      "parent_account_id": 97,
+      "code": "9281-06"
     },
     {
       "id": 122,
@@ -686,7 +699,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "VEHICLE",
-      "parent_account_id": 108
+      "parent_account_id": 97,
+      "code": "9281-07"
     },
     {
       "id": 123,
@@ -694,7 +708,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "VEHICLE",
-      "parent_account_id": 108
+      "parent_account_id": 97,
+      "code": "9281-08"
     },
     {
       "id": 124,
@@ -702,7 +717,8 @@
       "type": "EXPENSE",
       "user_id": 1,
       "category": "VEHICLE",
-      "parent_account_id": 108
+      "parent_account_id": 97,
+      "code": "9281-09"
     }
   ],
   "transactions": [
