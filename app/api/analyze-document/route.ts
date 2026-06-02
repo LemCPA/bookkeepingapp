@@ -145,28 +145,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-
-    if (!file) {
-      return NextResponse.json({ error: 'File is required' }, { status: 400 })
-    }
-
-    // Handle image files only
-    const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    if (!supportedTypes.includes(file.type)) {
-      return NextResponse.json({
-        error: 'Unsupported file type. Please use JPG, PNG, GIF, or WebP.',
-      }, { status: 400 })
-    }
-
-    const buffer = await file.arrayBuffer()
-    const base64 = Buffer.from(buffer).toString('base64')
-
+    let base64: string
     let mediaType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' = 'image/jpeg'
-    if (file.type === 'image/png') mediaType = 'image/png'
-    if (file.type === 'image/gif') mediaType = 'image/gif'
-    if (file.type === 'image/webp') mediaType = 'image/webp'
+
+    // Check if this is JSON (from Snap Document) or FormData (from Documents page or bulk scanner)
+    const contentType = request.headers.get('content-type') || ''
+
+    if (contentType.includes('application/json')) {
+      // JSON input: { image: "base64data" }
+      const body = await request.json()
+      base64 = body.image
+
+      if (!base64) {
+        return NextResponse.json({ error: 'Image data is required' }, { status: 400 })
+      }
+
+      // Default to JPEG for JSON input (Snap Document)
+      mediaType = 'image/jpeg'
+    } else {
+      // FormData input: file upload
+      const formData = await request.formData()
+      const file = formData.get('file') as File
+
+      if (!file) {
+        return NextResponse.json({ error: 'File is required' }, { status: 400 })
+      }
+
+      // Handle image files only
+      const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (!supportedTypes.includes(file.type)) {
+        return NextResponse.json({
+          error: 'Unsupported file type. Please use JPG, PNG, GIF, or WebP.',
+        }, { status: 400 })
+      }
+
+      const buffer = await file.arrayBuffer()
+      base64 = Buffer.from(buffer).toString('base64')
+
+      if (file.type === 'image/png') mediaType = 'image/png'
+      if (file.type === 'image/gif') mediaType = 'image/gif'
+      if (file.type === 'image/webp') mediaType = 'image/webp'
+    }
 
     const response = await analyzeImage(base64, mediaType)
 

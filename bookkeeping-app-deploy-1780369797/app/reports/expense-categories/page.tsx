@@ -1,0 +1,341 @@
+'use client'
+
+import React, { useEffect, useState } from 'react'
+import { createAuthenticatedFetch } from '@/lib/auth'
+import { formatCurrency } from '@/lib/utils'
+
+interface ExpenseCategory {
+  id: number
+  type: string
+  name: string
+  code: string
+  monthlyBalances: { [month: string]: number }
+  total: number
+}
+
+interface ExpenseCategoriesData {
+  months: string[]
+  categories: ExpenseCategory[]
+  monthlyTotals: { [month: string]: number }
+  grandTotal: number
+}
+
+export default function ExpenseCategoriesPage() {
+  const currentYear = new Date().getFullYear()
+  const [year, setYear] = useState(currentYear.toString())
+  const [startMonth, setStartMonth] = useState(`${currentYear}-01`)
+  const [endMonth, setEndMonth] = useState(`${currentYear}-12`)
+  const [data, setData] = useState<ExpenseCategoriesData | null>(null)
+  const [allCategories, setAllCategories] = useState<ExpenseCategory[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  // Load categories
+  useEffect(() => {
+    loadAvailableCategories()
+  }, [])
+
+  // Fetch report when date range or selected categories change
+  useEffect(() => {
+    fetchReport()
+  }, [startMonth, endMonth, selectedCategories])
+
+  async function loadAvailableCategories() {
+    try {
+      const authenticatedFetch = createAuthenticatedFetch()
+      const response = await authenticatedFetch('/api/chart-of-accounts?type=EXPENSE')
+
+      if (!response.ok) {
+        throw new Error('Failed to load expense categories')
+      }
+
+      const result = await response.json()
+      setAllCategories(result)
+    } catch (err: any) {
+      console.error('Error loading categories:', err)
+    }
+  }
+
+  async function fetchReport() {
+    if (selectedCategories.length === 0) {
+      setData(null)
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const authenticatedFetch = createAuthenticatedFetch()
+      const categoriesParam = selectedCategories.join(',')
+      const response = await authenticatedFetch(
+        `/api/reports/expense-categories?startMonth=${startMonth}&endMonth=${endMonth}&categories=${categoriesParam}`
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch expense report')
+      }
+
+      const result = await response.json()
+      setData(result)
+    } catch (err: any) {
+      setError(err.message || 'Error fetching expense report')
+      setData(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCategoryToggle = (categoryId: number) => {
+    setSelectedCategories(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    )
+  }
+
+  const handleSelectAll = () => {
+    if (selectedCategories.length === allCategories.length) {
+      setSelectedCategories([])
+    } else {
+      setSelectedCategories(allCategories.map(c => c.id))
+    }
+  }
+
+  const getMonthName = (monthStr: string) => {
+    const [year, month] = monthStr.split('-')
+    const date = new Date(parseInt(year), parseInt(month) - 1)
+    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="mb-6 mt-6">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">Expense Categories by Month</h1>
+          <p className="text-gray-600 mt-2">Track your spending across different expense categories over time</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Sidebar - Controls */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-md p-6 sticky top-[160px] space-y-6">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Report Options</h2>
+              </div>
+
+              {/* Year Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                <input
+                  type="number"
+                  value={year}
+                  onChange={(e) => {
+                    setYear(e.target.value)
+                    setStartMonth(`${e.target.value}-01`)
+                    setEndMonth(`${e.target.value}-12`)
+                  }}
+                  min="2020"
+                  max="2099"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+              </div>
+
+              {/* Start Month */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Month</label>
+                <select
+                  value={startMonth.split('-')[1]}
+                  onChange={(e) => setStartMonth(`${year}-${e.target.value}`)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="01">January</option>
+                  <option value="02">February</option>
+                  <option value="03">March</option>
+                  <option value="04">April</option>
+                  <option value="05">May</option>
+                  <option value="06">June</option>
+                  <option value="07">July</option>
+                  <option value="08">August</option>
+                  <option value="09">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+              </div>
+
+              {/* End Month */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Month</label>
+                <select
+                  value={endMonth.split('-')[1]}
+                  onChange={(e) => setEndMonth(`${year}-${e.target.value}`)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="01">January</option>
+                  <option value="02">February</option>
+                  <option value="03">March</option>
+                  <option value="04">April</option>
+                  <option value="05">May</option>
+                  <option value="06">June</option>
+                  <option value="07">July</option>
+                  <option value="08">August</option>
+                  <option value="09">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+              </div>
+
+              {/* Category Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Expense Categories
+                  </label>
+                  <button
+                    onClick={handleSelectAll}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    {selectedCategories.length === allCategories.length ? 'Clear' : 'All'}
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {allCategories.length === 0 ? (
+                    <p className="text-sm text-gray-500">No expense categories found</p>
+                  ) : (
+                    allCategories.map(category => (
+                      <label key={category.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(category.id)}
+                          onChange={() => handleCategoryToggle(category.id)}
+                          className="w-4 h-4 border-gray-300 rounded text-blue-600"
+                        />
+                        <span className="text-sm text-gray-700 flex-1 truncate">
+                          {category.name}
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                  {error}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Content - Expense Report */}
+          <div className="lg:col-span-3">
+            {data && (
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="bg-white rounded-lg shadow-md p-6 text-center">
+                  <h2 className="text-lg font-bold">Expenses by Category</h2>
+                  <p className="text-sm text-gray-600">
+                    {startMonth} to {endMonth}
+                  </p>
+                </div>
+
+                {/* Table */}
+                <div className="bg-white rounded-lg shadow-md p-6 overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b-2 border-gray-800">
+                        <th className="text-left py-2 px-2 font-bold text-gray-800">Category</th>
+                        {data.months.map(month => (
+                          <th key={month} className="text-right py-2 px-2 font-bold text-gray-800 whitespace-nowrap">
+                            {getMonthName(month)}
+                          </th>
+                        ))}
+                        <th className="text-right py-2 px-2 font-bold text-gray-800 border-l-2 border-gray-400">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.categories.length === 0 ? (
+                        <tr>
+                          <td colSpan={data.months.length + 2} className="py-4 px-2 text-center text-gray-500">
+                            No data available for selected categories
+                          </td>
+                        </tr>
+                      ) : (
+                        <>
+                          {data.categories.map((category, idx) => (
+                            <tr key={category.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                              <td className="py-2 px-2 text-gray-800 font-medium">
+                                {category.name}
+                              </td>
+                              {data.months.map(month => (
+                                <td key={month} className="py-2 px-2 text-right text-gray-700">
+                                  {formatCurrency(category.monthlyBalances[month] || 0)}
+                                </td>
+                              ))}
+                              <td className="py-2 px-2 text-right font-semibold text-gray-900 border-l-2 border-gray-400">
+                                {formatCurrency(category.total)}
+                              </td>
+                            </tr>
+                          ))}
+
+                          {/* Monthly Totals Row */}
+                          <tr className="bg-blue-50 font-bold text-blue-900 border-t-2 border-gray-800">
+                            <td className="py-3 px-2">Monthly Total</td>
+                            {data.months.map(month => (
+                              <td key={month} className="py-3 px-2 text-right">
+                                {formatCurrency(data.monthlyTotals[month] || 0)}
+                              </td>
+                            ))}
+                            <td className="py-3 px-2 text-right border-l-2 border-gray-400">
+                              {formatCurrency(data.grandTotal)}
+                            </td>
+                          </tr>
+                        </>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {!data && !loading && selectedCategories.length === 0 && (
+              <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+                Select at least one expense category to view the report
+              </div>
+            )}
+
+            {!data && !loading && selectedCategories.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+                Select date range and generate report
+              </div>
+            )}
+
+            {loading && (
+              <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+                Loading expense categories report...
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer Links */}
+        <div className="border-t border-gray-200 mt-12 py-6 text-center text-sm text-gray-600">
+          <p>
+            <a href="/terms" className="hover:text-blue-600 font-medium">
+              Terms of Use
+            </a>
+            {' | '}
+            <a href="/disclaimer" className="hover:text-blue-600 font-medium">
+              Disclaimer
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}

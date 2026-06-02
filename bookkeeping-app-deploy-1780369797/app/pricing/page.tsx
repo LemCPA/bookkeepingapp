@@ -1,0 +1,368 @@
+'use client'
+
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { isTrialExpired, getDaysRemainingInTrial } from '@/lib/pricing-tiers'
+
+export default function PricingPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userPlan, setUserPlan] = useState<string | null>(null)
+  const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null)
+  const [daysRemaining, setDaysRemaining] = useState(0)
+
+  useEffect(() => {
+    // Check if user is logged in by fetching dashboard data
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/dashboard')
+        if (response.ok) {
+          const data = await response.json()
+          setIsLoggedIn(true)
+          setUserPlan(data.plan || 'free')
+          setUserCreatedAt(data.userCreatedAt)
+          if (data.userCreatedAt) {
+            setDaysRemaining(getDaysRemainingInTrial(data.userCreatedAt))
+          }
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  const handleUpgrade = (plan: string) => {
+    if (plan === 'starter' || plan === 'professional') {
+      // Redirect to payment/upgrade flow
+      window.location.href = `/upgrade?plan=${plan}`
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex justify-between items-center">
+            <Link href="/" className="text-xl font-bold text-blue-600">
+              📊 BookKeep
+            </Link>
+            {isLoggedIn && (
+              <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
+                Back to Dashboard
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+            Simple, Transparent Pricing
+          </h1>
+          <p className="text-xl text-slate-600 mb-2">
+            Choose the perfect plan for your business
+          </p>
+          {isLoggedIn && userPlan === 'free' && !isTrialExpired(userCreatedAt || '') && (
+            <p className="text-base text-amber-600 font-medium">
+              ⏰ You have {daysRemaining} days remaining in your free trial
+            </p>
+          )}
+        </div>
+
+        {/* Trial Expiration Warning */}
+        {isLoggedIn && userPlan === 'free' && isTrialExpired(userCreatedAt || '') && (
+          <div className="bg-red-50 border border-red-300 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
+            <p className="text-red-800 font-semibold">🚨 Trial Period Ended</p>
+            <p className="text-red-700 text-sm mt-1">
+              Your 7-day free trial has ended. Upgrade now to continue using BookKeep.
+            </p>
+          </div>
+        )}
+
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-3 gap-8 mb-12">
+          {/* Free Plan */}
+          <div className={`rounded-lg border-2 transition-all ${
+            userPlan === 'free'
+              ? 'border-blue-500 bg-blue-50 shadow-lg'
+              : 'border-slate-200 bg-white shadow'
+          }`}>
+            <div className="p-8">
+              <div className="flex items-baseline justify-between mb-4">
+                <h2 className="text-2xl font-bold text-slate-900">Free</h2>
+                {userPlan === 'free' && (
+                  <span className="text-xs font-semibold bg-blue-500 text-white px-3 py-1 rounded-full">
+                    Current Plan
+                  </span>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <p className="text-slate-600 text-sm mb-2">Perfect for getting started</p>
+              </div>
+
+              {/* Price */}
+              <div className="mb-6">
+                <p className="text-4xl font-bold text-slate-900">
+                  $0<span className="text-lg text-slate-600">/month</span>
+                </p>
+                <p className="text-slate-600 text-sm mt-2">
+                  7-day free trial with 20 transaction limit
+                </p>
+              </div>
+
+              {/* CTA */}
+              <button
+                disabled
+                className="w-full py-3 rounded-lg font-semibold bg-slate-100 text-slate-600 cursor-default mb-6"
+              >
+                Your Current Plan
+              </button>
+
+              {/* Features */}
+              <div className="space-y-3">
+                <p className="font-semibold text-slate-900 text-sm mb-4">Includes:</p>
+                <ul className="space-y-2 text-slate-700 text-sm">
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Receipt scanning (unlimited)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Transaction tracking</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Monthly profit view</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Basic reports</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-3 font-bold">✕</span>
+                    <span>Advanced reports</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-3 font-bold">✕</span>
+                    <span>Bank reconciliation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-3 font-bold">✕</span>
+                    <span>Invoice management</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Starter Plan */}
+          <div className={`rounded-lg border-2 transition-all ${
+            userPlan === 'starter'
+              ? 'border-blue-500 bg-blue-50 shadow-lg'
+              : 'border-slate-200 bg-white shadow'
+          }`}>
+            <div className="p-8 relative">
+              {userPlan !== 'starter' && (
+                <div className="absolute top-4 right-4 bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  Popular
+                </div>
+              )}
+
+              <div className="flex items-baseline justify-between mb-4">
+                <h2 className="text-2xl font-bold text-slate-900">Starter</h2>
+                {userPlan === 'starter' && (
+                  <span className="text-xs font-semibold bg-blue-500 text-white px-3 py-1 rounded-full">
+                    Current Plan
+                  </span>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <p className="text-slate-600 text-sm mb-2">For growing businesses</p>
+              </div>
+
+              {/* Price */}
+              <div className="mb-6">
+                <p className="text-4xl font-bold text-slate-900">
+                  $9<span className="text-lg text-slate-600">/month</span>
+                </p>
+                <p className="text-slate-600 text-sm mt-2">
+                  50 transactions per month, resets monthly
+                </p>
+              </div>
+
+              {/* CTA */}
+              <button
+                onClick={() => handleUpgrade('starter')}
+                disabled={userPlan === 'starter'}
+                className={`w-full py-3 rounded-lg font-semibold mb-6 transition-all ${
+                  userPlan === 'starter'
+                    ? 'bg-slate-100 text-slate-600 cursor-default'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                }`}
+              >
+                {userPlan === 'starter' ? 'Your Current Plan' : 'Upgrade to Starter'}
+              </button>
+
+              {/* Features */}
+              <div className="space-y-3">
+                <p className="font-semibold text-slate-900 text-sm mb-4">Everything in Free, plus:</p>
+                <ul className="space-y-2 text-slate-700 text-sm">
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Advanced financial reports</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Bank reconciliation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Tax summary (GST/HST ready)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Invoice management</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-3 font-bold">✕</span>
+                    <span>Team members access</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-3 font-bold">✕</span>
+                    <span>Advanced analytics</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Professional Plan */}
+          <div className={`rounded-lg border-2 transition-all ${
+            userPlan === 'professional'
+              ? 'border-blue-500 bg-blue-50 shadow-lg'
+              : 'border-slate-200 bg-white shadow'
+          }`}>
+            <div className="p-8">
+              <div className="flex items-baseline justify-between mb-4">
+                <h2 className="text-2xl font-bold text-slate-900">Professional</h2>
+                {userPlan === 'professional' && (
+                  <span className="text-xs font-semibold bg-blue-500 text-white px-3 py-1 rounded-full">
+                    Current Plan
+                  </span>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <p className="text-slate-600 text-sm mb-2">For established teams</p>
+              </div>
+
+              {/* Price */}
+              <div className="mb-6">
+                <p className="text-4xl font-bold text-slate-900">
+                  $20<span className="text-lg text-slate-600">/month</span>
+                </p>
+                <p className="text-slate-600 text-sm mt-2">
+                  150 transactions per month, resets monthly
+                </p>
+              </div>
+
+              {/* CTA */}
+              <button
+                onClick={() => handleUpgrade('professional')}
+                disabled={userPlan === 'professional'}
+                className={`w-full py-3 rounded-lg font-semibold mb-6 transition-all ${
+                  userPlan === 'professional'
+                    ? 'bg-slate-100 text-slate-600 cursor-default'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                }`}
+              >
+                {userPlan === 'professional' ? 'Your Current Plan' : 'Upgrade to Professional'}
+              </button>
+
+              {/* Features */}
+              <div className="space-y-3">
+                <p className="font-semibold text-slate-900 text-sm mb-4">Everything in Starter, plus:</p>
+                <ul className="space-y-2 text-slate-700 text-sm">
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Team members access</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Advanced analytics</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Priority support</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>150 transactions/month</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="bg-white rounded-lg p-8 shadow">
+          <h2 className="text-2xl font-bold text-slate-900 mb-8">Frequently Asked Questions</h2>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="font-semibold text-slate-900 mb-2">Can I change plans later?</h3>
+              <p className="text-slate-600 text-sm">Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-slate-900 mb-2">Do you offer refunds?</h3>
+              <p className="text-slate-600 text-sm">Yes, we offer a 30-day money-back guarantee. No questions asked.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-slate-900 mb-2">What happens when I hit my transaction limit?</h3>
+              <p className="text-slate-600 text-sm">Your account will be locked from creating new transactions until you upgrade or wait for the monthly reset.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-slate-900 mb-2">Can I cancel anytime?</h3>
+              <p className="text-slate-600 text-sm">Absolutely. Cancel anytime with no penalty. You'll keep access through the end of your billing cycle.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="mt-12 text-center">
+          {!isLoggedIn && (
+            <div className="bg-blue-50 rounded-lg p-8">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Ready to get started?</h2>
+              <p className="text-slate-600 mb-6">Try BookKeep free for 7 days. No credit card required.</p>
+              <Link
+                href="/login"
+                className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700"
+              >
+                Sign Up Free
+              </Link>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-200 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <p className="text-center text-slate-600 text-sm">
+            © 2026 BookKeep. All rights reserved. Made with ❤️ for Canadian sole proprietors.
+          </p>
+        </div>
+      </footer>
+    </div>
+  )
+}
