@@ -171,21 +171,37 @@ Important:
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[BULK-SCAN] Starting document analysis')
+
     // Extract user ID from Authorization header
     const userId = getUserIdFromRequest(request)
+    console.log('[BULK-SCAN] userId from auth:', userId)
+
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const authHeader = request.headers.get('Authorization')
+      console.log('[BULK-SCAN] FAILED: No userId. Auth header present:', !!authHeader)
+      console.log('[BULK-SCAN] Auth header value:', authHeader ? authHeader.substring(0, 20) + '...' : 'MISSING')
+      return NextResponse.json(
+        { error: 'Unauthorized - no valid token. Please login.' },
+        { status: 401 }
+      )
     }
 
+    console.log('[BULK-SCAN] Got userId:', userId, '- parsing formData')
     const formData = await request.formData()
     const files = formData.getAll('files') as File[]
+    console.log('[BULK-SCAN] Files received:', files.length, 'files')
 
     if (!files || files.length === 0) {
+      const allKeys = Array.from(formData.keys())
+      console.log('[BULK-SCAN] FAILED: No files. FormData keys:', allKeys)
       return NextResponse.json(
-        { error: 'No files provided' },
+        { error: 'No files provided in request' },
         { status: 400 }
       )
     }
+
+    console.log('[BULK-SCAN] Proceeding with analysis of', files.length, 'files')
 
     const db = getDb()
     let analyzedCount = 0
