@@ -190,44 +190,17 @@ function initializeDb(): DbData {
       { id: 1, user_id: 1, name: 'Acme Corporation', gst_registered: true, gst_number: '123456789RT0002', created_at: new Date().toISOString() },
       { id: 2, user_id: 1, name: 'Tech Startup Inc', gst_registered: false, created_at: new Date().toISOString() },
     ],
-    chart_of_accounts: [
-      // ASSETS (for demo user - user_id: 1)
-      { id: 1, code: '1000', name: 'Cash', type: 'ASSET', user_id: 1 },
-      { id: 2, code: '1010', name: 'Checking Account', type: 'ASSET', user_id: 1 },
-      { id: 3, code: '1020', name: 'Savings Account', type: 'ASSET', user_id: 1 },
-      { id: 4, code: '1030', name: 'Accounts Receivable', type: 'ASSET', user_id: 1 },
-      // LIABILITIES
-      { id: 5, code: '2000', name: 'Accounts Payable', type: 'LIABILITY', user_id: 1 },
-      { id: 6, code: '2010', name: 'Credit Card', type: 'LIABILITY', user_id: 1 },
-      // EQUITY
-      { id: 7, code: '3000', name: 'Retained Earnings', type: 'EQUITY', user_id: 1 },
-      // INCOME
-      { id: 8, code: '4000', name: 'Service Revenue', type: 'INCOME', user_id: 1 },
-      { id: 9, code: '4010', name: 'Product Revenue', type: 'INCOME', user_id: 1 },
-      // EXPENSES
-      { id: 10, code: '5100', name: 'Advertising', type: 'EXPENSE', user_id: 1 },
-      { id: 11, code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE', user_id: 1 },
-      { id: 12, code: '5120', name: 'Insurance', type: 'EXPENSE', user_id: 1 },
-      { id: 13, code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE', user_id: 1 },
-      { id: 14, code: '5140', name: 'Business Taxes and Licenses', type: 'EXPENSE', user_id: 1 },
-      { id: 15, code: '5150', name: 'Office Expenses', type: 'EXPENSE', user_id: 1 },
-      { id: 16, code: '5160', name: 'Supplies', type: 'EXPENSE', user_id: 1 },
-      { id: 17, code: '5170', name: 'Legal and Accounting Fees', type: 'EXPENSE', user_id: 1 },
-      { id: 18, code: '5180', name: 'Rent', type: 'EXPENSE', user_id: 1 },
-      { id: 19, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE', user_id: 1 },
-      { id: 20, code: '5200', name: 'Travel', type: 'EXPENSE', user_id: 1 },
-      { id: 21, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE', user_id: 1 },
-      // Motor Vehicle Expenses (T2125 compliant - from DEFAULT_ACCOUNTS)
-      { id: 22, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE', user_id: 1 },
-      { id: 23, code: '5221', name: 'Motor Vehicle Expenses - Fuel', type: 'EXPENSE', user_id: 1 },
-      { id: 24, code: '5222', name: 'Motor Vehicle Expenses - Interest (Loan)', type: 'EXPENSE', user_id: 1 },
-      { id: 25, code: '5223', name: 'Motor Vehicle Expenses - Insurance', type: 'EXPENSE', user_id: 1 },
-      { id: 26, code: '5224', name: 'Motor Vehicle Expenses - Licence and Registration', type: 'EXPENSE', user_id: 1 },
-      { id: 27, code: '5225', name: 'Motor Vehicle Expenses - Maintenance and Repairs', type: 'EXPENSE', user_id: 1 },
-      { id: 28, code: '5226', name: 'Motor Vehicle Expenses - Parking and Tolls', type: 'EXPENSE', user_id: 1 },
-      { id: 29, code: '5227', name: 'Motor Vehicle Expenses - Other', type: 'EXPENSE', user_id: 1 },
-      { id: 30, code: '5230', name: 'Capital Cost Allowance (CCA)', type: 'EXPENSE', user_id: 1 },
-    ],
+    chart_of_accounts: (() => {
+      let id = 1
+      return DEFAULT_ACCOUNTS.filter(acc => acc.code).map(acc => ({
+        id: id++,
+        code: acc.code,
+        name: acc.name,
+        type: acc.type,
+        category: acc.category,
+        user_id: 1
+      }))
+    })(),
     transactions: [],
     documents: [],
     bank_reconciliations: [],
@@ -295,7 +268,7 @@ function initializeDb(): DbData {
     odometer_readings: [],
     nextUserId: 2,
     nextClientId: 3,
-    nextAccountId: 32,
+    nextAccountId: DEFAULT_ACCOUNTS.filter(acc => acc.code).length + 1,
     nextTransactionId: 1,
     nextDocumentId: 1,
     nextBankReconciliationId: 1,

@@ -7,38 +7,7 @@
       "name": "Demo User",
       "gst_registered": true,
       "gst_number": "123456789RT0001",
-      "created_at": "2026-05-24T21:02:44.591Z",
-      "default_gst_hst_rate": 13
-    },
-    {
-      "id": 2,
-      "email": "ping_Yau@outlook.com",
-      "password_hash": "$2a$10$oq7L/wNl9rhmcpVZgO4eru.kxvR.Efsuz0idMxC1JVs51cGDmOVQG",
-      "name": "Ping",
-      "email_verified": true,
-      "gst_registered": false,
-      "created_at": "2026-05-25T04:26:38.048Z",
-      "default_gst_hst_rate": 13
-    },
-    {
-      "id": 3,
-      "email": "test@test.ca",
-      "password_hash": "$2a$10$fUH5LG5T/UAvwpNLtkT0yuThmHqboq2KsBktL1Q1Y4UR7pUHb0u0.",
-      "name": "Test User",
-      "email_verified": true,
-      "gst_registered": false,
-      "created_at": "2026-05-30T16:11:35.037Z",
-      "default_gst_hst_rate": 13
-    },
-    {
-      "id": 4,
-      "email": "ted@lemcpa.ca",
-      "password_hash": "$2a$10$Ff0NLbsz92rrI9QaDt4lyOnFyb7P.cERI1aEmaG3vZSxYsNZ2otCG",
-      "name": "Ted",
-      "email_verified": true,
-      "gst_registered": false,
-      "created_at": "2026-05-30T17:00:00.000Z",
-      "default_gst_hst_rate": 13
+      "created_at": "2026-06-02T19:12:19.563Z"
     }
   ],
   "clients": [
@@ -48,14 +17,14 @@
       "name": "Acme Corporation",
       "gst_registered": true,
       "gst_number": "123456789RT0002",
-      "created_at": "2026-05-24T21:02:44.591Z"
+      "created_at": "2026-06-02T19:12:19.563Z"
     },
     {
       "id": 2,
       "user_id": 1,
       "name": "Tech Startup Inc",
       "gst_registered": false,
-      "created_at": "2026-05-24T21:02:44.591Z"
+      "created_at": "2026-06-02T19:12:19.563Z"
     }
   ],
   "chart_of_accounts": [
@@ -124,1320 +93,155 @@
     },
     {
       "id": 10,
-      "code": "8910",
+      "code": "5100",
       "name": "Advertising",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 11,
-      "code": "8523",
+      "code": "5110",
       "name": "Meals and Entertainment (50% rule)",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 12,
-      "code": "8690",
+      "code": "5120",
       "name": "Insurance",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 13,
-      "code": "8710",
+      "code": "5130",
       "name": "Interest and Bank Charges",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 14,
-      "code": "8760",
+      "code": "5140",
       "name": "Business Taxes and Licenses",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 15,
-      "code": "8810",
+      "code": "5150",
       "name": "Office Expenses",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 16,
-      "code": "8811",
+      "code": "5160",
       "name": "Supplies",
       "type": "EXPENSE",
       "user_id": 1
     },
     {
       "id": 17,
-      "code": "8860",
+      "code": "5170",
       "name": "Legal and Accounting Fees",
       "type": "EXPENSE",
       "user_id": 1
-    },
-    {
-      "id": 19,
-      "code": "9060",
-      "name": "Salaries and Wages",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 20,
-      "code": "9200",
-      "name": "Travel",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 21,
-      "code": "9220",
-      "name": "Telephone and Utilities",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 31,
-      "code": "9936",
-      "name": "Capital Cost Allowance (CCA)",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 63,
-      "code": "9270",
-      "name": "Other Expenses",
-      "type": "EXPENSE",
-      "user_id": 1
-    },
-    {
-      "id": 32,
-      "code": "1000",
-      "name": "Cash",
-      "type": "ASSET",
-      "user_id": 2
-    },
-    {
-      "id": 33,
-      "code": "1010",
-      "name": "Checking Account",
-      "type": "ASSET",
-      "user_id": 2
-    },
-    {
-      "id": 34,
-      "code": "1020",
-      "name": "Savings Account",
-      "type": "ASSET",
-      "user_id": 2
-    },
-    {
-      "id": 35,
-      "code": "1030",
-      "name": "Accounts Receivable",
-      "type": "ASSET",
-      "user_id": 2
-    },
-    {
-      "id": 36,
-      "code": "2000",
-      "name": "Accounts Payable",
-      "type": "LIABILITY",
-      "user_id": 2
-    },
-    {
-      "id": 37,
-      "code": "2010",
-      "name": "Credit Card",
-      "type": "LIABILITY",
-      "user_id": 2
-    },
-    {
-      "id": 38,
-      "code": "3000",
-      "name": "Retained Earnings",
-      "type": "EQUITY",
-      "user_id": 2
-    },
-    {
-      "id": 39,
-      "code": "4000",
-      "name": "Service Revenue",
-      "type": "INCOME",
-      "user_id": 2
-    },
-    {
-      "id": 40,
-      "code": "4010",
-      "name": "Product Revenue",
-      "type": "INCOME",
-      "user_id": 2
-    },
-    {
-      "id": 41,
-      "code": "8910",
-      "name": "Advertising",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 42,
-      "code": "8523",
-      "name": "Meals and Entertainment (50% rule)",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 43,
-      "code": "8690",
-      "name": "Insurance",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 44,
-      "code": "8710",
-      "name": "Interest and Bank Charges",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 45,
-      "code": "8760",
-      "name": "Business Taxes and Licenses",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 46,
-      "code": "8810",
-      "name": "Office Expenses",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 47,
-      "code": "8811",
-      "name": "Supplies",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 48,
-      "code": "8860",
-      "name": "Legal and Accounting Fees",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 50,
-      "code": "9060",
-      "name": "Salaries and Wages",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 51,
-      "code": "9200",
-      "name": "Travel",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 52,
-      "code": "9220",
-      "name": "Telephone and Utilities",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 54,
-      "code": "9936",
-      "name": "Capital Cost Allowance (CCA)",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 65,
-      "code": "9270",
-      "name": "Other Expenses",
-      "type": "EXPENSE",
-      "user_id": 2
-    },
-    {
-      "id": 66,
-      "name": "Gross Business Income",
-      "type": "INCOME",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8000"
-    },
-    {
-      "id": 67,
-      "name": "Other Income",
-      "type": "INCOME",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8230"
-    },
-    {
-      "id": 68,
-      "name": "Advertising",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8521"
-    },
-    {
-      "id": 69,
-      "name": "Meals and Entertainment",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8523"
-    },
-    {
-      "id": 70,
-      "name": "Bad Debts",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8590"
-    },
-    {
-      "id": 71,
-      "name": "Insurance",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8690"
-    },
-    {
-      "id": 72,
-      "name": "Interest and Bank Charges",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8710"
-    },
-    {
-      "id": 73,
-      "name": "Business Taxes, Fees, Licenses, and Memberships",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8760"
-    },
-    {
-      "id": 74,
-      "name": "Office Expenses",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8810"
-    },
-    {
-      "id": 75,
-      "name": "Office Stationery and Supplies",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8811"
-    },
-    {
-      "id": 76,
-      "name": "Professional Fees (Accounting, Legal)",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8860"
-    },
-    {
-      "id": 77,
-      "name": "Management and Administration Fees",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8871"
-    },
-    {
-      "id": 78,
-      "name": "Rent",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8910"
-    },
-    {
-      "id": 79,
-      "name": "Repairs and Maintenance",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "8960"
-    },
-    {
-      "id": 80,
-      "name": "Salaries, Wages, and Benefits",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "9060"
-    },
-    {
-      "id": 81,
-      "name": "Property Taxes",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "9180"
-    },
-    {
-      "id": 82,
-      "name": "Travel Expenses",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "9200"
-    },
-    {
-      "id": 83,
-      "name": "Utilities",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "9220"
-    },
-    {
-      "id": 84,
-      "name": "Fuel Costs (Excluding Motor Vehicles)",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "9224"
-    },
-    {
-      "id": 85,
-      "name": "Other Expenses",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "9270"
-    },
-    {
-      "id": 86,
-      "name": "Delivery, Freight, and Express",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "9275"
-    },
-    {
-      "id": 87,
-      "name": "Capital Cost Allowance (CCA)",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "9936"
-    },
-    {
-      "id": 88,
-      "name": "Business-Use-of-Home Expenses",
-      "type": "EXPENSE",
-      "category": "BUSINESS",
-      "user_id": 4,
-      "code": "9945"
-    },
-    {
-      "id": 97,
-      "name": "Motor Vehicle Expenses",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "user_id": 4,
-      "code": "9281",
-      "isParent": true
-    },
-    {
-      "id": 107,
-      "code": "9945",
-      "name": "Business-Use-of-Home Expenses",
-      "type": "EXPENSE",
-      "user_id": 1,
-      "category": "BUSINESS"
-    },
-    {
-      "id": 108,
-      "code": "9281",
-      "name": "Motor Vehicle Expenses",
-      "type": "EXPENSE",
-      "user_id": 1,
-      "category": "VEHICLE"
-    },
-    {
-      "id": 109,
-      "name": "Heat",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "HOME",
-      "parent_account_id": 88,
-      "code": "9945-01"
-    },
-    {
-      "id": 110,
-      "name": "Electricity",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "HOME",
-      "parent_account_id": 88,
-      "code": "9945-02"
-    },
-    {
-      "id": 111,
-      "name": "Insurance",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "HOME",
-      "parent_account_id": 88,
-      "code": "9945-03"
-    },
-    {
-      "id": 112,
-      "name": "Maintenance",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "HOME",
-      "parent_account_id": 88,
-      "code": "9945-04"
-    },
-    {
-      "id": 113,
-      "name": "Mortgage Interest",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "HOME",
-      "parent_account_id": 88,
-      "code": "9945-05"
-    },
-    {
-      "id": 114,
-      "name": "Property Taxes",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "HOME",
-      "parent_account_id": 88,
-      "code": "9945-06"
-    },
-    {
-      "id": 115,
-      "name": "Other Expenses",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "HOME",
-      "parent_account_id": 88,
-      "code": "9945-07"
-    },
-    {
-      "id": 116,
-      "name": "Fuel & Oil",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "code": "9281-01"
-    },
-    {
-      "id": 117,
-      "name": "Interest",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "code": "9281-02"
-    },
-    {
-      "id": 118,
-      "name": "Insurance",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "code": "9281-03"
-    },
-    {
-      "id": 119,
-      "name": "License and Registration",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "code": "9281-04"
-    },
-    {
-      "id": 120,
-      "name": "Maintenance and Repairs",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "code": "9281-05"
-    },
-    {
-      "id": 121,
-      "name": "Leasing",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "code": "9281-06"
-    },
-    {
-      "id": 122,
-      "name": "Electricity for Zero-Emission Vehicles",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "code": "9281-07"
-    },
-    {
-      "id": 123,
-      "name": "Other Vehicle Expenses",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "code": "9281-08"
-    },
-    {
-      "id": 124,
-      "name": "Business Parking Fees",
-      "type": "EXPENSE",
-      "user_id": 4,
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "code": "9281-09"
-    },
-    {
-      "id": 125,
-      "code": "9945-01",
-      "name": "Heat",
-      "type": "EXPENSE",
-      "category": "HOME",
-      "parent_account_id": 88,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 126,
-      "code": "9945-02",
-      "name": "Electricity",
-      "type": "EXPENSE",
-      "category": "HOME",
-      "parent_account_id": 88,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 127,
-      "code": "9945-03",
-      "name": "Insurance",
-      "type": "EXPENSE",
-      "category": "HOME",
-      "parent_account_id": 88,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 128,
-      "code": "9945-04",
-      "name": "Maintenance",
-      "type": "EXPENSE",
-      "category": "HOME",
-      "parent_account_id": 88,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 129,
-      "code": "9945-05",
-      "name": "Mortgage Interest",
-      "type": "EXPENSE",
-      "category": "HOME",
-      "parent_account_id": 88,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 130,
-      "code": "9945-06",
-      "name": "Property Taxes",
-      "type": "EXPENSE",
-      "category": "HOME",
-      "parent_account_id": 88,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 131,
-      "code": "9945-07",
-      "name": "Other Expenses",
-      "type": "EXPENSE",
-      "category": "HOME",
-      "parent_account_id": 88,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 132,
-      "code": "9281-01",
-      "name": "Fuel & Oil",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 133,
-      "code": "9281-02",
-      "name": "Interest",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 134,
-      "code": "9281-03",
-      "name": "Insurance",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 135,
-      "code": "9281-04",
-      "name": "License and Registration",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 136,
-      "code": "9281-05",
-      "name": "Maintenance and Repairs",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 137,
-      "code": "9281-06",
-      "name": "Leasing",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 138,
-      "code": "9281-07",
-      "name": "Electricity for Zero-Emission Vehicles",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 139,
-      "code": "9281-08",
-      "name": "Other Vehicle Expenses",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": 140,
-      "code": "9281-09",
-      "name": "Business Parking Fees",
-      "type": "EXPENSE",
-      "category": "VEHICLE",
-      "parent_account_id": 97,
-      "user_id": 1,
-      "created_at": "2025-01-01T00:00:00Z",
-      "updated_at": "2025-01-01T00:00:00Z"
-    }
-  ],
-  "transactions": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "account_id": 22,
-      "transaction_date": "2026-05-25",
-      "amount": 44.247787610619476,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 5.752212389380524,
-      "description": "",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "created_at": "2026-05-25T00:03:01.815Z",
-      "updated_at": "2026-05-25T00:03:01.815Z",
-      "is_vehicle_expense": true,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 2,
-      "user_id": 1,
-      "account_id": 22,
-      "transaction_date": "2026-03-19",
-      "amount": 176.9911504424779,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 23.008849557522097,
-      "description": "",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "created_at": "2026-05-25T00:04:42.614Z",
-      "updated_at": "2026-05-25T00:04:42.614Z",
-      "is_vehicle_expense": true,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 3,
-      "user_id": 1,
-      "account_id": 26,
-      "transaction_date": "2026-04-09",
-      "amount": 500,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 65,
-      "description": "",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "created_at": "2026-05-25T00:19:41.484Z",
-      "updated_at": "2026-05-25T00:19:41.484Z",
-      "is_vehicle_expense": true,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 4,
-      "user_id": 1,
-      "account_id": 8,
-      "transaction_date": "2026-04-07",
-      "amount": 1000,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 130,
-      "description": "",
-      "type": "INVOICE",
-      "reference_number": "",
-      "created_at": "2026-05-25T01:53:38.882Z",
-      "updated_at": "2026-05-25T01:53:38.882Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 5,
-      "user_id": 2,
-      "account_id": 46,
-      "transaction_date": "2026-05-25",
-      "amount": 100,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 13,
-      "description": "",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "created_at": "2026-05-25T04:43:26.244Z",
-      "updated_at": "2026-05-25T04:43:26.244Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 6,
-      "user_id": 2,
-      "account_id": 49,
-      "transaction_date": "2026-04-07",
-      "amount": 1000,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 130,
-      "description": "",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "created_at": "2026-05-25T04:44:00.143Z",
-      "updated_at": "2026-05-25T04:44:00.143Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 7,
-      "user_id": 2,
-      "account_id": 39,
-      "transaction_date": "2026-05-11",
-      "amount": 2000,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 260,
-      "description": "Did work",
-      "type": "INVOICE",
-      "reference_number": "",
-      "created_at": "2026-05-25T16:24:57.557Z",
-      "updated_at": "2026-05-25T16:24:57.557Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100,
-      "sent_date": "2026-05-25T23:05:34.778Z",
-      "sent_to_email": "customer@example.com",
-      "reconciliation_status": "CLEARED"
-    },
-    {
-      "id": 8,
-      "user_id": 2,
-      "account_id": 39,
-      "transaction_date": "2026-05-25",
-      "amount": 20,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 2.6,
-      "description": "",
-      "type": "INVOICE",
-      "reference_number": "",
-      "created_at": "2026-05-25T23:06:40.647Z",
-      "updated_at": "2026-05-25T23:06:40.647Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100,
-      "sent_date": "2026-05-25T23:07:09.945Z",
-      "sent_to_email": "customer@example.com",
-      "reconciliation_status": "CLEARED"
-    },
-    {
-      "id": 9,
-      "user_id": 2,
-      "account_id": 39,
-      "transaction_date": "2026-05-25",
-      "amount": 50,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 6.5,
-      "description": "",
-      "type": "INVOICE",
-      "reference_number": "",
-      "created_at": "2026-05-25T23:09:01.820Z",
-      "updated_at": "2026-05-25T23:09:01.820Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 10,
-      "user_id": 2,
-      "account_id": 39,
-      "transaction_date": "2026-04-07",
-      "amount": 333,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 43.29,
-      "description": "ddd",
-      "type": "INVOICE",
-      "reference_number": "",
-      "created_at": "2026-05-25T23:10:27.309Z",
-      "updated_at": "2026-05-25T23:10:27.309Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 11,
-      "user_id": 2,
-      "account_id": 39,
-      "transaction_date": "2026-02-17",
-      "amount": 22,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 2.8600000000000003,
-      "description": "",
-      "type": "INVOICE",
-      "reference_number": "",
-      "created_at": "2026-05-25T23:12:25.501Z",
-      "updated_at": "2026-05-25T23:12:25.501Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 12,
-      "user_id": 2,
-      "account_id": 39,
-      "transaction_date": "2026-01-14",
-      "amount": 1111,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 144.43,
-      "description": "",
-      "type": "INVOICE",
-      "reference_number": "",
-      "created_at": "2026-05-25T23:15:49.451Z",
-      "updated_at": "2026-05-25T23:15:49.451Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 13,
-      "user_id": 2,
-      "account_id": 39,
-      "transaction_date": "2026-05-25",
-      "amount": 11,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 1.4300000000000002,
-      "description": "",
-      "type": "INVOICE",
-      "reference_number": "",
-      "created_at": "2026-05-25T23:53:15.580Z",
-      "updated_at": "2026-05-25T23:53:15.580Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100,
-      "sent_date": "2026-05-25",
-      "reconciliation_status": "PAID"
-    },
-    {
-      "id": 14,
-      "user_id": 2,
-      "account_id": 45,
-      "transaction_date": "2026-03-27",
-      "amount": 79.99,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 10.3987,
-      "description": "myTaxExpress License Payment",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "created_at": "2026-05-26T01:22:13.216Z",
-      "updated_at": "2026-05-26T01:22:13.216Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 15,
-      "user_id": 2,
-      "account_id": 55,
-      "transaction_date": "2026-05-26",
-      "amount": 4,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 0.52,
-      "description": "d",
-      "type": "RECEIPT",
-      "created_at": "2026-05-26T03:46:20.774Z",
-      "updated_at": "2026-05-26T06:27:04.382Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 16,
-      "user_id": 2,
-      "account_id": 1,
-      "transaction_date": "2026-03-27",
-      "amount": 79.99,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 9.2,
-      "description": "myTaxExpress License Payment",
-      "type": "RECEIPT",
-      "created_at": "2026-05-26T04:43:50.201Z",
-      "updated_at": "2026-05-26T04:43:50.201Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
-    },
-    {
-      "id": 17,
-      "user_id": 2,
-      "account_id": 1,
-      "transaction_date": "2026-03-27",
-      "amount": 79.99,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 9.2,
-      "description": "myTaxExpress License Payment",
-      "type": "RECEIPT",
-      "created_at": "2026-05-26T04:45:18.661Z",
-      "updated_at": "2026-05-26T04:45:18.661Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
     },
     {
       "id": 18,
-      "user_id": 2,
-      "account_id": 47,
-      "transaction_date": "2026-05-26",
-      "amount": 70.78761061946904,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 9.20238938053096,
-      "gst_hst_included": false,
-      "description": "Test Receipt - GST Included ($79.99 total with $9.20 HST)",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "created_at": "2026-05-26T04:51:33.595Z",
-      "updated_at": "2026-05-26T04:51:33.595Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
+      "code": "5180",
+      "name": "Rent",
+      "type": "EXPENSE",
+      "user_id": 1
     },
     {
       "id": 19,
-      "user_id": 2,
-      "account_id": 46,
-      "transaction_date": "2026-05-26",
-      "amount": 70.78761061946904,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 9.20238938053096,
-      "gst_hst_included": true,
-      "description": "Test transaction with included GST",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "created_at": "2026-05-26T04:57:16.688Z",
-      "updated_at": "2026-05-26T04:57:16.688Z",
-      "is_vehicle_expense": false,
-      "business_use_percentage": 100
+      "code": "5190",
+      "name": "Salaries and Wages",
+      "type": "EXPENSE",
+      "user_id": 1
     },
     {
       "id": 20,
-      "user_id": 2,
-      "account_id": 36,
-      "transaction_date": "2026-05-26",
-      "amount": 28.25,
-      "description": "Monthly recurring charge top-up",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 3.25,
-      "created_at": "2026-05-26T11:29:30.068Z",
-      "updated_at": "2026-05-26T11:29:30.068Z",
-      "due_date": "2026-06-25",
-      "reconciliation_status": ""
+      "code": "5200",
+      "name": "Travel",
+      "type": "EXPENSE",
+      "user_id": 1
     },
     {
       "id": 21,
-      "user_id": 2,
-      "account_id": 36,
-      "transaction_date": "2026-05-26",
-      "amount": 28.25,
-      "description": "Monthly recurring charge top-up",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "gst_hst_rate": 0,
-      "gst_hst_amount": 0,
-      "created_at": "2026-05-26T11:32:57.456Z",
-      "updated_at": "2026-05-26T11:32:57.456Z",
-      "due_date": "2026-06-25",
-      "reconciliation_status": ""
+      "code": "5210",
+      "name": "Telephone and Utilities",
+      "type": "EXPENSE",
+      "user_id": 1
     },
     {
       "id": 22,
-      "user_id": 2,
-      "account_id": 36,
-      "transaction_date": "2026-05-26",
-      "amount": 28.25,
-      "description": "Monthly recurring charge top-up for Lucky Mobile account",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "gst_hst_rate": 0,
-      "gst_hst_amount": 0,
-      "created_at": "2026-05-26T11:36:21.392Z",
-      "updated_at": "2026-05-26T11:36:21.392Z",
-      "due_date": "2026-06-25",
-      "reconciliation_status": ""
+      "code": "5220",
+      "name": "Motor Vehicle Expenses",
+      "type": "EXPENSE",
+      "user_id": 1
     },
     {
       "id": 23,
-      "user_id": 2,
-      "account_id": 36,
-      "transaction_date": "2026-05-26",
-      "amount": 28.25,
-      "description": "Monthly recurring charge top-up",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "gst_hst_rate": 0,
-      "gst_hst_amount": 0,
-      "created_at": "2026-05-26T11:36:35.083Z",
-      "updated_at": "2026-05-26T11:36:35.083Z",
-      "due_date": "2026-06-25",
-      "reconciliation_status": ""
+      "code": "5221",
+      "name": "Motor Vehicle Expenses - Fuel",
+      "type": "EXPENSE",
+      "user_id": 1
     },
     {
       "id": 24,
-      "user_id": 2,
-      "account_id": 36,
-      "transaction_date": "2026-05-26",
-      "amount": 28.25,
-      "description": "Monthly recurring charge top-up for Lucky Mobile account",
-      "type": "RECEIPT",
-      "reference_number": "",
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 3.25,
-      "created_at": "2026-05-26T11:40:01.185Z",
-      "updated_at": "2026-05-26T11:40:01.185Z",
-      "due_date": "2026-06-25",
-      "reconciliation_status": ""
+      "code": "5222",
+      "name": "Motor Vehicle Expenses - Interest (Loan)",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 25,
+      "code": "5223",
+      "name": "Motor Vehicle Expenses - Insurance",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 26,
+      "code": "5224",
+      "name": "Motor Vehicle Expenses - Licence and Registration",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 27,
+      "code": "5225",
+      "name": "Motor Vehicle Expenses - Maintenance and Repairs",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 28,
+      "code": "5226",
+      "name": "Motor Vehicle Expenses - Parking and Tolls",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 29,
+      "code": "5227",
+      "name": "Motor Vehicle Expenses - Other",
+      "type": "EXPENSE",
+      "user_id": 1
+    },
+    {
+      "id": 30,
+      "code": "5230",
+      "name": "Capital Cost Allowance (CCA)",
+      "type": "EXPENSE",
+      "user_id": 1
     }
   ],
-  "documents": [
-    {
-      "id": 1,
-      "transaction_id": 14,
-      "file_name": "receipt.jpg",
-      "file_path": "/uploads/14/1779758534246-receipt.jpg",
-      "file_size": 74043,
-      "uploaded_at": "2026-05-26T01:22:14.250Z"
-    },
-    {
-      "id": 2,
-      "transaction_id": 15,
-      "file_name": "2026 03 27 MyExpress T2 20-2 5 licnes at $80-compressed.jpeg",
-      "file_path": "/uploads/15/1779767181731-2026 03 27 MyExpress T2 20-2 5 licnes at $80-compressed.jpeg",
-      "file_size": 104175,
-      "uploaded_at": "2026-05-26T03:46:21.734Z"
-    },
-    {
-      "id": 3,
-      "transaction_id": 16,
-      "file_name": "2026 03 27 MyExpress T2 20-2 5 licnes at $80-compressed.jpeg",
-      "file_path": "/uploads/16/1779770631159-2026 03 27 MyExpress T2 20-2 5 licnes at $80-compressed.jpeg",
-      "file_size": 104175,
-      "uploaded_at": "2026-05-26T04:43:51.162Z"
-    },
-    {
-      "id": 4,
-      "transaction_id": 17,
-      "file_name": "2026 03 27 MyExpress T2 20-2 5 licnes at $80-compressed.jpeg",
-      "file_path": "/uploads/17/1779770719020-2026 03 27 MyExpress T2 20-2 5 licnes at $80-compressed.jpeg",
-      "file_size": 104175,
-      "uploaded_at": "2026-05-26T04:45:19.023Z"
-    },
-    {
-      "id": 5,
-      "transaction_id": 20,
-      "file_name": "2025 12 05 Lucky.jpg",
-      "file_path": "/uploads/user-2/20-1779794970076-2025 12 05 Lucky.jpg",
-      "file_size": 85510,
-      "uploaded_at": "2026-05-26T11:29:30.076Z"
-    },
-    {
-      "id": 6,
-      "transaction_id": 21,
-      "file_name": "2025 12 05 Lucky.jpg",
-      "file_path": "/uploads/user-2/21-1779795177456-2025 12 05 Lucky.jpg",
-      "file_size": 85510,
-      "uploaded_at": "2026-05-26T11:32:57.457Z"
-    },
-    {
-      "id": 7,
-      "transaction_id": 22,
-      "file_name": "2025 12 05 Lucky.jpg",
-      "file_path": "/uploads/user-2/22-1779795381392-2025 12 05 Lucky.jpg",
-      "file_size": 85510,
-      "uploaded_at": "2026-05-26T11:36:21.393Z"
-    },
-    {
-      "id": 8,
-      "transaction_id": 23,
-      "file_name": "2025 12 05 Lucky.jpg",
-      "file_path": "/uploads/user-2/23-1779795395083-2025 12 05 Lucky.jpg",
-      "file_size": 85510,
-      "uploaded_at": "2026-05-26T11:36:35.084Z"
-    },
-    {
-      "id": 9,
-      "transaction_id": 24,
-      "file_name": "2025 12 05 Lucky.jpg",
-      "file_path": "/uploads/user-2/24-1779795601185-2025 12 05 Lucky.jpg",
-      "file_size": 85510,
-      "uploaded_at": "2026-05-26T11:40:01.186Z"
-    }
-  ],
-  "bank_reconciliations": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "account_id": 1,
-      "statement_date": "2026-05-24",
-      "statement_opening_balance": 0,
-      "statement_closing_balance": 1000,
-      "reconciliation_date": "2026-05-25T00:49:47.242Z",
-      "status": "PENDING",
-      "created_at": "2026-05-25T00:49:47.242Z",
-      "updated_at": "2026-05-25T00:49:47.242Z"
-    },
-    {
-      "id": 2,
-      "user_id": 1,
-      "account_id": 1,
-      "statement_date": "2026-05-24",
-      "statement_opening_balance": 0,
-      "statement_closing_balance": 10000,
-      "reconciliation_date": "2026-05-25T00:51:20.757Z",
-      "status": "PENDING",
-      "created_at": "2026-05-25T00:51:20.757Z",
-      "updated_at": "2026-05-25T00:51:20.757Z"
-    },
-    {
-      "id": 3,
-      "user_id": 1,
-      "account_id": 1,
-      "statement_date": "2026-05-24",
-      "statement_opening_balance": 0,
-      "statement_closing_balance": 10000,
-      "reconciliation_date": "2026-05-25T00:55:16.733Z",
-      "status": "PENDING",
-      "created_at": "2026-05-25T00:55:16.733Z",
-      "updated_at": "2026-05-25T00:55:16.733Z"
-    },
-    {
-      "id": 4,
-      "user_id": 1,
-      "account_id": 1,
-      "statement_date": "2026-05-24",
-      "statement_opening_balance": 0,
-      "statement_closing_balance": 10000,
-      "reconciliation_date": "2026-05-25T01:00:53.046Z",
-      "status": "PENDING",
-      "created_at": "2026-05-25T01:00:53.046Z",
-      "updated_at": "2026-05-25T01:00:53.046Z"
-    },
-    {
-      "id": 5,
-      "user_id": 1,
-      "account_id": 1,
-      "statement_date": "2026-05-01",
-      "statement_opening_balance": 0,
-      "statement_closing_balance": 1000,
-      "reconciliation_date": "2026-05-25T01:46:28.237Z",
-      "status": "PENDING",
-      "created_at": "2026-05-25T01:46:28.237Z",
-      "updated_at": "2026-05-25T01:46:28.237Z"
-    },
-    {
-      "id": 6,
-      "user_id": 1,
-      "account_id": 1,
-      "statement_date": "2026-05-24",
-      "statement_opening_balance": 10,
-      "statement_closing_balance": 1000,
-      "reconciliation_date": "2026-05-25T01:47:11.633Z",
-      "status": "PENDING",
-      "created_at": "2026-05-25T01:47:11.633Z",
-      "updated_at": "2026-05-25T01:47:11.633Z"
-    }
-  ],
+  "transactions": [],
+  "documents": [],
+  "bank_reconciliations": [],
   "reconciliation_items": [],
   "recurring_transactions": [
     {
@@ -1453,8 +257,8 @@
       "is_active": true,
       "gst_hst_rate": 0,
       "gst_hst_amount": 0,
-      "created_at": "2026-05-24T21:02:44.591Z",
-      "updated_at": "2026-05-24T21:02:44.591Z"
+      "created_at": "2026-06-02T19:12:19.563Z",
+      "updated_at": "2026-06-02T19:12:19.563Z"
     },
     {
       "id": 2,
@@ -1469,8 +273,8 @@
       "is_active": true,
       "gst_hst_rate": 0,
       "gst_hst_amount": 0,
-      "created_at": "2026-05-24T21:02:44.591Z",
-      "updated_at": "2026-05-24T21:02:44.591Z"
+      "created_at": "2026-06-02T19:12:19.563Z",
+      "updated_at": "2026-06-02T19:12:19.563Z"
     },
     {
       "id": 3,
@@ -1485,25 +289,8 @@
       "is_active": true,
       "gst_hst_rate": 0,
       "gst_hst_amount": 0,
-      "created_at": "2026-05-24T21:02:44.591Z",
-      "updated_at": "2026-05-24T21:02:44.591Z"
-    },
-    {
-      "id": 4,
-      "user_id": 2,
-      "account_id": 43,
-      "template_name": "recuring insurance",
-      "amount": 2,
-      "description": "dfd",
-      "frequency": "WEEKLY",
-      "start_date": "2026-03-01",
-      "end_date": "2026-05-26",
-      "next_due_date": "2026-03-08",
-      "is_active": true,
-      "gst_hst_rate": 13,
-      "gst_hst_amount": 0.26,
-      "created_at": "2026-05-26T06:37:02.546Z",
-      "updated_at": "2026-05-26T06:37:02.546Z"
+      "created_at": "2026-06-02T19:12:19.563Z",
+      "updated_at": "2026-06-02T19:12:19.563Z"
     }
   ],
   "transaction_instances": [],
@@ -1511,107 +298,23 @@
   "billing_history": [],
   "payment_methods": [],
   "stripe_webhooks": [],
-  "nextUserId": 4,
+  "vehicle_baseline": [],
+  "mileage_trips": [],
+  "odometer_readings": [],
+  "nextUserId": 2,
   "nextClientId": 3,
-  "nextAccountId": 55,
-  "nextTransactionId": 25,
-  "nextDocumentId": 10,
-  "nextBankReconciliationId": 7,
+  "nextAccountId": 32,
+  "nextTransactionId": 1,
+  "nextDocumentId": 1,
+  "nextBankReconciliationId": 1,
   "nextReconciliationItemId": 1,
-  "nextRecurringTransactionId": 5,
+  "nextRecurringTransactionId": 4,
   "nextTransactionInstanceId": 1,
   "nextSubscriptionId": 1,
   "nextBillingHistoryId": 1,
   "nextPaymentMethodId": 1,
   "nextStripeWebhookId": 1,
-  "odometer_readings": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "month": "2026-05",
-      "start_odometer": 45000,
-      "end_odometer": 45500,
-      "business_use_percentage": 100,
-      "created_at": "2026-05-25T05:22:31.377Z",
-      "updated_at": "2026-05-25T05:22:31.377Z"
-    }
-  ],
-  "nextOdometerReadingId": 2,
-  "vehicle_baseline": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "odometer_reading": 240000,
-      "setup_date": "2026-05-25",
-      "notes": "2026 Jan",
-      "created_at": "2026-05-25T05:37:40.728Z"
-    },
-    {
-      "id": 2,
-      "user_id": 2,
-      "odometer_reading": 240000,
-      "setup_date": "2026-01-26",
-      "created_at": "2026-05-25T07:06:58.238Z"
-    }
-  ],
-  "nextVehicleBaselineId": 3,
-  "mileage_trips": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "trip_date": "2026-05-25",
-      "kilometers": 120,
-      "destination": "Hamilton",
-      "purpose": "business",
-      "business_percentage": 100,
-      "notes": "Meeting with Helen Brown",
-      "created_at": "2026-05-25T05:50:49.796Z",
-      "updated_at": "2026-05-25T05:50:49.796Z"
-    },
-    {
-      "id": 2,
-      "user_id": 1,
-      "trip_date": "2026-05-25",
-      "kilometers": 50.5,
-      "destination": "Downtown Toronto - Client Meeting",
-      "purpose": "business",
-      "business_percentage": 100,
-      "created_at": "2026-05-25T06:15:54.501Z",
-      "updated_at": "2026-05-25T06:15:54.501Z"
-    },
-    {
-      "id": 3,
-      "user_id": 1,
-      "trip_date": "2026-05-25",
-      "kilometers": 200,
-      "destination": "Hamilton",
-      "purpose": "mixed",
-      "business_percentage": 50,
-      "created_at": "2026-05-25T07:07:22.610Z",
-      "updated_at": "2026-05-25T07:07:22.610Z"
-    },
-    {
-      "id": 4,
-      "user_id": 2,
-      "trip_date": "2026-05-25",
-      "kilometers": 400,
-      "destination": "Downtown Toronto - Client Meeting",
-      "purpose": "mixed",
-      "business_percentage": 81,
-      "created_at": "2026-05-25T07:12:11.959Z",
-      "updated_at": "2026-05-25T12:00:23.260Z"
-    },
-    {
-      "id": 5,
-      "user_id": 2,
-      "trip_date": "2026-05-06",
-      "kilometers": 55,
-      "destination": "Casey",
-      "purpose": "business",
-      "business_percentage": 100,
-      "created_at": "2026-05-25T11:21:50.151Z",
-      "updated_at": "2026-05-25T12:00:39.827Z"
-    }
-  ],
-  "nextMileageTripId": 6
+  "nextVehicleBaselineId": 1,
+  "nextMileageTripId": 1,
+  "nextOdometerReadingId": 1
 }
