@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
 import path from 'path'
 import { getDb, saveDb } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { readFileSync, existsSync } from 'fs'
-import { join } from 'path'
 
 let client: any = null
 
@@ -258,27 +255,6 @@ export async function POST(request: NextRequest) {
           reconciliation_status: '',
         }
         db.transactions.push(transaction)
-
-        // Save document file
-        const userUploadDir = path.join(uploadsDir, `user-${userId}`)
-        if (!fs.existsSync(userUploadDir)) {
-          fs.mkdirSync(userUploadDir, { recursive: true })
-        }
-
-        const fileName = `${transactionId}-${Date.now()}-${file.name}`
-        const filePath = path.join(userUploadDir, fileName)
-        fs.writeFileSync(filePath, buffer)
-
-        // Create document record
-        const documentId = db.nextDocumentId++
-        db.documents.push({
-          id: documentId,
-          transaction_id: transactionId,
-          file_name: file.name,
-          file_path: `/uploads/user-${userId}/${fileName}`,
-          file_size: buffer.length,
-          uploaded_at: new Date().toISOString(),
-        })
 
         results.push({
           fileName: file.name,
