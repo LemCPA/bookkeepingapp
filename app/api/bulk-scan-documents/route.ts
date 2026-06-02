@@ -321,14 +321,20 @@ export async function POST(request: NextRequest) {
           type
         )
 
-        if (!supabaseSuccess && process.env.NEXT_PUBLIC_SUPABASE_URL) {
-          // In production (Supabase configured), Supabase save MUST succeed
+        // In production, ALWAYS require Supabase persistence
+        const isProduction = process.env.NODE_ENV === 'production'
+        if (!supabaseSuccess && isProduction) {
           console.error(`[BULK-SCAN] CRITICAL: Failed to save transaction to Supabase in production`)
           errors.push(`${file.name}: Failed to persist data to database. Please try again.`)
           // Remove the transaction we added to in-memory DB since it won't persist
           db.transactions = db.transactions.filter(t => t.id !== transactionId)
           analyzedCount--
           continue
+        }
+
+        if (!supabaseSuccess && !isProduction) {
+          // Development: warn but allow JSON fallback
+          console.warn(`[BULK-SCAN] Supabase save failed in dev, falling back to JSON`)
         }
 
         results.push({

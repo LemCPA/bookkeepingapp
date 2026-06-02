@@ -7,7 +7,7 @@
       "name": "Demo User",
       "gst_registered": true,
       "gst_number": "123456789RT0001",
-      "created_at": "2026-06-02T19:13:58.713Z"
+      "created_at": "2026-06-02T19:37:32.351Z"
     }
   ],
   "clients": [
@@ -17,14 +17,14 @@
       "name": "Acme Corporation",
       "gst_registered": true,
       "gst_number": "123456789RT0002",
-      "created_at": "2026-06-02T19:13:58.713Z"
+      "created_at": "2026-06-02T19:37:32.351Z"
     },
     {
       "id": 2,
       "user_id": 1,
       "name": "Tech Startup Inc",
       "gst_registered": false,
-      "created_at": "2026-06-02T19:13:58.713Z"
+      "created_at": "2026-06-02T19:37:32.351Z"
     }
   ],
   "chart_of_accounts": [
@@ -226,7 +226,8 @@
       "name": "Heat",
       "type": "EXPENSE",
       "category": "HOME",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 23
     },
     {
       "id": 26,
@@ -234,7 +235,8 @@
       "name": "Electricity",
       "type": "EXPENSE",
       "category": "HOME",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 23
     },
     {
       "id": 27,
@@ -242,7 +244,8 @@
       "name": "Insurance (Home)",
       "type": "EXPENSE",
       "category": "HOME",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 23
     },
     {
       "id": 28,
@@ -250,7 +253,8 @@
       "name": "Property Tax",
       "type": "EXPENSE",
       "category": "HOME",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 23
     },
     {
       "id": 29,
@@ -258,7 +262,8 @@
       "name": "Mortgage Interest",
       "type": "EXPENSE",
       "category": "HOME",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 23
     },
     {
       "id": 30,
@@ -266,7 +271,8 @@
       "name": "Repairs and Maintenance (Home)",
       "type": "EXPENSE",
       "category": "HOME",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 23
     },
     {
       "id": 31,
@@ -274,7 +280,8 @@
       "name": "Supplies (Home)",
       "type": "EXPENSE",
       "category": "HOME",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 23
     },
     {
       "id": 32,
@@ -282,7 +289,8 @@
       "name": "Telephone",
       "type": "EXPENSE",
       "category": "HOME",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 23
     },
     {
       "id": 33,
@@ -290,7 +298,8 @@
       "name": "Rent (Home)",
       "type": "EXPENSE",
       "category": "HOME",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 23
     },
     {
       "id": 34,
@@ -298,7 +307,8 @@
       "name": "Fuel & Oil",
       "type": "EXPENSE",
       "category": "VEHICLE",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 24
     },
     {
       "id": 35,
@@ -306,7 +316,8 @@
       "name": "Interest",
       "type": "EXPENSE",
       "category": "VEHICLE",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 24
     },
     {
       "id": 36,
@@ -314,7 +325,8 @@
       "name": "Insurance (Vehicle)",
       "type": "EXPENSE",
       "category": "VEHICLE",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 24
     },
     {
       "id": 37,
@@ -322,7 +334,8 @@
       "name": "License & Registration",
       "type": "EXPENSE",
       "category": "VEHICLE",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 24
     },
     {
       "id": 38,
@@ -330,7 +343,8 @@
       "name": "Maintenance & Repairs",
       "type": "EXPENSE",
       "category": "VEHICLE",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 24
     },
     {
       "id": 39,
@@ -338,7 +352,8 @@
       "name": "Lease/Rental",
       "type": "EXPENSE",
       "category": "VEHICLE",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 24
     },
     {
       "id": 40,
@@ -346,7 +361,8 @@
       "name": "Parking",
       "type": "EXPENSE",
       "category": "VEHICLE",
-      "user_id": 1
+      "user_id": 1,
+      "parent_account_id": 24
     }
   ],
   "transactions": [],
@@ -367,8 +383,8 @@
       "is_active": true,
       "gst_hst_rate": 0,
       "gst_hst_amount": 0,
-      "created_at": "2026-06-02T19:13:58.713Z",
-      "updated_at": "2026-06-02T19:13:58.713Z"
+      "created_at": "2026-06-02T19:37:32.351Z",
+      "updated_at": "2026-06-02T19:37:32.351Z"
     },
     {
       "id": 2,
@@ -383,8 +399,8 @@
       "is_active": true,
       "gst_hst_rate": 0,
       "gst_hst_amount": 0,
-      "created_at": "2026-06-02T19:13:58.713Z",
-      "updated_at": "2026-06-02T19:13:58.713Z"
+      "created_at": "2026-06-02T19:37:32.351Z",
+      "updated_at": "2026-06-02T19:37:32.352Z"
     },
     {
       "id": 3,
@@ -399,8 +415,8 @@
       "is_active": true,
       "gst_hst_rate": 0,
       "gst_hst_amount": 0,
-      "created_at": "2026-06-02T19:13:58.713Z",
-      "updated_at": "2026-06-02T19:13:58.713Z"
+      "created_at": "2026-06-02T19:37:32.352Z",
+      "updated_at": "2026-06-02T19:37:32.352Z"
     }
   ],
   "transaction_instances": [],
