@@ -29,7 +29,7 @@ export default function TransactionsContent() {
     setSearchText,
   } = useTransactionFilters()
 
-  // Check if user is logged in on mount
+  // Check if user is logged in on mount and refetch on every mount
   useEffect(() => {
     const storedUser = getStoredUser()
     setUser(storedUser)
@@ -39,10 +39,27 @@ export default function TransactionsContent() {
     }
   }, [])
 
-  // Fetch transactions whenever filters change
+  // Refetch transactions on component mount (when returning from other pages)
+  useEffect(() => {
+    if (user) {
+      fetchTransactions()
+    }
+  }, [user])
+
+  // Fetch transactions when user loads the page or when filters change
   useEffect(() => {
     fetchTransactions()
   }, [filters])
+
+  // Also refetch when page regains focus (user returns from another page)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchTransactions()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [])
 
   async function fetchTransactions() {
     if (!user) {

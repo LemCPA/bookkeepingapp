@@ -177,8 +177,8 @@ export default function MileageSetupPage() {
                 <li>✓ Enter your vehicle's current odometer reading above</li>
                 <li>✓ Log each business trip with kilometers driven and purpose</li>
                 <li>✓ Business percentage is auto-calculated based on trip type</li>
-                <li>✓ Standard CRA deduction: $0.67 per business kilometer</li>
-                <li>✓ Monthly summaries track total business km and deductible amounts</li>
+                <li>✓ Track total business kilometers for CRA deduction claims</li>
+                <li>✓ Monthly summaries track total business km traveled</li>
               </ul>
             </div>
 
@@ -188,7 +188,7 @@ export default function MileageSetupPage() {
               <ul className="list-disc list-inside space-y-1 text-xs">
                 <li>Keep detailed records of each trip (date, distance, destination, purpose)</li>
                 <li>Log trips regularly - memory is fallible</li>
-                <li>Standard deduction: $0.67 per business kilometer</li>
+                <li>CRA rates vary by year and distance thresholds - check current rates when filing</li>
                 <li>Claim deductible amount on Line 9270 of Form T2125</li>
                 <li>Keep supporting records for at least 6 years</li>
               </ul>

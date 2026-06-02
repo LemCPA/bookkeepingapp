@@ -262,6 +262,53 @@ export async function getCustomerPaymentMethods(customerId: string) {
 }
 
 /**
+ * Create a payment link for an invoice (customer-facing payment)
+ */
+export async function createInvoicePaymentLink(
+  invoiceAmount: number,
+  invoiceId: number | string,
+  invoiceDescription: string,
+  successUrl: string,
+  cancelUrl: string
+) {
+  try {
+    const paymentLink = await getStripe().paymentLinks.create({
+      line_items: [
+        {
+          price_data: {
+            currency: 'cad', // Canadian dollars for this app
+            product_data: {
+              name: `Invoice #${invoiceId}`,
+              description: invoiceDescription,
+            },
+            unit_amount: Math.round(invoiceAmount * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      after_completion: {
+        type: 'redirect',
+        redirect: {
+          url: successUrl,
+        },
+      },
+      metadata: {
+        invoice_id: String(invoiceId),
+        type: 'invoice_payment',
+      },
+    })
+
+    return {
+      id: paymentLink.id,
+      url: paymentLink.url,
+    }
+  } catch (error) {
+    console.error('Error creating invoice payment link:', error)
+    throw error
+  }
+}
+
+/**
  * Handle subscription events
  */
 export function handleSubscriptionEvent(event: Stripe.Event) {
@@ -276,6 +323,8 @@ export function handleSubscriptionEvent(event: Stripe.Event) {
       return { type: 'invoice.paid', data: event.data.object }
     case 'invoice.payment_failed':
       return { type: 'invoice.payment_failed', data: event.data.object }
+    case 'charge.succeeded':
+      return { type: 'payment.succeeded', data: event.data.object }
     default:
       return null
   }

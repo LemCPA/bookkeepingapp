@@ -38,7 +38,6 @@ export default function MileagePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const [standardDeduction, setStandardDeduction] = useState(0.67)
   const [hasBaseline, setHasBaseline] = useState(false)
   const [baseline, setBaseline] = useState<VehicleBaseline | null>(null)
   const [sortColumn, setSortColumn] = useState<'date' | 'destination' | 'purpose' | null>(null)
@@ -138,11 +137,10 @@ export default function MileagePage() {
     return sortDirection === 'asc' ? ' ▲' : ' ▼'
   }
 
-  // Calculate totals using the current standard deduction rate
+  // Calculate totals
   const totalTrips = trips.length
   const totalKm = trips.reduce((sum, t) => sum + t.kilometers, 0)
   const totalBusinessKm = trips.reduce((sum, t) => sum + t.businessKm, 0)
-  const totalDeductible = totalBusinessKm * standardDeduction
   const avgBusinessUse = trips.length > 0
     ? (trips.reduce((sum, t) => sum + t.businessPercentage, 0) / trips.length).toFixed(1)
     : '0'
@@ -221,23 +219,6 @@ export default function MileagePage() {
               ))}
             </select>
           </div>
-
-          {/* CRA Rate */}
-          <div className="flex items-center gap-2">
-            <label className="text-gray-700 font-medium text-sm">CRA Rate:</label>
-            <div className="flex items-center gap-1">
-              <span className="text-gray-600 text-sm">$</span>
-              <input
-                type="number"
-                value={standardDeduction}
-                onChange={(e) => setStandardDeduction(parseFloat(e.target.value) || 0.67)}
-                min="0"
-                step="0.01"
-                className="w-16 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
-              <span className="text-gray-600 text-sm">/km</span>
-            </div>
-          </div>
         </div>
 
         {error && (
@@ -262,11 +243,6 @@ export default function MileagePage() {
               <p className="text-gray-600 text-xs mb-1">Business Kilometers</p>
               <p className="text-2xl font-bold text-blue-600">{totalBusinessKm.toLocaleString()}</p>
               <p className="text-xs text-gray-500 mt-0.5">avg {avgBusinessUse}% use</p>
-            </div>
-            <div className="bg-blue-50 rounded-lg shadow p-3 border-2 border-blue-200">
-              <p className="text-gray-600 text-xs mb-1">Deductible Amount</p>
-              <p className="text-2xl font-bold text-blue-600">${totalDeductible.toFixed(2)}</p>
-              <p className="text-xs text-gray-500 mt-0.5">@ ${standardDeduction.toFixed(2)}/km</p>
             </div>
           </div>
         )}
@@ -313,7 +289,6 @@ export default function MileagePage() {
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">Distance (km)</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">Business %</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">Business km</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-900">Deductible</th>
                     <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">Actions</th>
                   </tr>
                 </thead>
@@ -328,7 +303,6 @@ export default function MileagePage() {
                       <td className="px-6 py-4 text-sm text-gray-600">{trip.kilometers.toLocaleString()} km</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{trip.businessPercentage.toFixed(1)}%</td>
                       <td className="px-6 py-4 text-sm font-medium text-blue-600">{trip.businessKm.toLocaleString()} km</td>
-                      <td className="px-6 py-4 text-sm font-bold text-right text-gray-900">${(trip.businessKm * standardDeduction).toFixed(2)}</td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex justify-center gap-2">
                           <Link
@@ -359,7 +333,7 @@ export default function MileagePage() {
           <ul className="space-y-2 text-sm text-gray-700">
             <li>✓ Keep detailed records of each trip (date, distance, destination, purpose)</li>
             <li>✓ Document business use percentage (by trip purpose)</li>
-            <li>✓ Standard deduction: ${standardDeduction.toFixed(2)} per business kilometer (adjust above if CRA rate changes)</li>
+            <li>✓ Track business kilometers - CRA rates vary by year and distance thresholds</li>
             <li>✓ Claim on Line 9270 of Form T2125 (Statement of Business Activities)</li>
             <li>✓ Keep supporting records and trip logs for at least 6 years</li>
             <li>✓ Vehicle must be used for income-earning purposes</li>

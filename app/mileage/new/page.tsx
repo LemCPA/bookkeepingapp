@@ -267,18 +267,6 @@ export default function NewMileageTripPage() {
             </div>
 
             {/* Deduction Preview */}
-            {formData.kilometers && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">💰 Deduction Preview</h3>
-                <p className="text-sm text-gray-700">
-                  Business km: <span className="font-bold">{(parseFloat(formData.kilometers) * (formData.businessPercentage / 100)).toFixed(1)} km</span>
-                </p>
-                <p className="text-sm text-gray-700 mt-1">
-                  Deductible amount: <span className="font-bold">${(parseFloat(formData.kilometers) * (formData.businessPercentage / 100) * 0.67).toFixed(2)}</span> @ $0.67/km
-                </p>
-              </div>
-            )}
-
             {/* Info Box */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-gray-700">
               <p className="font-semibold mb-2">📋 CRA Requirements</p>
@@ -286,7 +274,7 @@ export default function NewMileageTripPage() {
                 <li>Record trip details as soon as possible</li>
                 <li>Keep supporting documentation (invoices, meeting notes)</li>
                 <li>Be consistent with business/personal classification</li>
-                <li>Standard deduction: $0.67 per business kilometer</li>
+                <li>CRA rates vary by year and distance thresholds</li>
                 <li>Claim on Line 9270 of Form T2125</li>
               </ul>
             </div>
