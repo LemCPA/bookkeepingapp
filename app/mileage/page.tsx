@@ -88,6 +88,16 @@ export default function MileagePage() {
     }
   }, [selectedYear, hasBaseline])
 
+  // Refetch baseline and trips when page regains focus (e.g., returning from settings)
+  useEffect(() => {
+    const handleFocus = () => {
+      checkBaseline()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [])
+
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this trip?')) return
 
