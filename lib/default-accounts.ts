@@ -43,4 +43,24 @@ export const DEFAULT_ACCOUNTS: DefaultAccount[] = [
   // GROUP ACCOUNTS (parent accounts for hierarchical display - no direct transactions)
   { code: '9945', name: 'Business-Use-of-Home Expenses', type: 'EXPENSE', category: 'BUSINESS' },
   { code: '9281', name: 'Motor Vehicle Expenses', type: 'EXPENSE', category: 'BUSINESS' },
+
+  // HOME SUB-ACCOUNTS (children of 9945 - category sets parent relationship)
+  { name: 'Heat', type: 'EXPENSE', category: 'HOME' },
+  { name: 'Electricity', type: 'EXPENSE', category: 'HOME' },
+  { name: 'Insurance (Home)', type: 'EXPENSE', category: 'HOME' },
+  { name: 'Property Tax', type: 'EXPENSE', category: 'HOME' },
+  { name: 'Mortgage Interest', type: 'EXPENSE', category: 'HOME' },
+  { name: 'Repairs and Maintenance (Home)', type: 'EXPENSE', category: 'HOME' },
+  { name: 'Supplies (Home)', type: 'EXPENSE', category: 'HOME' },
+  { name: 'Telephone', type: 'EXPENSE', category: 'HOME' },
+  { name: 'Rent (Home)', type: 'EXPENSE', category: 'HOME' },
+
+  // VEHICLE SUB-ACCOUNTS (children of 9281 - category sets parent relationship)
+  { name: 'Fuel & Oil', type: 'EXPENSE', category: 'VEHICLE' },
+  { name: 'Interest', type: 'EXPENSE', category: 'VEHICLE' },
+  { name: 'Insurance (Vehicle)', type: 'EXPENSE', category: 'VEHICLE' },
+  { name: 'License & Registration', type: 'EXPENSE', category: 'VEHICLE' },
+  { name: 'Maintenance & Repairs', type: 'EXPENSE', category: 'VEHICLE' },
+  { name: 'Lease/Rental', type: 'EXPENSE', category: 'VEHICLE' },
+  { name: 'Parking', type: 'EXPENSE', category: 'VEHICLE' },
 ]
