@@ -46,6 +46,43 @@ interface ExtractedTransaction {
   gst_hst_rate: number
 }
 
+async function saveTransactionToSupabase(
+  userId: number,
+  accountId: number,
+  date: string,
+  amount: number,
+  gstHstRate: number,
+  gstHstAmount: number,
+  description: string,
+  type: string
+): Promise<boolean> {
+  try {
+    const result = await createTransactionInSupabase(
+      userId,
+      0, // clientId - set to 0 for now
+      accountId,
+      date,
+      amount,
+      gstHstRate,
+      gstHstAmount,
+      description,
+      type,
+      '' // reference_number
+    )
+
+    if (result) {
+      console.log(`[BULK-SCAN] Transaction saved to Supabase successfully`)
+      return true
+    } else {
+      console.error(`[BULK-SCAN] Supabase returned null/falsy for transaction creation`)
+      return false
+    }
+  } catch (error) {
+    console.error(`[BULK-SCAN] Exception saving to Supabase:`, error)
+    return false
+  }
+}
+
 async function analyzeDocument(fileBuffer: Buffer, fileName: string): Promise<ExtractedTransaction | null> {
   try {
     console.log(`[${fileName}] Starting document analysis, buffer size: ${fileBuffer.length} bytes`)
@@ -273,23 +310,25 @@ export async function POST(request: NextRequest) {
         db.transactions.push(transaction)
 
         // Also save to Supabase for production persistence
-        try {
-          await createTransactionInSupabase(
-            userId,
-            0, // clientId - set to 0 for now, can be updated later
-            accountId,
-            date,
-            amount,
-            extracted.gst_hst_rate || 0,
-            extracted.gst_hst_amount || 0,
-            description,
-            type,
-            '' // reference_number
-          )
-          console.log(`[BULK-SCAN] Transaction saved to Supabase: ${transactionId}`)
-        } catch (supabaseError) {
-          console.error(`[BULK-SCAN] Failed to save transaction to Supabase:`, supabaseError)
-          // Continue anyway - JSON fallback is already saved above
+        const supabaseSuccess = await saveTransactionToSupabase(
+          userId,
+          accountId,
+          date,
+          amount,
+          extracted.gst_hst_rate || 0,
+          extracted.gst_hst_amount || 0,
+          description,
+          type
+        )
+
+        if (!supabaseSuccess && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+          // In production (Supabase configured), Supabase save MUST succeed
+          console.error(`[BULK-SCAN] CRITICAL: Failed to save transaction to Supabase in production`)
+          errors.push(`${file.name}: Failed to persist data to database. Please try again.`)
+          // Remove the transaction we added to in-memory DB since it won't persist
+          db.transactions = db.transactions.filter(t => t.id !== transactionId)
+          analyzedCount--
+          continue
         }
 
         results.push({
@@ -309,13 +348,20 @@ export async function POST(request: NextRequest) {
     // Save database
     saveDb(db)
 
-    return NextResponse.json({
+    // Return appropriate status code
+    const statusCode = analyzedCount === 0 ? 400 : (errors.length > 0 ? 207 : 200)
+    const response = {
       analyzedCount,
       totalCount: files.length,
       results: analyzedCount > 0 ? results : undefined,
       errors: errors.length > 0 ? errors : undefined,
-      message: `Successfully analyzed ${analyzedCount} document(s)`,
-    })
+      message: analyzedCount === 0
+        ? 'No documents could be processed'
+        : `Successfully analyzed ${analyzedCount} document(s)${errors.length > 0 ? ` (${errors.length} error(s))` : ''}`,
+    }
+
+    console.log(`[BULK-SCAN] Final response: ${analyzedCount} analyzed, ${errors.length} errors`)
+    return NextResponse.json(response, { status: statusCode })
   } catch (error) {
     console.error('Error scanning documents:', error)
     const errorMessage = error instanceof Error ? error.message : String(error)

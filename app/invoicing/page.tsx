@@ -109,13 +109,23 @@ export default function InvoicingPage() {
         body: formData,
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        alert(`Invoice uploaded successfully! Found ${data.results?.length || 1} invoice(s)`)
-        // Refresh invoices list
-        fetchInvoices()
+      const data = await response.json()
+
+      if (response.ok || response.status === 207) {
+        // 200 = full success, 207 = partial success
+        const message = data.message || `Processed ${data.analyzedCount} document(s)`
+        if (data.errors && data.errors.length > 0) {
+          alert(`${message}\n\nErrors:\n${data.errors.join('\n')}`)
+        } else {
+          alert(`${message}`)
+        }
+        // Refresh invoices list if any were processed
+        if (data.analyzedCount > 0) {
+          fetchInvoices()
+        }
       } else {
-        alert('Failed to upload invoice. Please try again.')
+        const errorMsg = data.errors ? data.errors.join('\n') : 'Failed to upload invoice'
+        alert(`Error: ${data.message || errorMsg}`)
       }
     } catch (error) {
       console.error('Error uploading file:', error)
