@@ -315,11 +315,7 @@ function initializeDb(): DbData {
 }
 
 export function saveDb(db: DbData) {
-  const dir = path.dirname(dbPath)
   try {
-    if (!existsSync(dir)) {
-      require('fs').mkdirSync(dir, { recursive: true })
-    }
     writeFileSync(dbPath, JSON.stringify(db, null, 2), 'utf-8')
   } catch (e) {
     console.error('Error saving database:', e)
