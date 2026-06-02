@@ -194,12 +194,6 @@ export async function POST(request: NextRequest) {
     const results: any[] = []
     const errors: string[] = []
 
-    // Ensure uploads directory exists
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true })
-    }
-
     for (const file of files) {
       try {
         const fileBuffer = await file.arrayBuffer()
