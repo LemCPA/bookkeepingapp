@@ -82,6 +82,15 @@ export function createAuthenticatedFetch(accessToken?: string | null, refreshTok
     token = null
   }
 
+  // Log token status for debugging
+  if (typeof window !== 'undefined') {
+    console.log('[AUTH] Token status:', {
+      hasAccessToken: !!token,
+      hasRefreshToken: !!refresh,
+      tokenLength: token ? token.length : 0,
+    })
+  }
+
   return async (url: string, options: RequestInit = {}) => {
     const headers = {
       ...options.headers,
@@ -94,6 +103,9 @@ export function createAuthenticatedFetch(accessToken?: string | null, refreshTok
 
     if (token && token !== 'null' && token !== 'undefined') {
       headers.Authorization = `Bearer ${token}`
+      console.log('[AUTH] Authorization header added, token length:', token.length)
+    } else {
+      console.log('[AUTH] WARNING: No valid token found, Authorization header NOT added')
     }
 
     let response = await fetch(url, {
