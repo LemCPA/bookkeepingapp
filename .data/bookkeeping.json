@@ -7,7 +7,7 @@
       "name": "Demo User",
       "gst_registered": true,
       "gst_number": "123456789RT0001",
-      "created_at": "2026-06-02T19:12:19.563Z"
+      "created_at": "2026-06-02T19:13:58.713Z"
     }
   ],
   "clients": [
@@ -17,225 +17,335 @@
       "name": "Acme Corporation",
       "gst_registered": true,
       "gst_number": "123456789RT0002",
-      "created_at": "2026-06-02T19:12:19.563Z"
+      "created_at": "2026-06-02T19:13:58.713Z"
     },
     {
       "id": 2,
       "user_id": 1,
       "name": "Tech Startup Inc",
       "gst_registered": false,
-      "created_at": "2026-06-02T19:12:19.563Z"
+      "created_at": "2026-06-02T19:13:58.713Z"
     }
   ],
   "chart_of_accounts": [
     {
       "id": 1,
-      "code": "1000",
-      "name": "Cash",
-      "type": "ASSET",
+      "code": "8000",
+      "name": "Gross Business Income",
+      "type": "INCOME",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 2,
-      "code": "1010",
-      "name": "Checking Account",
-      "type": "ASSET",
+      "code": "8230",
+      "name": "Other Income",
+      "type": "INCOME",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 3,
-      "code": "1020",
-      "name": "Savings Account",
-      "type": "ASSET",
+      "code": "8521",
+      "name": "Advertising",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 4,
-      "code": "1030",
-      "name": "Accounts Receivable",
-      "type": "ASSET",
+      "code": "8523",
+      "name": "Meals and Entertainment",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 5,
-      "code": "2000",
-      "name": "Accounts Payable",
-      "type": "LIABILITY",
+      "code": "8590",
+      "name": "Bad Debts",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 6,
-      "code": "2010",
-      "name": "Credit Card",
-      "type": "LIABILITY",
+      "code": "8690",
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 7,
-      "code": "3000",
-      "name": "Retained Earnings",
-      "type": "EQUITY",
+      "code": "8710",
+      "name": "Interest and Bank Charges",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 8,
-      "code": "4000",
-      "name": "Service Revenue",
-      "type": "INCOME",
+      "code": "8760",
+      "name": "Business Taxes, Fees, Licenses, and Memberships",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 9,
-      "code": "4010",
-      "name": "Product Revenue",
-      "type": "INCOME",
+      "code": "8810",
+      "name": "Office Expenses",
+      "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 10,
-      "code": "5100",
-      "name": "Advertising",
+      "code": "8811",
+      "name": "Office Stationery and Supplies",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 11,
-      "code": "5110",
-      "name": "Meals and Entertainment (50% rule)",
+      "code": "8860",
+      "name": "Professional Fees (Accounting, Legal)",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 12,
-      "code": "5120",
-      "name": "Insurance",
+      "code": "8871",
+      "name": "Management and Administration Fees",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 13,
-      "code": "5130",
-      "name": "Interest and Bank Charges",
+      "code": "8910",
+      "name": "Rent",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 14,
-      "code": "5140",
-      "name": "Business Taxes and Licenses",
+      "code": "8960",
+      "name": "Repairs and Maintenance",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 15,
-      "code": "5150",
-      "name": "Office Expenses",
+      "code": "9060",
+      "name": "Salaries, Wages, and Benefits",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 16,
-      "code": "5160",
-      "name": "Supplies",
+      "code": "9180",
+      "name": "Property Taxes",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 17,
-      "code": "5170",
-      "name": "Legal and Accounting Fees",
+      "code": "9200",
+      "name": "Travel Expenses",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 18,
-      "code": "5180",
-      "name": "Rent",
+      "code": "9220",
+      "name": "Utilities",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 19,
-      "code": "5190",
-      "name": "Salaries and Wages",
+      "code": "9224",
+      "name": "Fuel Costs (Excluding Motor Vehicles)",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 20,
-      "code": "5200",
-      "name": "Travel",
+      "code": "9270",
+      "name": "Other Expenses",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 21,
-      "code": "5210",
-      "name": "Telephone and Utilities",
+      "code": "9275",
+      "name": "Delivery, Freight, and Express",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 22,
-      "code": "5220",
-      "name": "Motor Vehicle Expenses",
+      "code": "9936",
+      "name": "Capital Cost Allowance (CCA)",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 23,
-      "code": "5221",
-      "name": "Motor Vehicle Expenses - Fuel",
+      "code": "9945",
+      "name": "Business-Use-of-Home Expenses",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 24,
-      "code": "5222",
-      "name": "Motor Vehicle Expenses - Interest (Loan)",
+      "code": "9281",
+      "name": "Motor Vehicle Expenses",
       "type": "EXPENSE",
+      "category": "BUSINESS",
       "user_id": 1
     },
     {
       "id": 25,
-      "code": "5223",
-      "name": "Motor Vehicle Expenses - Insurance",
+      "code": "9945-01",
+      "name": "Heat",
       "type": "EXPENSE",
+      "category": "HOME",
       "user_id": 1
     },
     {
       "id": 26,
-      "code": "5224",
-      "name": "Motor Vehicle Expenses - Licence and Registration",
+      "code": "9945-02",
+      "name": "Electricity",
       "type": "EXPENSE",
+      "category": "HOME",
       "user_id": 1
     },
     {
       "id": 27,
-      "code": "5225",
-      "name": "Motor Vehicle Expenses - Maintenance and Repairs",
+      "code": "9945-03",
+      "name": "Insurance (Home)",
       "type": "EXPENSE",
+      "category": "HOME",
       "user_id": 1
     },
     {
       "id": 28,
-      "code": "5226",
-      "name": "Motor Vehicle Expenses - Parking and Tolls",
+      "code": "9945-04",
+      "name": "Property Tax",
       "type": "EXPENSE",
+      "category": "HOME",
       "user_id": 1
     },
     {
       "id": 29,
-      "code": "5227",
-      "name": "Motor Vehicle Expenses - Other",
+      "code": "9945-05",
+      "name": "Mortgage Interest",
       "type": "EXPENSE",
+      "category": "HOME",
       "user_id": 1
     },
     {
       "id": 30,
-      "code": "5230",
-      "name": "Capital Cost Allowance (CCA)",
+      "code": "9945-06",
+      "name": "Repairs and Maintenance (Home)",
       "type": "EXPENSE",
+      "category": "HOME",
+      "user_id": 1
+    },
+    {
+      "id": 31,
+      "code": "9945-07",
+      "name": "Supplies (Home)",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "user_id": 1
+    },
+    {
+      "id": 32,
+      "code": "9945-08",
+      "name": "Telephone",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "user_id": 1
+    },
+    {
+      "id": 33,
+      "code": "9945-09",
+      "name": "Rent (Home)",
+      "type": "EXPENSE",
+      "category": "HOME",
+      "user_id": 1
+    },
+    {
+      "id": 34,
+      "code": "9281-01",
+      "name": "Fuel & Oil",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 1
+    },
+    {
+      "id": 35,
+      "code": "9281-02",
+      "name": "Interest",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 1
+    },
+    {
+      "id": 36,
+      "code": "9281-03",
+      "name": "Insurance (Vehicle)",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 1
+    },
+    {
+      "id": 37,
+      "code": "9281-04",
+      "name": "License & Registration",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 1
+    },
+    {
+      "id": 38,
+      "code": "9281-05",
+      "name": "Maintenance & Repairs",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 1
+    },
+    {
+      "id": 39,
+      "code": "9281-06",
+      "name": "Lease/Rental",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
+      "user_id": 1
+    },
+    {
+      "id": 40,
+      "code": "9281-07",
+      "name": "Parking",
+      "type": "EXPENSE",
+      "category": "VEHICLE",
       "user_id": 1
     }
   ],
@@ -257,8 +367,8 @@
       "is_active": true,
       "gst_hst_rate": 0,
       "gst_hst_amount": 0,
-      "created_at": "2026-06-02T19:12:19.563Z",
-      "updated_at": "2026-06-02T19:12:19.563Z"
+      "created_at": "2026-06-02T19:13:58.713Z",
+      "updated_at": "2026-06-02T19:13:58.713Z"
     },
     {
       "id": 2,
@@ -273,8 +383,8 @@
       "is_active": true,
       "gst_hst_rate": 0,
       "gst_hst_amount": 0,
-      "created_at": "2026-06-02T19:12:19.563Z",
-      "updated_at": "2026-06-02T19:12:19.563Z"
+      "created_at": "2026-06-02T19:13:58.713Z",
+      "updated_at": "2026-06-02T19:13:58.713Z"
     },
     {
       "id": 3,
@@ -289,8 +399,8 @@
       "is_active": true,
       "gst_hst_rate": 0,
       "gst_hst_amount": 0,
-      "created_at": "2026-06-02T19:12:19.563Z",
-      "updated_at": "2026-06-02T19:12:19.563Z"
+      "created_at": "2026-06-02T19:13:58.713Z",
+      "updated_at": "2026-06-02T19:13:58.713Z"
     }
   ],
   "transaction_instances": [],
@@ -303,7 +413,7 @@
   "odometer_readings": [],
   "nextUserId": 2,
   "nextClientId": 3,
-  "nextAccountId": 32,
+  "nextAccountId": 41,
   "nextTransactionId": 1,
   "nextDocumentId": 1,
   "nextBankReconciliationId": 1,

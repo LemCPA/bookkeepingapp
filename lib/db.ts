@@ -283,6 +283,8 @@ function initializeDb(): DbData {
     nextMileageTripId: 1,
     nextOdometerReadingId: 1,
   }
+  // Establish parent-child relationships for account hierarchies
+  establishAccountHierarchies(db)
   saveDb(db)
   return db
 }
