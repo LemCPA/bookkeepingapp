@@ -54,39 +54,52 @@ async function analyzeDocument(fileBuffer: Buffer, fileName: string): Promise<Ex
     const ext = path.extname(fileName).toLowerCase()
     const base64Data = fileBuffer.toString('base64')
 
-    // Only handle images, not PDFs
+    // Handle images and PDFs
     const supportedImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
-    if (!supportedImageTypes.includes(ext)) {
+    const supportedPdfTypes = ['.pdf']
+
+    if (!supportedImageTypes.includes(ext) && !supportedPdfTypes.includes(ext)) {
       console.log(`[${fileName}] Unsupported file type: ${ext}`)
       return null
     }
 
-    let mediaType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' = 'image/jpeg'
-    if (ext === '.png') mediaType = 'image/png'
-    if (ext === '.gif') mediaType = 'image/gif'
-    if (ext === '.webp') mediaType = 'image/webp'
-
-    console.log(`[${fileName}] Analyzing as ${mediaType}`)
+    console.log(`[${fileName}] Analyzing as ${ext === '.pdf' ? 'PDF' : 'image'}`)
 
     const anthropic = await getClient()
-    const response = await anthropic.messages.create({
-      model: 'claude-opus-4-1-20250805',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mediaType,
-                data: base64Data,
-              },
-            },
-            {
-              type: 'text',
-              text: `Analyze this receipt or invoice image and extract the following information in JSON format:
+
+    // Build content array based on file type
+    const content: any[] = []
+
+    if (ext === '.pdf') {
+      // PDF documents
+      content.push({
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data: base64Data,
+        },
+      })
+    } else {
+      // Image files
+      let mediaType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' = 'image/jpeg'
+      if (ext === '.png') mediaType = 'image/png'
+      if (ext === '.gif') mediaType = 'image/gif'
+      if (ext === '.webp') mediaType = 'image/webp'
+
+      content.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
+          data: base64Data,
+        },
+      })
+    }
+
+    content.push({
+      type: 'text',
+      text: `Analyze this receipt or invoice document and extract the following information in JSON format:
 {
   "date": "YYYY-MM-DD (from the document, or today if not found)",
   "amount": "numeric amount as number (e.g., 150.50) - this should be the TOTAL amount including tax",
@@ -111,22 +124,29 @@ Important:
   * For 13% HST: set rate to 13 and amount to the HST total
   * If no GST/HST found after thorough search: set both amount and rate to 0
 - Only Canadian tax rates are expected (0, 5, 7, 12, or 13)`,
-            },
-          ],
+    })
+
+    const response = await anthropic.messages.create({
+      model: 'claude-opus-4-1-20250805',
+      max_tokens: 1024,
+      messages: [
+        {
+          role: 'user',
+          content: content,
         },
       ],
     })
 
-    const content = response.content[0]
-    if (content.type !== 'text') {
-      console.error(`[${fileName}] Response not text, type: ${content.type}`)
+    const responseContent = response.content[0]
+    if (responseContent.type !== 'text') {
+      console.error(`[${fileName}] Response not text, type: ${responseContent.type}`)
       return null
     }
 
-    console.log(`[${fileName}] Claude response (first 300 chars):`, content.text.substring(0, 300))
+    console.log(`[${fileName}] Claude response (first 300 chars):`, responseContent.text.substring(0, 300))
 
     // Parse JSON - handle both plain JSON and markdown code blocks
-    let jsonText = content.text
+    let jsonText = responseContent.text
     const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
     if (jsonMatch) {
       jsonText = jsonMatch[1].trim()
@@ -134,7 +154,7 @@ Important:
       // Try to extract plain JSON object
       const plainJsonMatch = jsonText.match(/\{[\s\S]*\}/)
       if (!plainJsonMatch) {
-        console.error(`[${fileName}] No JSON found in response:`, content.text)
+        console.error(`[${fileName}] No JSON found in response:`, responseContent.text)
         return null
       }
       jsonText = plainJsonMatch[0]
