@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       DEFAULT_ACCOUNTS.forEach(acc => {
         // Only create accounts that have a code (skip HOME/VEHICLE sub-accounts which have no code)
         if (acc.code && !existingCodes.has(acc.code)) {
-          createAccount(acc.code, acc.name, acc.type, userId)
+          createAccount(acc.code, acc.name, acc.type, userId, acc.category)
           addedCount++
         }
       })

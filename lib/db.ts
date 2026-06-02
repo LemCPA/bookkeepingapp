@@ -449,10 +449,14 @@ export function getAccount(id: number) {
   return getDb().chart_of_accounts.find(a => a.id === id)
 }
 
-export function createAccount(code: string, name: string, type: string, userId: number) {
+export function createAccount(code: string, name: string, type: string, userId: number, category?: string) {
   const db = getDb()
   const id = db.nextAccountId++
-  db.chart_of_accounts.push({ id, code, name, type, user_id: userId })
+  const account: any = { id, code, name, type, user_id: userId }
+  if (category) {
+    account.category = category
+  }
+  db.chart_of_accounts.push(account)
   saveDb(db)
   return { lastID: id }
 }
