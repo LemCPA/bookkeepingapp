@@ -3,6 +3,7 @@ import path from 'path'
 import { readFileSync } from 'fs'
 import { getDb, saveDb } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
+import { createTransactionInSupabase } from '@/lib/supabase-db'
 
 let client: any = null
 
@@ -272,6 +273,26 @@ export async function POST(request: NextRequest) {
           reconciliation_status: '',
         }
         db.transactions.push(transaction)
+
+        // Also save to Supabase for production persistence
+        try {
+          await createTransactionInSupabase(
+            userId,
+            0, // clientId - set to 0 for now, can be updated later
+            accountId,
+            date,
+            amount,
+            extracted.gst_hst_rate || 0,
+            extracted.gst_hst_amount || 0,
+            description,
+            type,
+            '' // reference_number
+          )
+          console.log(`[BULK-SCAN] Transaction saved to Supabase: ${transactionId}`)
+        } catch (supabaseError) {
+          console.error(`[BULK-SCAN] Failed to save transaction to Supabase:`, supabaseError)
+          // Continue anyway - JSON fallback is already saved above
+        }
 
         results.push({
           fileName: file.name,

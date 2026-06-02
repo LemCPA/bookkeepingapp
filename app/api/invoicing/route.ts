@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
+import { getTransactionsFromSupabase } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,8 +30,24 @@ export async function GET(request: NextRequest) {
       toDateObj.setHours(23, 59, 59, 999)
     }
 
+    // Try to get transactions from Supabase first (production), fallback to JSON (development)
+    let allTransactions: any[] = []
+    try {
+      const supabaseTransactions = await getTransactionsFromSupabase(userId)
+      if (supabaseTransactions && supabaseTransactions.length > 0) {
+        console.log('[INVOICING] Loaded from Supabase:', supabaseTransactions.length, 'transactions')
+        allTransactions = supabaseTransactions
+      } else {
+        console.log('[INVOICING] No transactions in Supabase, using JSON fallback')
+        allTransactions = db.transactions
+      }
+    } catch (error) {
+      console.error('[INVOICING] Error fetching from Supabase, using JSON fallback:', error)
+      allTransactions = db.transactions
+    }
+
     // Get all INVOICE type transactions for this user, filtered by date range
-    const invoices = db.transactions
+    const invoices = allTransactions
       .filter(t => {
         if (t.type !== 'INVOICE' || t.user_id !== userId) return false
 
