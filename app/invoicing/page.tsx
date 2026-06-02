@@ -101,7 +101,7 @@ export default function InvoicingPage() {
     setUploadingFile(true)
     try {
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('files', file)
 
       const authenticatedFetch = createAuthenticatedFetch()
       const response = await authenticatedFetch('/api/bulk-scan-documents', {
