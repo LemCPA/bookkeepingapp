@@ -312,8 +312,14 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error scanning documents:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Error details:', errorMessage)
+    console.error('Full error:', error)
     return NextResponse.json(
-      { error: 'Failed to scan documents' },
+      {
+        error: 'Failed to scan documents',
+        details: errorMessage
+      },
       { status: 500 }
     )
   }
