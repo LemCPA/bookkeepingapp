@@ -10,7 +10,7 @@ function getApiKey(): string | undefined {
     return process.env.ANTHROPIC_API_KEY
   }
   try {
-    const envPath = join(process.cwd(), '.env.local')
+    const envPath = path.join(process.cwd(), '.env.local')
     const envContent = readFileSync(envPath, 'utf-8')
     const match = envContent.match(/ANTHROPIC_API_KEY=(.+)/)
     if (match) {
