@@ -46,6 +46,11 @@ export default function AccountsSettingsPage() {
       // Fetch GST settings
       try {
         const settingsRes = await authenticatedFetch('/api/user/settings')
+        if (settingsRes.status === 401) {
+          console.error('Unauthorized - redirecting to login')
+          window.location.href = '/login'
+          return
+        }
         if (settingsRes.ok) {
           const data = await settingsRes.json()
           // Convert numeric rate back to province code for display
@@ -64,6 +69,11 @@ export default function AccountsSettingsPage() {
       // Fetch accounts
       try {
         const accountsRes = await authenticatedFetch('/api/chart-of-accounts')
+        if (accountsRes.status === 401) {
+          console.error('Unauthorized - redirecting to login')
+          window.location.href = '/login'
+          return
+        }
         if (accountsRes.ok) {
           let accountsData = await accountsRes.json()
 
@@ -80,6 +90,10 @@ export default function AccountsSettingsPage() {
               const initData = await initRes.json()
               accountsData = initData.accounts || []
               console.log('Initialized', initData.addedCount, 'default accounts')
+            } else if (initRes.status === 401) {
+              console.error('Unauthorized during initialization - redirecting to login')
+              window.location.href = '/login'
+              return
             } else {
               console.error('Failed to initialize default accounts:', initRes.status)
               accountsData = []
@@ -87,6 +101,10 @@ export default function AccountsSettingsPage() {
           }
 
           setAccounts(Array.isArray(accountsData) ? accountsData : [])
+        } else if (accountsRes.status === 401) {
+          console.error('Unauthorized - redirecting to login')
+          window.location.href = '/login'
+          return
         } else {
           console.error('API error fetching accounts:', accountsRes.status)
           setAccounts([])
