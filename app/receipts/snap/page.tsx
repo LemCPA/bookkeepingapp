@@ -36,15 +36,19 @@ export default function SnapReceiptPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validate file is an image
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file')
+    // Validate file is an image or PDF
+    const isImage = file.type.startsWith('image/')
+    const isPDF = file.type === 'application/pdf'
+
+    if (!isImage && !isPDF) {
+      setError('Please select an image or PDF file')
       return
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB')
+    // Validate file size (max 10MB for PDFs, 5MB for images)
+    const maxSize = isPDF ? 10 * 1024 * 1024 : 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      setError(`File size must be less than ${isPDF ? '10' : '5'}MB`)
       return
     }
 
@@ -161,25 +165,25 @@ export default function SnapReceiptPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">📷 Snap Document</h1>
-        <p className="text-gray-600 mt-2">Take a photo of a receipt and we'll extract the details automatically</p>
+        <p className="text-gray-600 mt-2">Take a photo or upload a PDF of a receipt and we'll extract the details automatically</p>
       </div>
 
       <div className="max-w-2xl mx-auto">
         {/* Camera Input */}
         {!imagePreview && (
           <div className="p-8 bg-gradient-to-b from-blue-50 to-blue-100 border-2 border-dashed border-blue-300 rounded-lg text-center">
-            <p className="text-gray-700 mb-4">Take a photo of a receipt or invoice</p>
+            <p className="text-gray-700 mb-4">Take a photo or upload a PDF of a receipt or invoice</p>
             <label className="inline-block">
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.pdf"
                 capture="environment"
                 onChange={handleFileChange}
                 className="hidden"
               />
               <span className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 cursor-pointer inline-block">
-                📸 Open Camera
+                📸 Open Camera or Upload PDF
               </span>
             </label>
           </div>
@@ -336,7 +340,7 @@ export default function SnapReceiptPage() {
                     onClick={handleRetake}
                     className="flex-1 bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 font-medium"
                   >
-                    Retake Photo
+                    Try Again
                   </button>
                   <button
                     onClick={handleConfirm}
