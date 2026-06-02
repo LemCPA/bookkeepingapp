@@ -318,16 +318,24 @@ export function createUser(email: string, password_hash: string, name: string, g
   defaultAccounts.forEach(acc => {
     // Only create accounts that have a code (skip HOME/VEHICLE sub-accounts which have no code)
     if (acc.code) {
-      db.chart_of_accounts.push({
+      const account: any = {
         id: nextAccountId++,
         code: acc.code,
         name: acc.name,
         type: acc.type,
         user_id: id,
-      })
+      }
+      // Preserve category field for hierarchy establishment
+      if (acc.category) {
+        account.category = acc.category
+      }
+      db.chart_of_accounts.push(account)
     }
   })
   db.nextAccountId = nextAccountId
+
+  // Establish parent-child relationships for this new user's accounts
+  establishAccountHierarchies(db)
 
   db.users.push({
     id,

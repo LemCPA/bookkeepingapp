@@ -65,7 +65,27 @@ export default function AccountsSettingsPage() {
       try {
         const accountsRes = await authenticatedFetch('/api/chart-of-accounts')
         if (accountsRes.ok) {
-          const accountsData = await accountsRes.json()
+          let accountsData = await accountsRes.json()
+
+          // If no accounts exist, initialize default accounts (fixes serverless persistence issue)
+          if (!Array.isArray(accountsData) || accountsData.length === 0) {
+            console.log('No accounts found, initializing default accounts')
+            const initRes = await authenticatedFetch('/api/chart-of-accounts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ initializeDefaults: true })
+            })
+
+            if (initRes.ok) {
+              const initData = await initRes.json()
+              accountsData = initData.accounts || []
+              console.log('Initialized', initData.addedCount, 'default accounts')
+            } else {
+              console.error('Failed to initialize default accounts:', initRes.status)
+              accountsData = []
+            }
+          }
+
           setAccounts(Array.isArray(accountsData) ? accountsData : [])
         } else {
           console.error('API error fetching accounts:', accountsRes.status)
