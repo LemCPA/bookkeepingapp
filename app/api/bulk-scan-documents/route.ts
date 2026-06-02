@@ -132,7 +132,7 @@ Important:
       messages: [
         {
           role: 'user',
-          content: content,
+          content: content as any,
         },
       ],
     })
