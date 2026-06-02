@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFileSync, mkdirSync } from 'fs'
-import path from 'path'
 import { createDocument, getTransaction } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
@@ -110,41 +108,18 @@ export async function POST(request: NextRequest) {
           details: supabaseError?.toString(),
         })
         console.error('Stack:', supabaseError?.stack)
-        // Fall through to filesystem backup below
+        return NextResponse.json(
+          { error: 'File upload failed. Please try again.' },
+          { status: 500 }
+        )
       }
     } else {
-      console.log('Supabase not configured, using filesystem fallback')
+      console.log('Supabase not configured - file uploads require Supabase setup')
+      return NextResponse.json(
+        { error: 'File storage is not configured for this deployment' },
+        { status: 503 }
+      )
     }
-
-    // Fall back to filesystem (development)
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', transactionId)
-
-    try {
-      mkdirSync(uploadDir, { recursive: true })
-    } catch (e) {
-      // Directory might already exist
-    }
-
-    const filePath = path.join(uploadDir, fileName)
-    const relativeFilePath = `/uploads/${transactionId}/${fileName}`
-
-    writeFileSync(filePath, new Uint8Array(buffer))
-
-    const actualSize = new Uint8Array(buffer).length
-
-    createDocument(
-      parseInt(transactionId),
-      file.name,
-      relativeFilePath,
-      actualSize
-    )
-
-    return NextResponse.json({
-      path: relativeFilePath,
-      size: actualSize,
-      originalSize: file.size,
-      storage: 'filesystem',
-    })
   } catch (error: any) {
     console.error('Upload error:', error)
     return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 })
