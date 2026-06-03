@@ -99,29 +99,39 @@ export default function ReceiptsPage() {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith("image/")) {
-      setError("Please select an image file")
+
+    // Support both images and PDFs
+    const isImage = file.type.startsWith("image/")
+    const isPdf = file.type === "application/pdf"
+
+    if (!isImage && !isPdf) {
+      setError("Please select an image file or PDF")
       return
     }
+
     setSelectedFile(file)
     setError("")
-    setCompressing(true)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setPreview(e.target?.result as string)
+
+    if (isImage) {
+      setCompressing(true)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setPreview(e.target?.result as string)
+        setCompressing(false)
+      }
+      reader.readAsDataURL(file)
+    } else if (isPdf) {
+      // For PDF, just show a preview icon
+      setPreview('pdf-file')
       setCompressing(false)
     }
-    reader.readAsDataURL(file)
   }
 
   const handleAnalyzeReceipt = async () => {
     if (!selectedFile) {
-      setError("Please select a receipt image")
+      setError("Please select a receipt image or PDF")
       return
     }
-
-    setAnalyzing(true)
-    setError("")
 
     // Ensure we have the latest default GST rate before analyzing
     // (in case the initial fetch hasn't completed yet)
@@ -143,7 +153,53 @@ export default function ReceiptsPage() {
       }
     }
 
+    // PDFs now also go through Claude analysis for OCR extraction
+    // (Removed the skip that was setting amount to 0)
+
+    setAnalyzing(true)
+    setError("")
+
     try {
+      // For PDFs, convert to images first (5x scale for clarity)
+      let fileToProcess = selectedFile
+      if (selectedFile.type === "application/pdf") {
+        try {
+          // Dynamically import PDF.js
+          const pdfjsModule = await import('pdfjs-dist')
+          const pdfjsLib = pdfjsModule.default
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+
+          const arrayBuffer = await selectedFile.arrayBuffer()
+          const pdf = await pdfjsLib.getDocument(arrayBuffer).promise
+          const page = await pdf.getPage(1) // First page only
+
+          // Render at 5x scale for clarity
+          const viewport = page.getViewport({ scale: 5 })
+          const canvas = document.createElement('canvas')
+          canvas.width = viewport.width
+          canvas.height = viewport.height
+
+          const context = canvas.getContext('2d')!
+          context.fillStyle = 'white'
+          context.fillRect(0, 0, canvas.width, canvas.height)
+
+          await page.render({
+            canvasContext: context,
+            viewport: viewport,
+          }).promise
+
+          // Convert to blob
+          const blob = await new Promise<Blob>((resolve) => {
+            canvas.toBlob((b) => resolve(b!), 'image/png')
+          })
+
+          fileToProcess = new File([blob], selectedFile.name.replace('.pdf', '.png'), { type: 'image/png' })
+        } catch (err) {
+          console.warn("Could not convert PDF, using original:", err)
+          // Continue with original PDF
+        }
+      }
+
       // Fix EXIF orientation for mobile camera images before OCR analysis
       // Mobile cameras often save images rotated, which breaks OCR
       let fileToAnalyze = selectedFile
@@ -317,10 +373,11 @@ export default function ReceiptsPage() {
         // Continue with original file if rotation fails
       }
 
-      // Send the (potentially rotated) image for OCR analysis
+      // Send the (potentially rotated or converted) image for OCR analysis
       const authenticatedFetch = createAuthenticatedFetch()
       const formData = new FormData()
-      formData.append("file", fileToAnalyze)
+      // Use fileToProcess (which handles PDF conversion) for the final analysis
+      formData.append("file", fileToProcess === selectedFile ? fileToAnalyze : fileToProcess)
 
       const response = await authenticatedFetch("/api/analyze-document", {
         method: "POST",
@@ -417,12 +474,20 @@ export default function ReceiptsPage() {
     setError("")
 
     try {
-      // Compress image one more time for storage
-      const compressed = await compressImage(selectedFile, {
-        maxWidth: 1920,
-        maxHeight: 1080,
-        quality: 0.85,
-      })
+      // For PDFs, skip compression; for images, compress
+      let fileToUpload: { blob: Blob; name: string }
+      if (selectedFile.type === "application/pdf") {
+        fileToUpload = {
+          blob: selectedFile,
+          name: selectedFile.name,
+        }
+      } else {
+        fileToUpload = await compressImage(selectedFile, {
+          maxWidth: 1920,
+          maxHeight: 1080,
+          quality: 0.85,
+        })
+      }
 
       // Create the transaction
       const authenticatedFetch = createAuthenticatedFetch()
@@ -458,13 +523,38 @@ export default function ReceiptsPage() {
         category: selectedCategory,
       }
 
-      // Add account or sub-account based on category
+      // Add account based on category
       if (selectedCategory === 'BUSINESS') {
         requestBody.account_id = selectedAccountId
         const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
         requestBody.is_vehicle_expense = selectedAccount?.code?.startsWith('52') || selectedAccount?.name.includes('Motor Vehicle')
-      } else if (selectedCategory === 'HOME' || selectedCategory === 'VEHICLE') {
-        requestBody.sub_account_name = selectedSubAccount
+      } else if (selectedCategory === 'HOME') {
+        // Map HOME sub-account names to account IDs
+        const homeAccounts = (accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.code?.startsWith('9945-'))
+        const selectedAccount = homeAccounts.find(a =>
+          a.name.includes(selectedSubAccount) ||
+          a.name.startsWith(selectedSubAccount)
+        )
+        if (!selectedAccount) {
+          setError(`Could not find HOME account for "${selectedSubAccount}"`)
+          setSaving(false)
+          return
+        }
+        requestBody.account_id = selectedAccount.id
+      } else if (selectedCategory === 'VEHICLE') {
+        // Map VEHICLE sub-account names to account IDs
+        const vehicleAccounts = (accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.code?.startsWith('9281-'))
+        const selectedAccount = vehicleAccounts.find(a =>
+          a.name.includes(selectedSubAccount) ||
+          a.name.startsWith(selectedSubAccount)
+        )
+        if (!selectedAccount) {
+          setError(`Could not find VEHICLE account for "${selectedSubAccount}"`)
+          setSaving(false)
+          return
+        }
+        requestBody.account_id = selectedAccount.id
+        requestBody.is_vehicle_expense = true
       }
 
       const txResponse = await authenticatedFetch("/api/transactions", {
@@ -476,9 +566,9 @@ export default function ReceiptsPage() {
       if (!txResponse.ok) throw new Error("Failed to create transaction")
       const transaction = await txResponse.json()
 
-      // Upload the receipt image
+      // Upload the receipt file
       const formData = new FormData()
-      formData.append("file", compressed.blob, compressed.name)
+      formData.append("file", fileToUpload.blob, fileToUpload.name)
       formData.append("transactionId", transaction.id.toString())
 
       const uploadResponse = await authenticatedFetch("/api/upload", {
@@ -580,7 +670,7 @@ export default function ReceiptsPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,application/pdf"
               capture="environment"
               onChange={handleFileSelect}
               className="hidden"
@@ -597,12 +687,20 @@ export default function ReceiptsPage() {
           {preview && (
             <>
               <div className="bg-gray-100 rounded overflow-hidden flex items-center justify-center mx-auto" style={{ aspectRatio: '3/4', maxHeight: '300px', width: '100%' }}>
-                <img
-                  src={preview}
-                  alt="Receipt preview"
-                  className="w-full h-full object-contain transition-opacity duration-300"
-                  style={{ opacity: compressing ? 0.7 : 1 }}
-                />
+                {preview === 'pdf-file' ? (
+                  <div className="flex flex-col items-center justify-center gap-2 text-gray-700">
+                    <span className="text-6xl">📄</span>
+                    <p className="font-medium">{selectedFile?.name}</p>
+                    <p className="text-sm text-gray-500">PDF ready to upload</p>
+                  </div>
+                ) : (
+                  <img
+                    src={preview}
+                    alt="Receipt preview"
+                    className="w-full h-full object-contain transition-opacity duration-300"
+                    style={{ opacity: compressing ? 0.7 : 1 }}
+                  />
+                )}
               </div>
               {compressing && <p className="text-center text-sm text-gray-600 mt-2">Processing image...</p>}
             </>
@@ -675,13 +773,22 @@ export default function ReceiptsPage() {
         {preview && (
           <div className="bg-gray-100 p-4 rounded">
             <div className="overflow-hidden rounded flex items-center justify-center mx-auto" style={{ aspectRatio: '3/4', maxHeight: '400px', backgroundColor: '#f3f4f6' }}>
-              <img
-                src={preview}
-                alt="Receipt"
-                className="w-full h-full object-contain"
-              />
+              {preview === 'pdf-file' ? (
+                <div className="flex flex-col items-center justify-center gap-2 text-gray-700">
+                  <span className="text-6xl">📄</span>
+                  <p className="font-medium text-sm">{selectedFile?.name}</p>
+                </div>
+              ) : (
+                <img
+                  src={preview}
+                  alt="Receipt"
+                  className="w-full h-full object-contain"
+                />
+              )}
             </div>
-            <p className="text-xs text-gray-600 mt-2">Receipt image - check details below</p>
+            <p className="text-xs text-gray-600 mt-2">
+              {preview === 'pdf-file' ? 'PDF file - check details below' : 'Receipt image - check details below'}
+            </p>
           </div>
         )}
 
