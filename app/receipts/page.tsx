@@ -551,13 +551,21 @@ export default function ReceiptsPage() {
         requestBody.is_vehicle_expense = true
       }
 
+      console.log('Creating transaction with data:', requestBody)
+
       const txResponse = await authenticatedFetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       })
 
-      if (!txResponse.ok) throw new Error("Failed to create transaction")
+      console.log('Transaction creation response:', { ok: txResponse.ok, status: txResponse.status })
+
+      if (!txResponse.ok) {
+        const errorText = await txResponse.text()
+        console.error('Transaction creation error:', errorText)
+        throw new Error(`Failed to create transaction: ${txResponse.status} ${errorText}`)
+      }
       const transaction = await txResponse.json()
 
       // Upload the receipt file
