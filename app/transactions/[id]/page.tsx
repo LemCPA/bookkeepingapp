@@ -17,7 +17,10 @@ function getSupabasePublicUrl(storagePath: string): string {
   // storagePath format: receipts/{userId}/{transactionId}/{fileName}
   const bucket = 'T2125'
 
-  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`
+  // URL encode the path to handle spaces and special characters
+  const encodedPath = path.split('/').map(segment => encodeURIComponent(segment)).join('/')
+
+  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${encodedPath}`
 }
 
 interface NoteEntry {
@@ -525,16 +528,46 @@ export default function TransactionDetailPage() {
                 <div className="text-center text-gray-600">
                   <p className="text-lg mb-2">Unable to load image</p>
                   <p className="text-sm text-gray-500">The image file may be corrupted or unavailable</p>
+                  {(() => {
+                    const url = getSupabasePublicUrl(
+                      documents.find(d => d.id === selectedDocumentId)?.file_path || ''
+                    )
+                    console.log('Failed to load image from URL:', url)
+                    return <p className="text-xs text-gray-400 mt-2 break-all">{url}</p>
+                  })()}
                 </div>
               ) : (
-                <img
-                  src={getSupabasePublicUrl(
-                    documents.find(d => d.id === selectedDocumentId)?.file_path || ''
-                  )}
-                  alt="Receipt"
-                  className="max-w-full max-h-full object-contain"
-                  onError={() => setImageError(true)}
-                />
+                (() => {
+                  const doc = documents.find(d => d.id === selectedDocumentId)
+                  const url = getSupabasePublicUrl(doc?.file_path || '')
+                  const isPDF = doc?.file_name?.toLowerCase().endsWith('.pdf')
+
+                  if (isPDF) {
+                    return (
+                      <iframe
+                        src={url}
+                        alt="Receipt"
+                        className="w-full h-full border-0"
+                        onError={() => {
+                          console.error('PDF failed to load from:', url)
+                          setImageError(true)
+                        }}
+                      />
+                    )
+                  } else {
+                    return (
+                      <img
+                        src={url}
+                        alt="Receipt"
+                        className="max-w-full max-h-full object-contain"
+                        onError={() => {
+                          console.error('Image failed to load from:', url)
+                          setImageError(true)
+                        }}
+                      />
+                    )
+                  }
+                })()
               )}
             </div>
 
