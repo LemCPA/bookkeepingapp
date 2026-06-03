@@ -523,29 +523,39 @@ export default function TransactionDetailPage() {
                       documents.find(d => d.id === selectedDocumentId)?.file_path || ''
                     )
                     const fileName = documents.find(d => d.id === selectedDocumentId)?.file_name || 'receipt'
-                    // Create a temporary link and trigger download
+                    // Download: Save file to computer (no new window)
                     const link = document.createElement('a')
                     link.href = url
                     link.download = fileName
-                    link.target = '_blank'
                     link.rel = 'noreferrer'
                     document.body.appendChild(link)
                     link.click()
                     document.body.removeChild(link)
                   }}
-                  title="Download receipt"
+                  title="Save receipt to your computer"
                   className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"
                 >
-                  ⬇️ Download
+                  ⬇️ Save
                 </button>
                 <button
                   onClick={() => {
                     const url = getSupabasePublicUrl(
                       documents.find(d => d.id === selectedDocumentId)?.file_path || ''
                     )
-                    window.open(url, '_blank')
+                    // Print: Open in new window for viewing and printing
+                    const printWindow = window.open(url, '_blank', 'width=800,height=600')
+                    if (printWindow) {
+                      // Try to trigger print after a short delay to allow PDF to load
+                      setTimeout(() => {
+                        try {
+                          printWindow.print()
+                        } catch (e) {
+                          console.log('Print triggered - use Ctrl+P or the Print button in the PDF viewer')
+                        }
+                      }, 1000)
+                    }
                   }}
-                  title="Print receipt"
+                  title="Open and print receipt"
                   className="px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition text-sm"
                 >
                   🖨️ Print
