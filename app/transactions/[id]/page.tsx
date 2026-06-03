@@ -506,8 +506,8 @@ export default function TransactionDetailPage() {
 
       {/* Image Viewer Modal */}
       {selectedDocumentId && documents.length > 0 && (
-        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-auto flex flex-col">
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-2">
+          <div className="bg-white rounded-lg shadow-2xl w-[95vw] h-[95vh] overflow-auto flex flex-col">
             {/* Header */}
             <div className="flex justify-between items-center p-4 border-b bg-white sticky top-0 z-10">
               <div className="flex flex-col flex-1">
@@ -523,12 +523,15 @@ export default function TransactionDetailPage() {
                       documents.find(d => d.id === selectedDocumentId)?.file_path || ''
                     )
                     const fileName = documents.find(d => d.id === selectedDocumentId)?.file_name || 'receipt'
-                    fetch(url).then(r => r.blob()).then(blob => {
-                      const link = document.createElement('a')
-                      link.href = URL.createObjectURL(blob)
-                      link.download = fileName
-                      link.click()
-                    })
+                    // Create a temporary link and trigger download
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.download = fileName
+                    link.target = '_blank'
+                    link.rel = 'noreferrer'
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
                   }}
                   title="Download receipt"
                   className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"
