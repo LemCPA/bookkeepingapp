@@ -1138,7 +1138,7 @@ export default function ReceiptsPage() {
           </button>
           <button
             onClick={handleSaveTransaction}
-            disabled={saving || !selectedAccountId}
+            disabled={saving || (selectedCategory === 'BUSINESS' && !selectedAccountId) || ((selectedCategory === 'HOME' || selectedCategory === 'VEHICLE') && !selectedSubAccount)}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
           >
             {saving ? "Creating transaction..." : "Create Transaction"}
