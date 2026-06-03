@@ -542,7 +542,17 @@ export default function ReceiptsPage() {
       } else if (selectedCategory === 'HOME') {
         // Find HOME sub-account by exact name match
         const homeAccounts = (accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.code?.startsWith('9945-'))
-        const selectedAccount = homeAccounts.find(a => a.name === selectedSubAccount)
+        let selectedAccount = homeAccounts.find(a => a.name === selectedSubAccount)
+
+        // Handle "Other Expenses" by mapping to "Supplies (Home)" or using parent account
+        if (!selectedAccount && selectedSubAccount === 'Other Expenses') {
+          selectedAccount = homeAccounts.find(a => a.name.includes('Supplies') || a.code === '9945-07')
+          if (!selectedAccount) {
+            // Fallback to parent account if Supplies not found
+            selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.code === '9945')
+          }
+        }
+
         if (!selectedAccount) {
           setError(`Could not find HOME account for "${selectedSubAccount}"`)
           setSaving(false)
@@ -552,7 +562,17 @@ export default function ReceiptsPage() {
       } else if (selectedCategory === 'VEHICLE') {
         // Find VEHICLE sub-account by exact name match
         const vehicleAccounts = (accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.code?.startsWith('9281-'))
-        const selectedAccount = vehicleAccounts.find(a => a.name === selectedSubAccount)
+        let selectedAccount = vehicleAccounts.find(a => a.name === selectedSubAccount)
+
+        // Handle "Other Vehicle Expenses" by mapping to a catch-all vehicle account or parent
+        if (!selectedAccount && selectedSubAccount === 'Other Vehicle Expenses') {
+          // Try to find an existing catch-all account, otherwise use parent
+          selectedAccount = vehicleAccounts[vehicleAccounts.length - 1] // Last vehicle account as fallback
+          if (!selectedAccount) {
+            selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.code === '9281')
+          }
+        }
+
         if (!selectedAccount) {
           setError(`Could not find VEHICLE account for "${selectedSubAccount}"`)
           setSaving(false)
@@ -899,6 +919,7 @@ export default function ReceiptsPage() {
                         {account.name}
                       </option>
                     ))}
+                  <option value="Other Expenses">Other Expenses</option>
                 </select>
               </div>
             )}
@@ -922,6 +943,7 @@ export default function ReceiptsPage() {
                         {account.name}
                       </option>
                     ))}
+                  <option value="Other Vehicle Expenses">Other Vehicle Expenses</option>
                 </select>
               </div>
             )}
