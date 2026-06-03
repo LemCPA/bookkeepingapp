@@ -529,12 +529,9 @@ export default function ReceiptsPage() {
         const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
         requestBody.is_vehicle_expense = selectedAccount?.code?.startsWith('52') || selectedAccount?.name.includes('Motor Vehicle')
       } else if (selectedCategory === 'HOME') {
-        // Map HOME sub-account names to account IDs
+        // Find HOME sub-account by exact name match
         const homeAccounts = (accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.code?.startsWith('9945-'))
-        const selectedAccount = homeAccounts.find(a =>
-          a.name.includes(selectedSubAccount) ||
-          a.name.startsWith(selectedSubAccount)
-        )
+        const selectedAccount = homeAccounts.find(a => a.name === selectedSubAccount)
         if (!selectedAccount) {
           setError(`Could not find HOME account for "${selectedSubAccount}"`)
           setSaving(false)
@@ -542,12 +539,9 @@ export default function ReceiptsPage() {
         }
         requestBody.account_id = selectedAccount.id
       } else if (selectedCategory === 'VEHICLE') {
-        // Map VEHICLE sub-account names to account IDs
+        // Find VEHICLE sub-account by exact name match
         const vehicleAccounts = (accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.code?.startsWith('9281-'))
-        const selectedAccount = vehicleAccounts.find(a =>
-          a.name.includes(selectedSubAccount) ||
-          a.name.startsWith(selectedSubAccount)
-        )
+        const selectedAccount = vehicleAccounts.find(a => a.name === selectedSubAccount)
         if (!selectedAccount) {
           setError(`Could not find VEHICLE account for "${selectedSubAccount}"`)
           setSaving(false)
@@ -877,14 +871,15 @@ export default function ReceiptsPage() {
                   onChange={(e) => setSelectedSubAccount(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg"
                 >
-                  <option value="">Select expense type...</option>
-                  <option value="Heat">Heat</option>
-                  <option value="Electricity">Electricity</option>
-                  <option value="Insurance">Insurance</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Mortgage Interest">Mortgage Interest</option>
-                  <option value="Property Taxes">Property Taxes</option>
-                  <option value="Other Expenses">Other Expenses</option>
+                  <option value="">📋 Select expense type...</option>
+                  {(accounts.length > 0 ? accounts : fallbackAccounts)
+                    .filter(account => account.code?.startsWith('9945-'))
+                    .sort((a, b) => (a.code || '').localeCompare(b.code || ''))
+                    .map((account) => (
+                      <option key={account.id} value={account.name}>
+                        {account.name}
+                      </option>
+                    ))}
                 </select>
               </div>
             )}
@@ -899,16 +894,15 @@ export default function ReceiptsPage() {
                   onChange={(e) => setSelectedSubAccount(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg"
                 >
-                  <option value="">Select vehicle expense type...</option>
-                  <option value="Fuel & Oil">Fuel & Oil</option>
-                  <option value="Interest">Interest</option>
-                  <option value="Insurance">Insurance</option>
-                  <option value="License and Registration">License and Registration</option>
-                  <option value="Maintenance and Repairs">Maintenance and Repairs</option>
-                  <option value="Leasing">Leasing</option>
-                  <option value="Electricity for Zero-Emission Vehicles">Electricity for Zero-Emission Vehicles</option>
-                  <option value="Other Vehicle Expenses">Other Vehicle Expenses</option>
-                  <option value="Business Parking Fees">Business Parking Fees</option>
+                  <option value="">🚗 Select vehicle expense type...</option>
+                  {(accounts.length > 0 ? accounts : fallbackAccounts)
+                    .filter(account => account.code?.startsWith('9281-'))
+                    .sort((a, b) => (a.code || '').localeCompare(b.code || ''))
+                    .map((account) => (
+                      <option key={account.id} value={account.name}>
+                        {account.name}
+                      </option>
+                    ))}
                 </select>
               </div>
             )}
