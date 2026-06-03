@@ -33,6 +33,7 @@ export default function ReceiptsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null)
+  const [transactionType, setTransactionType] = useState<string>("RECEIPT")
   const [compressing, setCompressing] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -527,7 +528,7 @@ export default function ReceiptsPage() {
         transaction_date: extractedData.date,
         amount: submissionAmount,
         description: extractedData.description,
-        type: extractedData.type,
+        type: transactionType,
         gst_hst_rate: extractedData.gst_hst_rate || 0,
         gst_hst_amount: extractedData.gst_hst_amount || 0,
         gst_hst_included: extractedData.gst_hst_included || false,
@@ -988,6 +989,18 @@ export default function ReceiptsPage() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium mb-1">Transaction Type</label>
+              <select
+                value={transactionType}
+                onChange={(e) => setTransactionType(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg"
+              >
+                <option value="RECEIPT">Receipt (Expense - Money Out)</option>
+                <option value="INVOICE">Invoice (Income - Money In)</option>
+              </select>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium mb-3">GST/HST Status</label>
               <div className="flex flex-wrap gap-4 mb-4">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1119,6 +1132,7 @@ export default function ReceiptsPage() {
               setSelectedFile(null)
               setPreview(null)
               setExtractedData(null)
+              setTransactionType("RECEIPT")
             }}
             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
@@ -1131,6 +1145,7 @@ export default function ReceiptsPage() {
               setSelectedFile(null)
               setPreview(null)
               setExtractedData(null)
+              setTransactionType("RECEIPT")
             }}
             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
