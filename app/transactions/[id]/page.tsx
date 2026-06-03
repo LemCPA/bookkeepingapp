@@ -507,19 +507,56 @@ export default function TransactionDetailPage() {
       {/* Image Viewer Modal */}
       {selectedDocumentId && documents.length > 0 && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-96 overflow-auto flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-auto flex flex-col">
             {/* Header */}
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-lg font-bold">Receipt</h3>
-              <button
-                onClick={() => {
-                  setSelectedDocumentId(null)
-                  setImageError(false)
-                }}
-                className="text-2xl hover:text-gray-600"
-              >
-                ✕
-              </button>
+            <div className="flex justify-between items-center p-4 border-b bg-white sticky top-0 z-10">
+              <div className="flex flex-col flex-1">
+                <h3 className="text-lg font-bold">Receipt</h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  {documents.find(d => d.id === selectedDocumentId)?.file_name}
+                </p>
+              </div>
+              <div className="flex gap-2 ml-4">
+                <button
+                  onClick={() => {
+                    const url = getSupabasePublicUrl(
+                      documents.find(d => d.id === selectedDocumentId)?.file_path || ''
+                    )
+                    const fileName = documents.find(d => d.id === selectedDocumentId)?.file_name || 'receipt'
+                    fetch(url).then(r => r.blob()).then(blob => {
+                      const link = document.createElement('a')
+                      link.href = URL.createObjectURL(blob)
+                      link.download = fileName
+                      link.click()
+                    })
+                  }}
+                  title="Download receipt"
+                  className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"
+                >
+                  ⬇️ Download
+                </button>
+                <button
+                  onClick={() => {
+                    const url = getSupabasePublicUrl(
+                      documents.find(d => d.id === selectedDocumentId)?.file_path || ''
+                    )
+                    window.open(url, '_blank')
+                  }}
+                  title="Print receipt"
+                  className="px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition text-sm"
+                >
+                  🖨️ Print
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedDocumentId(null)
+                    setImageError(false)
+                  }}
+                  className="text-2xl hover:text-gray-600 ml-2"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Image */}
@@ -572,18 +609,9 @@ export default function TransactionDetailPage() {
             </div>
 
             {/* Footer with file info */}
-            <div className="p-4 border-t bg-gray-50 text-sm text-gray-600">
-              {documents.find(d => d.id === selectedDocumentId) && (
-                <>
-                  <p className="font-medium text-gray-900">
-                    {documents.find(d => d.id === selectedDocumentId)?.file_name}
-                  </p>
-                  <p className="text-xs">
-                    {documents.find(d => d.id === selectedDocumentId) &&
-                      `${(documents.find(d => d.id === selectedDocumentId)!.file_size / 1024).toFixed(2)} KB`}
-                  </p>
-                </>
-              )}
+            <div className="p-3 border-t bg-gray-50 text-xs text-gray-500 sticky bottom-0">
+              {documents.find(d => d.id === selectedDocumentId) &&
+                `Size: ${(documents.find(d => d.id === selectedDocumentId)!.file_size / 1024).toFixed(2)} KB • Uploaded: ${documents.find(d => d.id === selectedDocumentId)?.uploaded_at ? new Date(documents.find(d => d.id === selectedDocumentId)!.uploaded_at).toLocaleDateString() : 'N/A'}`}
             </div>
           </div>
         </div>
