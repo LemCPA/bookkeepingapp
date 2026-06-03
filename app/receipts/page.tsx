@@ -45,14 +45,25 @@ export default function ReceiptsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Fallback accounts from shared Chart of Accounts (source of truth)
+  // Generate unique IDs: use code directly as ID for simplicity
   const fallbackAccounts: Account[] = DEFAULT_ACCOUNTS.filter(
     acc => acc.code && acc.type === 'EXPENSE'
-  ).map(acc => ({
-    id: parseInt(acc.code!),
-    code: acc.code!,
-    name: acc.name,
-    type: acc.type
-  }))
+  ).map((acc) => {
+    // For codes like "9281-01", create unique ID by removing dash and concatenating
+    // "9281-01" becomes 928101, "9945-03" becomes 994503
+    let id: number
+    if (acc.code!.includes('-')) {
+      id = parseInt(acc.code!.replace(/-/g, ''))
+    } else {
+      id = parseInt(acc.code!)
+    }
+    return {
+      id,
+      code: acc.code!,
+      name: acc.name,
+      type: acc.type
+    }
+  })
 
   // Fetch user's default GST/HST rate and accounts on mount
   useEffect(() => {
