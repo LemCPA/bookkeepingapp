@@ -119,7 +119,8 @@ export async function POST(request: NextRequest) {
       body.business_use_percentage || 100,
       body.sent_date,
       body.reconciliation_status,
-      body.gst_hst_included
+      body.gst_hst_included,
+      body.category
     )
 
     // Track first receipt scanned for email sequence

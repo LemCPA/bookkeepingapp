@@ -6,7 +6,7 @@ interface DbData {
   users: { id: number; email: string; password_hash: string; name: string; email_verified?: boolean; gst_registered?: boolean; gst_number?: string; default_gst_hst_rate?: number; qbo_access_token?: string; qbo_refresh_token?: string; qbo_realm_id?: string; qbo_connected_at?: string; plan?: string; stripe_customer_id?: string | null; business_name?: string; address_street?: string; city?: string; province?: string; postal_code?: string; phone?: string; business_email?: string; created_at: string }[]
   clients: { id: number; user_id: number; name: string; email?: string; address?: string; gst_registered: boolean; gst_number?: string; created_at: string }[]
   chart_of_accounts: { id: number; code?: string; name: string; type: string; user_id?: number; is_vehicle_expense?: boolean; parent_account_id?: number; category?: string }[]
-  transactions: { id: number; user_id: number; client_id?: number; account_id?: number; transaction_date: string; due_date?: string; amount: number; gst_hst_rate?: number; gst_hst_amount?: number; gst_hst_included?: boolean; description: string; type: string; reference_number?: string; created_at: string; updated_at?: string; reconciliation_id?: number; reconciliation_status?: string; internal_notes?: { id: number; content: string; createdAt: string; updatedAt?: string; createdBy?: string }[]; tags?: string[]; audit_trail?: { field: string; oldValue: any; newValue: any; changedAt: string; changedBy?: string }[]; project_id?: number; is_vehicle_expense?: boolean; business_use_percentage?: number }[]
+  transactions: { id: number; user_id: number; client_id?: number; account_id?: number; transaction_date: string; due_date?: string; amount: number; gst_hst_rate?: number; gst_hst_amount?: number; gst_hst_included?: boolean; description: string; type: string; reference_number?: string; created_at: string; updated_at?: string; reconciliation_id?: number; reconciliation_status?: string; internal_notes?: { id: number; content: string; createdAt: string; updatedAt?: string; createdBy?: string }[]; tags?: string[]; audit_trail?: { field: string; oldValue: any; newValue: any; changedAt: string; changedBy?: string }[]; project_id?: number; is_vehicle_expense?: boolean; business_use_percentage?: number; category?: string }[]
   documents: { id: number; transaction_id: number; file_name: string; file_path: string; file_size: number; uploaded_at: string }[]
   bank_reconciliations: { id: number; user_id: number; account_id: number; statement_date: string; statement_opening_balance: number; statement_closing_balance: number; reconciliation_date: string; status: string; created_at: string; updated_at: string }[]
   reconciliation_items: { id: number; reconciliation_id: number; transaction_id: number; status: string; created_at: string }[]
@@ -432,12 +432,15 @@ export function getAccount(id: number) {
   return getDb().chart_of_accounts.find(a => a.id === id)
 }
 
-export function createAccount(code: string, name: string, type: string, userId: number, category?: string) {
+export function createAccount(code: string, name: string, type: string, userId: number, category?: string, parent_account_id?: number) {
   const db = getDb()
   const id = db.nextAccountId++
   const account: any = { id, code, name, type, user_id: userId }
   if (category) {
     account.category = category
+  }
+  if (parent_account_id !== undefined) {
+    account.parent_account_id = parent_account_id
   }
   db.chart_of_accounts.push(account)
   saveDb(db)
@@ -545,7 +548,8 @@ export function createTransaction(
   businessUsePercentage?: number,
   sentDate?: string,
   reconciliationStatus?: string,
-  gstHstIncluded?: boolean
+  gstHstIncluded?: boolean,
+  category?: string
 ) {
   const db = getDb()
   const id = db.nextTransactionId++
@@ -565,6 +569,7 @@ export function createTransaction(
     updated_at: new Date().toISOString(),
     is_vehicle_expense: isVehicleExpense || false,
     business_use_percentage: businessUsePercentage || 100,
+    category: category || 'BUSINESS',
   }
 
   // Add optional invoice fields

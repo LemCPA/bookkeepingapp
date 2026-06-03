@@ -11,6 +11,7 @@ interface Transaction {
   amount: number
   account_name: string
   gst_hst_amount?: number
+  category?: string
 }
 
 interface TransactionsTableProps {
@@ -72,6 +73,9 @@ export default function TransactionsTable({
               Type
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+              Category
+            </th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
               Account
             </th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
@@ -118,6 +122,19 @@ export default function TransactionsTable({
                   }`}
                 >
                   {transaction.type}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-sm">
+                <span
+                  className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                    transaction.category === 'HOME'
+                      ? 'bg-purple-100 text-purple-800'
+                      : transaction.category === 'VEHICLE'
+                      ? 'bg-orange-100 text-orange-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {transaction.category || 'BUSINESS'}
                 </span>
               </td>
               <td className="px-4 py-3 text-sm text-gray-900">

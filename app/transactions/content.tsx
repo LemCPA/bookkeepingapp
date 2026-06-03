@@ -15,6 +15,7 @@ interface Transaction {
   gst_hst_amount?: number
   description: string
   type: string
+  category?: string
 }
 
 export default function TransactionsContent() {
