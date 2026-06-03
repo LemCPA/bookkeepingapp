@@ -541,48 +541,76 @@ export default function ReceiptsPage() {
         requestBody.is_vehicle_expense = selectedAccount?.code?.startsWith('52') || selectedAccount?.name.includes('Motor Vehicle')
       } else if (selectedCategory === 'HOME') {
         // Find HOME sub-account by exact name match
-        const homeAccounts = (accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.code?.startsWith('9945-'))
+        const allAccounts = accounts.length > 0 ? accounts : fallbackAccounts
+        const homeAccounts = allAccounts.filter(a => a.code?.startsWith('9945-'))
+
+        console.log('[HOME] Available HOME accounts:', homeAccounts.map(a => ({ id: a.id, code: a.code, name: a.name })))
+        console.log('[HOME] Looking for sub-account:', selectedSubAccount)
+
         let selectedAccount = homeAccounts.find(a => a.name === selectedSubAccount)
+
+        console.log('[HOME] Matched account:', selectedAccount ? { id: selectedAccount.id, code: selectedAccount.code, name: selectedAccount.name } : 'NOT FOUND')
 
         // Handle "Other Expenses" by mapping to "Supplies (Home)" or using parent account
         if (!selectedAccount && selectedSubAccount === 'Other Expenses') {
           selectedAccount = homeAccounts.find(a => a.name.includes('Supplies') || a.code === '9945-07')
           if (!selectedAccount) {
             // Fallback to parent account if Supplies not found
-            selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.code === '9945')
+            selectedAccount = allAccounts.find(a => a.code === '9945')
           }
         }
 
         if (!selectedAccount) {
-          setError(`Could not find HOME account for "${selectedSubAccount}"`)
+          console.error('[HOME] CRITICAL: Could not find HOME account for', selectedSubAccount)
+          console.error('[HOME] selectedSubAccount value:', selectedSubAccount)
+          console.error('[HOME] selectedCategory value:', selectedCategory)
+          setError(`Could not find HOME account for "${selectedSubAccount}". Please select a valid expense type.`)
           setSaving(false)
           return
         }
+        console.log('[HOME] Final selected account ID:', selectedAccount.id)
         requestBody.account_id = selectedAccount.id
       } else if (selectedCategory === 'VEHICLE') {
         // Find VEHICLE sub-account by exact name match
-        const vehicleAccounts = (accounts.length > 0 ? accounts : fallbackAccounts).filter(a => a.code?.startsWith('9281-'))
+        const allAccounts = accounts.length > 0 ? accounts : fallbackAccounts
+        const vehicleAccounts = allAccounts.filter(a => a.code?.startsWith('9281-'))
+
+        console.log('[VEHICLE] Available VEHICLE accounts:', vehicleAccounts.map(a => ({ id: a.id, code: a.code, name: a.name })))
+        console.log('[VEHICLE] Looking for sub-account:', selectedSubAccount)
+
         let selectedAccount = vehicleAccounts.find(a => a.name === selectedSubAccount)
+
+        console.log('[VEHICLE] Matched account:', selectedAccount ? { id: selectedAccount.id, code: selectedAccount.code, name: selectedAccount.name } : 'NOT FOUND')
 
         // Handle "Other Vehicle Expenses" by mapping to a catch-all vehicle account or parent
         if (!selectedAccount && selectedSubAccount === 'Other Vehicle Expenses') {
           // Try to find an existing catch-all account, otherwise use parent
           selectedAccount = vehicleAccounts[vehicleAccounts.length - 1] // Last vehicle account as fallback
           if (!selectedAccount) {
-            selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.code === '9281')
+            selectedAccount = allAccounts.find(a => a.code === '9281')
           }
         }
 
         if (!selectedAccount) {
-          setError(`Could not find VEHICLE account for "${selectedSubAccount}"`)
+          console.error('[VEHICLE] CRITICAL: Could not find VEHICLE account for', selectedSubAccount)
+          console.error('[VEHICLE] selectedSubAccount value:', selectedSubAccount)
+          console.error('[VEHICLE] selectedCategory value:', selectedCategory)
+          setError(`Could not find VEHICLE account for "${selectedSubAccount}". Please select a valid expense type.`)
           setSaving(false)
           return
         }
+        console.log('[VEHICLE] Final selected account ID:', selectedAccount.id)
         requestBody.account_id = selectedAccount.id
         requestBody.is_vehicle_expense = true
       }
 
-      console.log('Creating transaction with data:', requestBody)
+      console.log('[SUBMIT] Form state at submission:', {
+        selectedCategory,
+        selectedSubAccount,
+        selectedAccountId,
+        categoryMatch: selectedCategory === 'HOME' ? 'HOME matched' : selectedCategory === 'VEHICLE' ? 'VEHICLE matched' : selectedCategory === 'BUSINESS' ? 'BUSINESS matched' : 'NO MATCH'
+      })
+      console.log('[SUBMIT] Creating transaction with data:', requestBody)
 
       const txResponse = await authenticatedFetch("/api/transactions", {
         method: "POST",
