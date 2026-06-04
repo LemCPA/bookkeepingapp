@@ -47,14 +47,21 @@ export default function ReceiptsPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // When transaction type changes to INVOICE, ensure category is BUSINESS (but preserve account selection)
+  // When transaction type changes to INVOICE, ensure category is BUSINESS and set default account to 8000
   useEffect(() => {
-    if (transactionType === 'INVOICE' && selectedCategory !== 'BUSINESS') {
+    if (transactionType === 'INVOICE') {
       setSelectedCategory('BUSINESS')
-      // Don't reset selectedAccountId - let user keep their account selection
       setSelectedSubAccount('')
+
+      // Auto-select "Gross Business Income" (8000) as default INVOICE account
+      const allAccounts = accounts.length > 0 ? accounts : fallbackAccounts
+      const defaultAccount = allAccounts.find(a => a.code === '8000')
+      if (defaultAccount) {
+        setSelectedAccountId(defaultAccount.id)
+        console.log('Auto-selected default INVOICE account:', defaultAccount)
+      }
     }
-  }, [transactionType, selectedCategory])
+  }, [transactionType, accounts])
 
   // Fallback accounts from shared Chart of Accounts (source of truth)
   // Generate unique IDs: use code directly as ID for simplicity
