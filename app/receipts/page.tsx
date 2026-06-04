@@ -550,8 +550,10 @@ export default function ReceiptsPage() {
 
       // Add account based on category
       if (selectedCategory === 'BUSINESS') {
+        console.error('🔴 BUSINESS CATEGORY - selectedAccountId:', selectedAccountId, 'type:', typeof selectedAccountId)
         requestBody.account_id = selectedAccountId
         const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
+        console.error('🔴 Found account:', selectedAccount ? { id: selectedAccount.id, code: selectedAccount.code, name: selectedAccount.name } : 'NOT FOUND')
         requestBody.is_vehicle_expense = selectedAccount?.code?.startsWith('52') || selectedAccount?.name.includes('Motor Vehicle')
       } else if (selectedCategory === 'HOME') {
         // Find HOME sub-account by exact name match
