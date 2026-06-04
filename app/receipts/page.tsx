@@ -96,7 +96,7 @@ export default function ReceiptsPage() {
           console.error("Failed to fetch settings:", settingsResponse.status)
         }
 
-        // Fetch accounts
+        // Fetch accounts (both INCOME and EXPENSE)
         const accountsResponse = await authenticatedFetch("/api/chart-of-accounts")
         if (accountsResponse.ok) {
           const accountsData = await accountsResponse.json()
@@ -106,8 +106,10 @@ export default function ReceiptsPage() {
           if (defaultAccount) {
             setSelectedAccountId(defaultAccount.id)
           }
+          console.log('Loaded accounts from API:', accountsData)
         } else {
           // API failed - use fallback accounts
+          console.warn('API failed, using fallback accounts')
           setAccounts(fallbackAccounts)
         }
       } catch (err) {
@@ -936,7 +938,8 @@ export default function ReceiptsPage() {
                   {(accounts.length > 0 ? accounts : fallbackAccounts)
                     .filter(account => {
                       if (transactionType === 'INVOICE') {
-                        // For invoices, only show income accounts: 8000 and 8230
+                        // For invoices, only show real INCOME accounts from database (8000, 8230)
+                        // These must have actual IDs from chart_of_accounts to link properly
                         return account.type === 'INCOME' && (account.code === '8000' || account.code === '8230')
                       } else {
                         // For receipts, show expense accounts (current behavior)
