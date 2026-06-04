@@ -47,11 +47,11 @@ export default function ReceiptsPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // When transaction type changes to INVOICE, ensure category is BUSINESS
+  // When transaction type changes to INVOICE, ensure category is BUSINESS (but preserve account selection)
   useEffect(() => {
     if (transactionType === 'INVOICE' && selectedCategory !== 'BUSINESS') {
       setSelectedCategory('BUSINESS')
-      setSelectedAccountId('')
+      // Don't reset selectedAccountId - let user keep their account selection
       setSelectedSubAccount('')
     }
   }, [transactionType, selectedCategory])
