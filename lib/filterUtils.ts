@@ -82,9 +82,25 @@ export function useTransactionFilters() {
   const [filters, setFilters] = useState<TransactionFilters>({})
   const [mounted, setMounted] = useState(false)
 
-  // Initialize filters from URL on mount
+  // Initialize filters from URL on mount, with localStorage fallback
   useEffect(() => {
     const parsedFilters = parseFiltersFromUrl(searchParams)
+
+    // If no URL params, try to load from localStorage
+    if (Object.keys(parsedFilters).length === 0) {
+      try {
+        const savedFilters = localStorage.getItem('transactionFilters')
+        if (savedFilters) {
+          const loadedFilters = JSON.parse(savedFilters)
+          setFilters(loadedFilters)
+          setMounted(true)
+          return
+        }
+      } catch (error) {
+        console.error('Failed to load filters from localStorage:', error)
+      }
+    }
+
     setFilters(parsedFilters)
     setMounted(true)
   }, [searchParams])
@@ -93,6 +109,12 @@ export function useTransactionFilters() {
   const updateFilters = useCallback(
     (newFilters: TransactionFilters) => {
       setFilters(newFilters)
+      // Save to localStorage for persistence
+      try {
+        localStorage.setItem('transactionFilters', JSON.stringify(newFilters))
+      } catch (error) {
+        console.error('Failed to save filters to localStorage:', error)
+      }
       if (mounted) {
         const queryString = buildQueryString(newFilters)
         router.push(`/transactions${queryString}`)
@@ -104,6 +126,12 @@ export function useTransactionFilters() {
   // Clear all filters
   const clearFilters = useCallback(() => {
     setFilters({})
+    // Clear from localStorage too
+    try {
+      localStorage.removeItem('transactionFilters')
+    } catch (error) {
+      console.error('Failed to clear filters from localStorage:', error)
+    }
     if (mounted) {
       router.push('/transactions')
     }
