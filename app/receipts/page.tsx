@@ -33,11 +33,13 @@ export default function ReceiptsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null)
-  const [transactionType, setTransactionType] = useState<string>("RECEIPT")
   const [compressing, setCompressing] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+
+  // Transaction type is locked based on document type
+  const transactionType = documentType === 'invoice' ? 'INVOICE' : 'RECEIPT'
   const [defaultGstRate, setDefaultGstRate] = useState<number>(0)
   const [selectedCategory, setSelectedCategory] = useState<'BUSINESS' | 'HOME' | 'VEHICLE'>('BUSINESS')
   const [selectedAccountId, setSelectedAccountId] = useState<number | string>('') // For BUSINESS
@@ -45,10 +47,19 @@ export default function ReceiptsPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // When transaction type changes to INVOICE, ensure category is BUSINESS
+  useEffect(() => {
+    if (transactionType === 'INVOICE' && selectedCategory !== 'BUSINESS') {
+      setSelectedCategory('BUSINESS')
+      setSelectedAccountId('')
+      setSelectedSubAccount('')
+    }
+  }, [transactionType, selectedCategory])
+
   // Fallback accounts from shared Chart of Accounts (source of truth)
   // Generate unique IDs: use code directly as ID for simplicity
   const fallbackAccounts: Account[] = DEFAULT_ACCOUNTS.filter(
-    acc => acc.code && acc.type === 'EXPENSE'
+    acc => acc.code && (acc.type === 'EXPENSE' || acc.type === 'INCOME')
   ).map((acc) => {
     // For codes like "9281-01", create unique ID by removing dash and concatenating
     // "9281-01" becomes 928101, "9945-03" becomes 994503
@@ -902,15 +913,19 @@ export default function ReceiptsPage() {
                 className="w-full px-3 py-2 border rounded-lg"
               >
                 <option value="BUSINESS">Business</option>
-                <option value="HOME">Home</option>
-                <option value="VEHICLE">Vehicle</option>
+                {transactionType === 'RECEIPT' && (
+                  <>
+                    <option value="HOME">Home</option>
+                    <option value="VEHICLE">Vehicle</option>
+                  </>
+                )}
               </select>
             </div>
 
             {selectedCategory === 'BUSINESS' && (
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Expense Account <span className="text-red-600">*required</span>
+                  {transactionType === 'INVOICE' ? 'Income Account' : 'Expense Account'} <span className="text-red-600">*required</span>
                 </label>
                 <select
                   value={selectedAccountId}
@@ -919,7 +934,15 @@ export default function ReceiptsPage() {
                 >
                   <option value="">📁 Select an account...</option>
                   {(accounts.length > 0 ? accounts : fallbackAccounts)
-                    .filter(account => account.type === 'EXPENSE' && account.code !== '9945' && account.code !== '9281')
+                    .filter(account => {
+                      if (transactionType === 'INVOICE') {
+                        // For invoices, only show income accounts: 8000 and 8230
+                        return account.type === 'INCOME' && (account.code === '8000' || account.code === '8230')
+                      } else {
+                        // For receipts, show expense accounts (current behavior)
+                        return account.type === 'EXPENSE' && account.code !== '9945' && account.code !== '9281'
+                      }
+                    })
                     .map((account) => (
                       <option key={account.id} value={account.id}>
                         {account.code} - {account.name}
@@ -990,14 +1013,9 @@ export default function ReceiptsPage() {
 
             <div>
               <label className="block text-sm font-medium mb-1">Transaction Type</label>
-              <select
-                value={transactionType}
-                onChange={(e) => setTransactionType(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-              >
-                <option value="RECEIPT">Receipt (Expense - Money Out)</option>
-                <option value="INVOICE">Invoice (Income - Money In)</option>
-              </select>
+              <div className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-700 flex items-center">
+                {transactionType === 'INVOICE' ? '💰 Invoice (Income - Money In)' : '🧾 Receipt (Expense - Money Out)'}
+              </div>
             </div>
 
             <div>
@@ -1132,7 +1150,6 @@ export default function ReceiptsPage() {
               setSelectedFile(null)
               setPreview(null)
               setExtractedData(null)
-              setTransactionType("RECEIPT")
             }}
             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
@@ -1145,7 +1162,6 @@ export default function ReceiptsPage() {
               setSelectedFile(null)
               setPreview(null)
               setExtractedData(null)
-              setTransactionType("RECEIPT")
             }}
             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
