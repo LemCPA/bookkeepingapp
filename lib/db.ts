@@ -756,11 +756,9 @@ export function getGstFilingData(userId: number, startMonth?: string, endMonth?:
     }
   })
 
-  // If user has no GST transactions and is not explicitly registered, return null
-  const hasGstTransactions = gstCollected > 0 || gstPaid > 0
-  if (!hasGstTransactions && !user.gst_registered) {
-    return null
-  }
+  // Allow users to access GST filing even without a registration number
+  // GST number is optional - users can file GST regardless
+  // Only return null if user doesn't exist (already checked above)
 
   const netGst = gstCollected - gstPaid
 
