@@ -167,25 +167,25 @@ export default function TransactionsContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center gap-6 mt-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-6 mt-4">
         <h1 className="text-3xl font-bold">Transactions</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <a
             href="/receipts"
-            className="bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 flex items-center gap-1 text-sm"
+            className="bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 flex items-center gap-1 text-sm whitespace-nowrap"
           >
             📸 Snap Document
           </a>
           <button
             onClick={handleExport}
             disabled={loading || transactions.length === 0}
-            className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-1 text-sm"
+            className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-1 text-sm whitespace-nowrap"
           >
             📥 Export CSV
           </button>
           <a
             href="/transactions/new"
-            className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-sm"
+            className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-sm whitespace-nowrap"
           >
             New Transaction
           </a>
