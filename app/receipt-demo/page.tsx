@@ -36,26 +36,45 @@ export default function ReceiptDemo() {
     if (status === 'none') {
       setExtractedData({ ...extractedData, gst_hst_applicable: false, gst_hst_rate: 0, gst_hst_amount: 0 })
     } else {
-      const newGstAmount = extractedData.amount && extractedData.gst_hst_rate
-        ? (status === 'included'
-          ? (extractedData.amount / (1 + extractedData.gst_hst_rate / 100)) * (extractedData.gst_hst_rate / 100)
-          : extractedData.amount - (extractedData.amount / (1 + extractedData.gst_hst_rate / 100)))
-        : 0
+      let newGstAmount = 0
+      if (extractedData.amount && extractedData.gst_hst_rate) {
+        if (status === 'included') {
+          // Tax is included: back-calculate
+          newGstAmount = (extractedData.amount / (1 + extractedData.gst_hst_rate / 100)) * (extractedData.gst_hst_rate / 100)
+        } else if (status === 'separate') {
+          // Tax is NOT included: calculate on top
+          newGstAmount = extractedData.amount * extractedData.gst_hst_rate / 100
+        }
+      }
       setExtractedData({ ...extractedData, gst_hst_included: status === 'included', gst_hst_applicable: true, gst_hst_amount: parseFloat(newGstAmount.toFixed(2)) })
     }
   }
 
-  // Calculate subtotal based on tax status
-  // For both "included" and "separate" cases, the amount field is the total paid
-  // Subtotal is always: total / (1 + rate/100) when there's a rate
-  const subtotal = extractedData.gst_hst_applicable === false
-    ? extractedData.amount
-    : (extractedData.gst_hst_rate && extractedData.gst_hst_rate > 0
-      ? extractedData.amount / (1 + extractedData.gst_hst_rate / 100)
-      : extractedData.amount)
+  // Calculate pretax amount, tax, and total based on tax status
+  // User always enters the TOTAL amount
+  // Toggle determines if tax is included or not
+  const pretaxAmount = (() => {
+    if (extractedData.gst_hst_applicable === false) {
+      // No GST: amount is the pretax amount
+      return extractedData.amount
+    } else if (extractedData.gst_hst_included === true && extractedData.gst_hst_rate && extractedData.gst_hst_rate > 0) {
+      // Tax is included: back-calculate pretax
+      return extractedData.amount / (1 + extractedData.gst_hst_rate / 100)
+    } else {
+      // Tax is NOT included: amount is pretax
+      return extractedData.amount
+    }
+  })()
 
-  // Total is always the amount field regardless of tax status
-  const total = extractedData.amount
+  const calculatedTotal = (() => {
+    if (extractedData.gst_hst_included === true || extractedData.gst_hst_applicable === false) {
+      // Total is already the amount entered
+      return extractedData.amount
+    } else {
+      // Tax is NOT included: calculate total = pretax + tax
+      return extractedData.amount + (extractedData.gst_hst_amount || 0)
+    }
+  })()
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -85,7 +104,7 @@ export default function ReceiptDemo() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-3">GST/HST Status</label>
+            <label className="block text-sm font-medium mb-3">Is GST/HST included in the amount above?</label>
             <div className="flex flex-wrap gap-4 mb-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -95,7 +114,7 @@ export default function ReceiptDemo() {
                   onChange={() => toggleTaxStatus('included')}
                   className="w-4 h-4"
                 />
-                <span className="text-sm">Included in amount</span>
+                <span className="text-sm">Yes, tax is included</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -105,7 +124,7 @@ export default function ReceiptDemo() {
                   onChange={() => toggleTaxStatus('separate')}
                   className="w-4 h-4"
                 />
-                <span className="text-sm">Separate from amount</span>
+                <span className="text-sm">No, tax will be added</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -115,7 +134,7 @@ export default function ReceiptDemo() {
                   onChange={() => toggleTaxStatus('none')}
                   className="w-4 h-4"
                 />
-                <span className="text-sm">No GST</span>
+                <span className="text-sm">No GST applies</span>
               </label>
             </div>
           </div>
@@ -148,9 +167,9 @@ export default function ReceiptDemo() {
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-xs text-gray-600 font-medium mb-1">Subtotal</p>
+                  <p className="text-xs text-gray-600 font-medium mb-1">Pretax Amount</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    ${subtotal.toFixed(2)}
+                    ${pretaxAmount.toFixed(2)}
                   </p>
                 </div>
                 <div>
@@ -158,13 +177,13 @@ export default function ReceiptDemo() {
                     {extractedData.gst_hst_applicable === false ? 'Tax' : `Tax (${extractedData.gst_hst_rate || 0}%)`}
                   </p>
                   <p className="text-lg font-semibold text-gray-900">
-                    ${extractedData.gst_hst_amount.toFixed(2)}
+                    ${(extractedData.gst_hst_amount || 0).toFixed(2)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-600 font-medium mb-1">Total</p>
                   <p className="text-lg font-semibold text-blue-600">
-                    ${total.toFixed(2)}
+                    ${calculatedTotal.toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -175,10 +194,10 @@ export default function ReceiptDemo() {
         <div className="text-sm text-gray-600 space-y-2 bg-blue-50 p-4 rounded-lg">
           <p><strong>Try these interactions to see the summary update in real-time:</strong></p>
           <ul className="list-disc list-inside space-y-1">
-            <li>Change the amount (e.g., 79.99)</li>
-            <li>Toggle the radio buttons between "Included in amount" and "Separate from amount"</li>
+            <li>Enter the total amount from the receipt</li>
+            <li>Select whether tax is included or will be added</li>
             <li>Adjust the GST/HST rate (try 13%, 5%, 0%)</li>
-            <li>Change the tax amount manually</li>
+            <li>Toggle between the three tax options to see different calculations</li>
           </ul>
         </div>
       </div>

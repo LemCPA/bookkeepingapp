@@ -17,8 +17,13 @@ export default function NewMileageTripPage() {
     tripDate: new Date().toISOString().split('T')[0],
     kilometers: '',
     destination: '',
-    purpose: 'business',
-    businessPercentage: 100,
+    businessPercentage: (() => {
+      try {
+        return parseInt(localStorage.getItem('lastBusinessPercentage') || '100')
+      } catch {
+        return 100
+      }
+    })(),
     notes: '',
   })
 
@@ -71,6 +76,15 @@ export default function NewMileageTripPage() {
       ...prev,
       [name]: value,
     }))
+
+    // Save business percentage to localStorage for persistence
+    if (name === 'businessPercentage') {
+      try {
+        localStorage.setItem('lastBusinessPercentage', value)
+      } catch (error) {
+        console.error('Failed to save business percentage:', error)
+      }
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,7 +101,6 @@ export default function NewMileageTripPage() {
           tripDate: formData.tripDate,
           kilometers: parseFloat(formData.kilometers),
           destination: formData.destination,
-          purpose: formData.purpose,
           businessPercentage: parseFloat(formData.businessPercentage.toString()),
           notes: formData.notes || undefined,
         }),
@@ -210,33 +223,14 @@ export default function NewMileageTripPage() {
               />
             </div>
 
-            {/* Purpose */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Trip Purpose <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="purpose"
-                value={formData.purpose}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="business">Business</option>
-                <option value="mixed">Mixed Business/Personal</option>
-                <option value="personal">Personal</option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1">Classify the type of trip</p>
-            </div>
-
             {/* Business Percentage */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Percentage <span className="text-red-500">*</span>
+                Business Use Percentage <span className="text-red-500">*</span>
               </label>
               <div className="flex items-center gap-3">
                 <input
-                  type="number"
+                  type="range"
                   name="businessPercentage"
                   value={formData.businessPercentage}
                   onChange={handleChange}
@@ -244,11 +238,14 @@ export default function NewMileageTripPage() {
                   min="0"
                   max="100"
                   step="1"
-                  className="w-16 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-medium"
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
-                <span className="text-gray-600 font-medium">%</span>
+                <div className="text-center whitespace-nowrap">
+                  <span className="text-2xl font-bold text-blue-600">{formData.businessPercentage}</span>
+                  <span className="text-gray-600 font-medium">%</span>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Use the ▲▼ arrows to adjust. Examples: 100 for all business, 50 for mixed, 0 for personal</p>
+              <p className="text-xs text-gray-500 mt-2">100% = all business trip, 50% = half business/half personal, 0% = personal trip</p>
             </div>
 
             {/* Notes */}

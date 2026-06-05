@@ -47,22 +47,6 @@ export default function ConfirmReceiptPage() {
     businessUsePercentage: '100',
   })
 
-  // Fallback expense accounts (for receipts) - define at module level for consistency
-  const fallbackAccounts: ChartOfAccount[] = [
-    { id: 5100, code: '5100', name: 'Advertising', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5110, code: '5110', name: 'Meals and Entertainment (50% rule)', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5120, code: '5120', name: 'Insurance', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5130, code: '5130', name: 'Interest and Bank Charges', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5140, code: '5140', name: 'Business Taxes and Licenses', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5150, code: '5150', name: 'Office Expenses', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5160, code: '5160', name: 'Supplies', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5170, code: '5170', name: 'Legal and Accounting Fees', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5180, code: '5180', name: 'Rent', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5190, code: '5190', name: 'Salaries and Wages', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5200, code: '5200', name: 'Travel', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5210, code: '5210', name: 'Telephone and Utilities', type: 'EXPENSE', is_vehicle_expense: false },
-    { id: 5220, code: '5220', name: 'Motor Vehicle Expenses', type: 'EXPENSE', is_vehicle_expense: true },
-  ]
 
   useEffect(() => {
     const data = sessionStorage.getItem('extractedReceiptData')
@@ -111,10 +95,38 @@ export default function ConfirmReceiptPage() {
       businessUsePercentage: '100',
     })
 
-    // Always use fallback accounts - they're the T2125 standard chart
-    console.log('Setting accounts to fallback T2125 accounts')
-    setAccounts(fallbackAccounts)
-    setLoading(false)
+    // Fetch accounts from API (no hardcoded fallback)
+    const authenticatedFetch = createAuthenticatedFetch()
+    authenticatedFetch('/api/chart-of-accounts')
+      .then(async res => {
+        console.log('API Response Status:', res.status)
+        const text = await res.text()
+        console.log('API Response Body:', text)
+        try {
+          return JSON.parse(text)
+        } catch (e) {
+          throw new Error(`Invalid JSON response: ${text}`)
+        }
+      })
+      .then(data => {
+        console.log('Parsed accounts from API:', data)
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(`✅ Loaded ${data.length} accounts`)
+          setAccounts(data)
+        } else {
+          const msg = `No accounts returned from API. Response: ${JSON.stringify(data)}`
+          console.error(msg)
+          setError(msg)
+          setAccounts([])
+        }
+      })
+      .catch(err => {
+        const msg = `Failed to load accounts: ${err.message}`
+        console.error(msg, err)
+        setError(msg)
+        setAccounts([])
+      })
+      .finally(() => setLoading(false))
 
   }, [router])
 
@@ -452,27 +464,27 @@ export default function ConfirmReceiptPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Amount Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Is GST/HST included in the amount above?</label>
               <div className="space-y-2">
                 <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
                   <input
                     type="radio"
                     name="taxType"
-                    checked={!formData.taxIncluded}
+                    checked={formData.taxIncluded === false}
                     onChange={() => setFormData({ ...formData, taxIncluded: false })}
                     className="w-4 h-4 text-blue-600"
                   />
-                  <span className="ml-3 font-medium text-gray-900">Subtotal (tax added on top)</span>
+                  <span className="ml-3 font-medium text-gray-900">No, tax will be added</span>
                 </label>
                 <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
                   <input
                     type="radio"
                     name="taxType"
-                    checked={formData.taxIncluded}
+                    checked={formData.taxIncluded === true}
                     onChange={() => setFormData({ ...formData, taxIncluded: true })}
                     className="w-4 h-4 text-blue-600"
                   />
-                  <span className="ml-3 font-medium text-gray-900">Total (tax already included)</span>
+                  <span className="ml-3 font-medium text-gray-900">Yes, tax is already included</span>
                 </label>
               </div>
             </div>

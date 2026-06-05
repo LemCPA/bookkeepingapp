@@ -41,6 +41,7 @@ export default function ReceiptsPage() {
   // Transaction type is locked based on document type
   const transactionType = documentType === 'invoice' ? 'INVOICE' : 'RECEIPT'
   const [defaultGstRate, setDefaultGstRate] = useState<number>(0)
+  const [gstRegistered, setGstRegistered] = useState(true) // Assume registered by default
   const [selectedCategory, setSelectedCategory] = useState<'BUSINESS' | 'HOME' | 'VEHICLE'>('BUSINESS')
   const [selectedAccountId, setSelectedAccountId] = useState<number | string>('') // For BUSINESS
   const [selectedSubAccount, setSelectedSubAccount] = useState<string>('') // For HOME/VEHICLE
@@ -98,6 +99,11 @@ export default function ReceiptsPage() {
           if (settings.default_gst_hst_rate !== undefined) {
             console.log("Setting default GST rate to:", settings.default_gst_hst_rate)
             setDefaultGstRate(settings.default_gst_hst_rate)
+          }
+          // Check if user is registered for GST/HST
+          if (settings.gst_registered !== undefined) {
+            console.log("GST Registration Status:", settings.gst_registered)
+            setGstRegistered(settings.gst_registered)
           }
         } else {
           console.error("Failed to fetch settings:", settingsResponse.status)
@@ -557,9 +563,16 @@ export default function ReceiptsPage() {
 
       // Add account based on category
       if (selectedCategory === 'BUSINESS') {
-        console.error('🔴 BUSINESS CATEGORY - selectedAccountId:', selectedAccountId, 'type:', typeof selectedAccountId)
-        requestBody.account_id = selectedAccountId
-        const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => a.id === selectedAccountId)
+        const accountIdNumber = typeof selectedAccountId === 'string' ? parseInt(selectedAccountId, 10) : selectedAccountId
+        console.error('🔴 BUSINESS CATEGORY - selectedAccountId:', selectedAccountId, 'type:', typeof selectedAccountId, 'converted:', accountIdNumber)
+        console.error('🔴 Available accounts:', accounts.map(a => ({ id: a.id, code: a.code, name: a.name, type: typeof a.id })))
+        console.error('🔴 Searching for account with ID:', accountIdNumber, 'type:', typeof accountIdNumber)
+        debugger; // PAUSE HERE - Check console before continuing
+        requestBody.account_id = accountIdNumber
+        const selectedAccount = (accounts.length > 0 ? accounts : fallbackAccounts).find(a => {
+          console.error(`  Comparing: a.id=${a.id} (${typeof a.id}) === accountIdNumber=${accountIdNumber} (${typeof accountIdNumber}) ? ${a.id === accountIdNumber}`)
+          return a.id === accountIdNumber
+        })
         console.error('🔴 Found account:', selectedAccount ? { id: selectedAccount.id, code: selectedAccount.code, name: selectedAccount.name } : 'NOT FOUND')
         requestBody.is_vehicle_expense = selectedAccount?.code?.startsWith('52') || selectedAccount?.name.includes('Motor Vehicle')
       } else if (selectedCategory === 'HOME') {
@@ -895,7 +908,7 @@ export default function ReceiptsPage() {
               <input
                 type="number"
                 step="0.01"
-                value={extractedData.amount}
+                value={extractedData.amount && extractedData.amount > 0 ? extractedData.amount : ''}
                 onChange={(e) => {
                   const newAmount = parseFloat(e.target.value) || 0
                   const newGstAmount = extractedData.gst_hst_applicable !== false && extractedData.gst_hst_rate && extractedData.gst_hst_rate > 0
@@ -951,8 +964,11 @@ export default function ReceiptsPage() {
                         // These must have actual IDs from chart_of_accounts to link properly
                         return account.type === 'INCOME' && (account.code === '8000' || account.code === '8230')
                       } else {
-                        // For receipts, show expense accounts (current behavior)
-                        return account.type === 'EXPENSE' && account.code !== '9945' && account.code !== '9281'
+                        // For receipts, show expense accounts BUT exclude HOME (9945 and 9945-*) and VEHICLE (9281 and 9281-*) accounts
+                        // Those are handled separately in their own category sections
+                        return account.type === 'EXPENSE' &&
+                               account.code !== '9945' && !account.code?.startsWith('9945-') &&
+                               account.code !== '9281' && !account.code?.startsWith('9281-')
                       }
                     })
                     .map((account) => (
@@ -1030,126 +1046,164 @@ export default function ReceiptsPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-3">GST/HST Status</label>
-              <div className="flex flex-wrap gap-4 mb-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="gst_hst_status"
-                    checked={extractedData.gst_hst_applicable !== false && extractedData.gst_hst_included === true}
-                    onChange={() => {
-                      const rate = defaultGstRate // Always reset to default when switching
-                      const newGstAmount = extractedData.amount && rate > 0
-                        ? (extractedData.amount / (1 + rate / 100)) * (rate / 100)
-                        : 0
-                      setExtractedData({...extractedData, gst_hst_included: true, gst_hst_applicable: true, gst_hst_rate: rate, gst_hst_amount: parseFloat(newGstAmount.toFixed(2))})
-                    }}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm">Included in amount</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="gst_hst_status"
-                    checked={extractedData.gst_hst_applicable !== false && extractedData.gst_hst_included === false}
-                    onChange={() => {
-                      const rate = defaultGstRate // Always reset to default when switching
-                      // For "Separate from amount", the entered amount is the TOTAL (what they paid)
-                      // We need to back out the tax to get the subtotal
-                      const newGstAmount = extractedData.amount && rate > 0
-                        ? extractedData.amount - (extractedData.amount / (1 + rate / 100))
-                        : 0
-                      setExtractedData({...extractedData, gst_hst_included: false, gst_hst_applicable: true, gst_hst_rate: rate, gst_hst_amount: parseFloat(newGstAmount.toFixed(2))})
-                    }}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm">Separate from amount</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="gst_hst_status"
-                    checked={extractedData.gst_hst_applicable === false}
-                    onChange={() => setExtractedData({...extractedData, gst_hst_applicable: false, gst_hst_rate: 0, gst_hst_amount: 0})}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm">No GST</span>
-                </label>
-              </div>
-            </div>
+            {/* GST Section - Only if user is registered for GST */}
+            {gstRegistered && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-3">Is GST/HST included in the total amount above?</label>
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="gst_hst_status"
+                        checked={extractedData.gst_hst_applicable !== false && extractedData.gst_hst_included === true}
+                        onChange={() => {
+                          const rate = defaultGstRate
+                          const newGstAmount = extractedData.amount && rate > 0
+                            ? (extractedData.amount / (1 + rate / 100)) * (rate / 100)
+                            : 0
+                          setExtractedData({...extractedData, gst_hst_included: true, gst_hst_applicable: true, gst_hst_rate: rate, gst_hst_amount: parseFloat(newGstAmount.toFixed(2))})
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">Yes, tax is included</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="gst_hst_status"
+                        checked={extractedData.gst_hst_applicable !== false && extractedData.gst_hst_included === false}
+                        onChange={() => {
+                          const rate = defaultGstRate
+                          const newGstAmount = extractedData.amount && rate > 0
+                            ? extractedData.amount * rate / 100
+                            : 0
+                          setExtractedData({...extractedData, gst_hst_included: false, gst_hst_applicable: true, gst_hst_rate: rate, gst_hst_amount: parseFloat(newGstAmount.toFixed(2))})
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">No, tax will be added</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="gst_hst_status"
+                        checked={extractedData.gst_hst_applicable === false}
+                        onChange={() => setExtractedData({...extractedData, gst_hst_applicable: false, gst_hst_rate: 0, gst_hst_amount: 0})}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">No GST applies</span>
+                    </label>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">GST/HST Rate (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={extractedData.gst_hst_rate || 0}
-                  onChange={(e) => {
-                    const newRate = parseFloat(e.target.value) || 0
-                    const newGstAmount = extractedData.gst_hst_applicable !== false && extractedData.amount && newRate > 0
-                      ? (extractedData.gst_hst_included === true
-                        ? (extractedData.amount / (1 + newRate / 100)) * (newRate / 100)
-                        : extractedData.amount * newRate / 100)
-                      : 0
-                    setExtractedData({...extractedData, gst_hst_rate: newRate, gst_hst_amount: parseFloat(newGstAmount.toFixed(2))})
-                  }}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">GST/HST Amount</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={extractedData.gst_hst_amount || 0}
-                  onChange={(e) => setExtractedData({...extractedData, gst_hst_amount: parseFloat(e.target.value) || 0})}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {extractedData.gst_hst_included === true && extractedData.amount && extractedData.gst_hst_rate ?
-                    `Suggested: $${(((extractedData.amount || 0) / (1 + (extractedData.gst_hst_rate || 0) / 100)) * ((extractedData.gst_hst_rate || 0) / 100)).toFixed(2)} (included in $${extractedData.amount})` :
-                    extractedData.gst_hst_included === false && extractedData.amount && extractedData.gst_hst_rate ?
-                    `Suggested: $${(((extractedData.amount || 0) * (extractedData.gst_hst_rate || 0) / 100)).toFixed(2)} (on top of $${extractedData.amount})` :
-                    'Select GST status and enter amount'
-                  }
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">GST/HST Rate (%)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={extractedData.gst_hst_rate || 0}
+                      onChange={(e) => {
+                        const newRate = parseFloat(e.target.value) || 0
+                        let newGstAmount = 0
+                        if (extractedData.amount && newRate > 0) {
+                          if (extractedData.gst_hst_included === true) {
+                            // Tax is included in the amount: back-calculate
+                            newGstAmount = (extractedData.amount / (1 + newRate / 100)) * (newRate / 100)
+                          } else if (extractedData.gst_hst_included === false) {
+                            // Tax is NOT included: calculate on top
+                            newGstAmount = extractedData.amount * newRate / 100
+                          }
+                        }
+                        setExtractedData({...extractedData, gst_hst_rate: newRate, gst_hst_amount: parseFloat(newGstAmount.toFixed(2))})
+                      }}
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">GST/HST Amount</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={extractedData.gst_hst_amount || 0}
+                      onChange={(e) => setExtractedData({...extractedData, gst_hst_amount: parseFloat(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {extractedData.amount && extractedData.gst_hst_rate ?
+                        extractedData.gst_hst_included === true ?
+                          `Calculated: $${(((extractedData.amount || 0) / (1 + (extractedData.gst_hst_rate || 0) / 100)) * ((extractedData.gst_hst_rate || 0) / 100)).toFixed(2)} (back-calculated from $${extractedData.amount})` :
+                          extractedData.gst_hst_included === false ?
+                          `Calculated: $${(((extractedData.amount || 0) * (extractedData.gst_hst_rate || 0) / 100)).toFixed(2)} (added to $${extractedData.amount})` :
+                          'Select GST status and enter amount'
+                        : 'Enter amount and select GST status'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Notice for non-registered users */}
+            {!gstRegistered && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800">
+                  ℹ️ <strong>GST/HST Not Registered</strong> — The total amount you enter is treated as the final amount including any applicable tax.
                 </p>
               </div>
-            </div>
+            )}
 
             {/* Summary Breakdown */}
             <div className="border-t pt-4">
               <div className="bg-gray-50 rounded-lg p-4">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium mb-1">Subtotal</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      ${((extractedData.gst_hst_applicable === false
-                        ? extractedData.amount || 0
-                        : (extractedData.gst_hst_rate && extractedData.gst_hst_rate > 0
-                          ? (extractedData.amount || 0) / (1 + extractedData.gst_hst_rate / 100)
-                          : extractedData.amount || 0
-                        )
-                      ) || 0).toFixed(2)}
-                    </p>
+                {gstRegistered ? (
+                  /* Show 3-column breakdown for GST-registered users */
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-xs text-gray-600 font-medium mb-1">Pretax Amount</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        ${(() => {
+                          if (extractedData.gst_hst_applicable === false) {
+                            return (extractedData.amount || 0).toFixed(2)
+                          } else if (extractedData.gst_hst_included === true && extractedData.gst_hst_rate && extractedData.gst_hst_rate > 0) {
+                            return ((extractedData.amount || 0) / (1 + extractedData.gst_hst_rate / 100)).toFixed(2)
+                          } else {
+                            return (extractedData.amount || 0).toFixed(2)
+                          }
+                        })()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-medium mb-1">
+                        {extractedData.gst_hst_applicable === false ? 'Tax' : `Tax (${extractedData.gst_hst_rate || 0}%)`}
+                      </p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        ${(extractedData.gst_hst_amount || 0).toFixed(2)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-medium mb-1">Total</p>
+                      <p className="text-lg font-semibold text-blue-600">
+                        ${(() => {
+                          if (extractedData.gst_hst_included === true || extractedData.gst_hst_applicable === false) {
+                            return (extractedData.amount || 0).toFixed(2)
+                          } else {
+                            return ((extractedData.amount || 0) + (extractedData.gst_hst_amount || 0)).toFixed(2)
+                          }
+                        })()}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium mb-1">
-                      {extractedData.gst_hst_applicable === false ? 'Tax' : `Tax (${extractedData.gst_hst_rate || 0}%)`}
-                    </p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      ${(extractedData.gst_hst_amount || 0).toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium mb-1">Total</p>
-                    <p className="text-lg font-semibold text-blue-600">
+                ) : (
+                  /* Show simple total for non-registered users */
+                  <div className="text-center">
+                    <p className="text-xs text-gray-600 font-medium mb-2">Total Amount (Tax Included)</p>
+                    <p className="text-2xl font-bold text-blue-600">
                       ${(extractedData.amount || 0).toFixed(2)}
                     </p>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

@@ -347,3 +347,93 @@ export async function getSubscriptionFromSupabase(userId: number) {
     return null
   }
 }
+
+/**
+ * Business Use Percentages
+ * Store default percentages for home and vehicle expense deductions
+ */
+export async function getBusinessUsePercentagesFromSupabase(userId: number) {
+  if (!supabase) return null
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('home_business_use_percentage, vehicle_business_use_percentage')
+      .eq('id', userId)
+      .single()
+
+    if (error) {
+      console.error('Error fetching business use percentages:', error)
+      // Return defaults if not found
+      return {
+        home_business_use_percentage: 100,
+        vehicle_business_use_percentage: 100,
+      }
+    }
+
+    return {
+      home_business_use_percentage: data?.home_business_use_percentage ?? 100,
+      vehicle_business_use_percentage: data?.vehicle_business_use_percentage ?? 100,
+    }
+  } catch (error) {
+    console.error('Error fetching business use percentages:', error)
+    return {
+      home_business_use_percentage: 100,
+      vehicle_business_use_percentage: 100,
+    }
+  }
+}
+
+export async function updateBusinessUsePercentagesInSupabase(
+  userId: number,
+  homePercentage?: number,
+  vehiclePercentage?: number
+) {
+  if (!supabase) return null
+
+  try {
+    const updates: any = {}
+
+    if (homePercentage !== undefined) {
+      // Validate percentage
+      if (homePercentage < 0 || homePercentage > 100) {
+        throw new Error('Home business use percentage must be between 0 and 100')
+      }
+      updates.home_business_use_percentage = homePercentage
+    }
+
+    if (vehiclePercentage !== undefined) {
+      // Validate percentage
+      if (vehiclePercentage < 0 || vehiclePercentage > 100) {
+        throw new Error('Vehicle business use percentage must be between 0 and 100')
+      }
+      updates.vehicle_business_use_percentage = vehiclePercentage
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return { success: false, error: 'No updates provided' }
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating business use percentages:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log(`Updated business use percentages for user ${userId}:`, updates)
+    return {
+      success: true,
+      home_business_use_percentage: data?.home_business_use_percentage ?? 100,
+      vehicle_business_use_percentage: data?.vehicle_business_use_percentage ?? 100,
+    }
+  } catch (error: any) {
+    console.error('Error updating business use percentages:', error)
+    return { success: false, error: error.message }
+  }
+}

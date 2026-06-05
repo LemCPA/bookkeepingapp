@@ -58,76 +58,37 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
           },
           {
             type: 'text',
-            text: `Extract receipt/invoice data. Return ONLY JSON object, no other text.
+            text: `Extract information from this receipt or invoice. Follow these rules carefully:
+
+FINDING THE AMOUNT (CRITICAL - THIS IS YOUR PRIMARY JOB):
+Search for "Amount Due", "Total Due", "Balance Due", "Total", or "Please Pay"
+- Look to the RIGHT of these phrases for a $ sign and the number
+- Example: "Amount Due        $68.93" → extract as 68.93 (not string, real number)
+- Strip symbols: $ £ € ¥ commas
+- Valid range: 0.01 to 999999.99 (reject 0 or null unless genuinely blank)
+
+ACCOUNT TYPE (ASSET vs EXPENSE):
+- EXPENSE (default): rent, utilities, office supplies, meals, services, subscriptions
+- ASSET: equipment, vehicles, property, furniture, tools with useful life > 1 year
+- Return: "EXPENSE", "ASSET", or null
+
+GST/HST DETAILS:
+- Extract the GST/HST rate if shown (5, 13, etc.)
+- Extract the GST/HST amount if shown separately
+- If not shown: rate=0, amount=0
+
+Now extract and return ONLY this JSON (no markdown, no explanations, no extra text):
 
 {
   "date": "YYYY-MM-DD or null",
   "amount": <number or null>,
-  "description": "what was purchased/service",
-  "vendor_name": "company/business name or null",
+  "description": "what was purchased",
+  "vendor_name": "business name or null",
   "type": "RECEIPT or INVOICE or null",
-  "account_type": "ASSET or EXPENSE or null",
+  "account_type": "EXPENSE or ASSET or null",
   "gst_hst_amount": 0,
   "gst_hst_rate": 0
-}
-
-VENDOR NAME - CRITICAL (Extract before anything else):
-1. FIRST: Look at the very TOP of the document (first 20% of page)
-2. Look for: Company logo, business header, large bold text
-3. Check for: Company name in a box, banner, or stamp
-4. Look for: Business address which indicates the company name
-5. Look for: Merchant name on credit card receipts
-6. Examples of where found: "ExecuSpace North York" (header), "Tim Hortons" (logo area), "Staples Canada" (top banner)
-7. CRITICAL: The vendor is the BUSINESS that ISSUED this receipt to me
-8. NOT the customer (that's me)
-9. If you see any text that looks like a company/business name: EXTRACT IT
-10. Do not return null if you see ANY business-like name at top
-11. Return as simple string: "CompanyName" (no "From:" or extra text)
-12. If truly cannot find: return null
-
-DOCUMENT TYPE (RECEIPT vs INVOICE):
-- Ask yourself: "Did I BUY from this business?" (Yes = RECEIPT) or "Did I SELL to a customer?" (No = INVOICE)
-- RECEIPT: Document issued TO ME by a vendor/store/service provider showing what I paid
-- INVOICE: Document issued BY ME to a customer showing what they owe
-- Check for key words:
-  * "Invoice To:" or "Bill To:" followed by MY info = I created this (INVOICE)
-  * "From:" or "Sold By:" followed by vendor = They sold to me (RECEIPT)
-  * No clear indicator = Most likely RECEIPT (95% of scanned docs are receipts)
-- Return: "RECEIPT" if I received this from a vendor, "INVOICE" if I created it, null if truly ambiguous
-
-ACCOUNT TYPE (ASSET vs EXPENSE):
-- EXPENSE (most common): rent, utilities, office supplies, meals, services, subscriptions
-- ASSET (less common): equipment, vehicles, property, furniture, tools with useful life > 1 year
-- Items purchased: If unclear, default to EXPENSE
-- Return: "EXPENSE" or "ASSET" or null
-
-TOTAL AMOUNT:
-1. Find the LARGEST dollar amount ($XX.XX format)
-2. Look for "Total", "Invoice Total", "Amount Due", "TOTAL"
-3. Return as NUMBER: 62.15 (not string, not "$62.15")
-4. Include tax in this total (don't subtract)
-5. If cannot find: return null (not 0, not empty)
-
-DATE:
-1. Look for: Invoice Date, Transaction Date, Bill Date, or Date field
-2. Format: YYYY-MM-DD (e.g., "2026-05-24")
-3. Common locations: Near company name (top), in header, near invoice number, at bottom
-4. Do not use today's date if not found
-5. If not found: return null
-
-TAX (GST/HST):
-1. Find "GST", "HST", "PST", "QST", or "Tax" label
-2. GST (5%) = Federal, HST (13%) = most provinces, PST = BC
-3. Return gst_hst_amount as number (e.g., 7.15 for $7.15)
-4. Return gst_hst_rate as number (e.g., 13 for 13%)
-5. If not found: both = 0
-
-DEBUGGING NOTES:
-- If you find a business name but aren't 100% sure it's the vendor, still return it with high confidence
-- Better to extract something plausible than return null
-- The user can edit if wrong
-
-RETURN ONLY JSON - no markdown, explanations, code blocks, or extra text`,
+}`,
           },
         ],
       },
@@ -194,25 +155,100 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unexpected response from Claude' }, { status: 500 })
     }
 
-    let jsonText = content.text
+    let jsonText = content.text.trim()
     // Log raw response for debugging
-    console.log('Claude Vision raw response:', jsonText)
+    console.log('Claude Vision raw response (first 500 chars):', jsonText.substring(0, 500))
 
+    // Try to extract JSON from markdown code blocks first
     const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
     if (jsonMatch) {
       jsonText = jsonMatch[1].trim()
+      console.log('Extracted JSON from markdown code block')
+    } else {
+      console.log('No markdown code block found, parsing raw text')
     }
 
     let extractedData
     try {
       extractedData = JSON.parse(jsonText)
+      console.log('Successfully parsed JSON')
     } catch (parseError) {
-      console.error('Failed to parse Claude response:', jsonText)
-      throw new Error('Invalid response format from Claude Vision')
+      console.error('Failed to parse Claude response as JSON')
+      console.error('Raw text:', jsonText.substring(0, 1000))
+      console.error('Parse error:', parseError)
+
+      // Try one more time: remove any leading/trailing non-JSON characters
+      const jsonStart = jsonText.indexOf('{')
+      const jsonEnd = jsonText.lastIndexOf('}')
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        const potentialJson = jsonText.substring(jsonStart, jsonEnd + 1)
+        try {
+          extractedData = JSON.parse(potentialJson)
+          console.log('Successfully parsed JSON after cleaning')
+        } catch {
+          throw new Error(`Invalid response format from Claude Vision. Expected JSON, got: ${jsonText.substring(0, 200)}`)
+        }
+      } else {
+        throw new Error(`Invalid response format from Claude Vision. Expected JSON, got: ${jsonText.substring(0, 200)}`)
+      }
+    }
+
+    // Validate and clean extracted data
+    // Fix invalid amount values (e.g., "010d" should be null, allowing manual correction)
+    if (extractedData.amount !== null && extractedData.amount !== undefined) {
+      let amountStr = String(extractedData.amount).trim()
+
+      // Remove common OCR artifacts and cleanup
+      // Replace common OCR misreadings: O->0, l->1, I->1, S->5, Z->2, etc.
+      amountStr = amountStr.replace(/[OI]/g, '0').replace(/l/g, '1').replace(/[S]/g, '5').replace(/Z/g, '2')
+
+      // Remove any non-numeric characters except decimal point
+      amountStr = amountStr.replace(/[^\d.]/g, '')
+
+      // Handle multiple decimals (keep only one)
+      const parts = amountStr.split('.')
+      if (parts.length > 2) {
+        amountStr = parts[0] + '.' + parts.slice(1).join('')
+      }
+
+      const amount = Number(amountStr)
+
+      if (isNaN(amount) || amountStr === '') {
+        console.warn('Invalid amount extracted (NaN after cleanup):', extractedData.amount, 'cleaned to:', amountStr, '- setting to null')
+        extractedData.amount = null
+      } else if (amount === 0) {
+        // 0 is almost never a valid total - extraction likely failed
+        console.warn('Amount extracted as 0 - treating as extraction failure. Raw value was:', extractedData.amount)
+        // Set to null so user sees empty field and knows extraction failed
+        extractedData.amount = null
+      } else if (amount < 0.01 || amount > 999999.99) {
+        // Amount is unreasonable (less than 1 cent or more than $999,999.99)
+        console.warn('Amount extracted is out of reasonable range:', amount, '- setting to null')
+        extractedData.amount = null
+      } else {
+        extractedData.amount = amount
+      }
+    }
+
+    // Log the final extracted data for debugging
+    console.log('Final extracted data:', {
+      date: extractedData.date,
+      amount: extractedData.amount,
+      vendor: extractedData.vendor_name,
+      type: extractedData.type,
+      description: extractedData.description,
+      gst_hst_rate: extractedData.gst_hst_rate,
+      gst_hst_amount: extractedData.gst_hst_amount
+    })
+
+    if (!extractedData.amount) {
+      console.warn('⚠️ NO AMOUNT EXTRACTED - User will need to enter manually')
+    } else if (extractedData.amount < 1) {
+      console.warn('⚠️ SUSPICIOUSLY LOW AMOUNT:', extractedData.amount, '- may be extraction error')
     }
 
     // Log extracted data for debugging
-    console.log('Extracted data:', extractedData)
+    console.log('Extracted data (validated):', extractedData)
 
     return NextResponse.json({
       success: true,

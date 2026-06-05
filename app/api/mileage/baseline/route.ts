@@ -7,7 +7,10 @@ import { logDemoActivity } from '@/lib/demo-audit'
 export async function GET(request: NextRequest) {
   try {
     const userId = getUserIdFromRequest(request) || 1
-    const baseline = getVehicleBaseline(userId)
+    const { searchParams } = new URL(request.url)
+    const year = searchParams.get('year') ? parseInt(searchParams.get('year') || '') : undefined
+
+    const baseline = getVehicleBaseline(userId, year)
 
     if (!baseline) {
       return NextResponse.json({ baseline: null })
@@ -15,6 +18,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       id: baseline.id,
+      year: baseline.year,
       odometerReading: baseline.odometer_reading,
       setupDate: baseline.setup_date,
       notes: baseline.notes,
@@ -65,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
 
-    const { odometerReading, notes, setupDate } = body
+    const { odometerReading, year, notes, setupDate } = body
 
     // Validation
     if (odometerReading === undefined || odometerReading < 0) {
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = setVehicleBaseline(userId, odometerReading, notes, setupDate)
+    const result = setVehicleBaseline(userId, odometerReading, year, notes, setupDate)
 
     if (!result) {
       return NextResponse.json({ error: 'Failed to set vehicle baseline' }, { status: 500 })

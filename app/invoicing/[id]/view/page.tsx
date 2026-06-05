@@ -1,9 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createAuthenticatedFetch } from '@/lib/auth'
+
+// Helper function to generate Supabase public URL
+function getSupabasePublicUrl(storagePath: string): string {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!supabaseUrl || !storagePath) return ''
+
+  const path = storagePath.startsWith('/') ? storagePath.slice(1) : storagePath
+  const bucket = 'T2125'
+
+  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`
+}
 
 interface Invoice {
   id: number
@@ -22,13 +33,25 @@ interface Invoice {
   reconciliation_status?: string
 }
 
+interface Document {
+  id: number
+  file_name: string
+  file_path: string
+  file_size: number
+  uploaded_at: string
+}
+
 export default function InvoiceViewPage() {
   const params = useParams()
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
+  const [uploadingFile, setUploadingFile] = useState(false)
+  const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchInvoice = async () => {
@@ -38,6 +61,13 @@ export default function InvoiceViewPage() {
         if (res.ok) {
           const data = await res.json()
           setInvoice(data)
+
+          // Fetch documents for this invoice
+          const docsRes = await authenticatedFetch(`/api/documents?id=${params.id}`)
+          if (docsRes.ok) {
+            const docsData = await docsRes.json()
+            setDocuments(docsData || [])
+          }
         } else {
           setError('Invoice not found')
         }
@@ -99,6 +129,55 @@ export default function InvoiceViewPage() {
       setError('Failed to mark invoice as paid')
     } finally {
       setSending(false)
+    }
+  }
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Check file type
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+    if (!validTypes.includes(file.type)) {
+      alert('Please upload a PDF or image file (PDF, JPG, PNG)')
+      return
+    }
+
+    setUploadingFile(true)
+    setError('')
+    try {
+      const authenticatedFetch = createAuthenticatedFetch()
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('transactionId', params.id as string)
+
+      const uploadResponse = await authenticatedFetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json()
+        setError(`Failed to upload file: ${errorData.error || 'Unknown error'}`)
+        return
+      }
+
+      // Refresh documents
+      const docsRes = await authenticatedFetch(`/api/documents?id=${params.id}`)
+      if (docsRes.ok) {
+        const docsData = await docsRes.json()
+        setDocuments(docsData || [])
+      }
+
+      alert('✓ File attached successfully')
+    } catch (err) {
+      console.error('Error uploading file:', err)
+      setError('Error uploading file. Please try again.')
+    } finally {
+      setUploadingFile(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -172,7 +251,7 @@ export default function InvoiceViewPage() {
           <div className="border-t border-gray-200 pt-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-600">Pretax Amount</span>
                 <span className="font-medium">${invoice.amount.toFixed(2)}</span>
               </div>
               {invoice.gst_hst_amount && invoice.gst_hst_amount > 0 && (
@@ -216,10 +295,50 @@ export default function InvoiceViewPage() {
             <p className="text-blue-900 mt-2">{invoice.payment_terms}</p>
           </div>
         )}
+
+        {/* Attachments Section */}
+        {documents.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📎 Attachments ({documents.length})</h3>
+            <div className="space-y-2">
+              {documents.map((doc) => (
+                <button
+                  key={doc.id}
+                  onClick={() => setSelectedDocumentId(doc.id)}
+                  className="w-full text-left p-3 bg-gray-50 rounded hover:bg-blue-50 border border-gray-200 hover:border-blue-300 transition-colors"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {doc.file_name.endsWith('.pdf') ? '📄' : '📸'} {doc.file_name}
+                      </p>
+                      <p className="text-xs text-gray-600">{(doc.file_size / 1024).toFixed(2)} KB</p>
+                    </div>
+                    <span className="text-blue-600">→</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
       <div className="flex gap-4 justify-center flex-wrap">
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadingFile}
+          className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium disabled:bg-gray-400"
+        >
+          {uploadingFile ? '⏳ Uploading...' : '📎 Attach File'}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
         <button
           onClick={() => window.print()}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
@@ -250,6 +369,57 @@ export default function InvoiceViewPage() {
           </div>
         )}
       </div>
+
+      {/* Document Viewer Modal */}
+      {selectedDocumentId && documents.length > 0 && (
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-96 overflow-auto flex flex-col">
+            {/* Header */}
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-bold">
+                {documents.find(d => d.id === selectedDocumentId)?.file_name.endsWith('.pdf') ? '📄 PDF' : '📸 Image'}
+              </h3>
+              <button
+                onClick={() => setSelectedDocumentId(null)}
+                className="text-2xl hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-auto bg-gray-50 flex items-center justify-center">
+              {documents.find(d => d.id === selectedDocumentId)?.file_name.endsWith('.pdf') ? (
+                <div className="text-center p-8">
+                  <p className="text-gray-600 mb-4">📄 PDF Preview</p>
+                  <a
+                    href={getSupabasePublicUrl(documents.find(d => d.id === selectedDocumentId)?.file_path || '')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Download PDF
+                  </a>
+                </div>
+              ) : (
+                <img
+                  src={getSupabasePublicUrl(documents.find(d => d.id === selectedDocumentId)?.file_path || '')}
+                  alt="Invoice attachment"
+                  className="max-w-full max-h-full object-contain"
+                />
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t bg-gray-50">
+              <p className="text-sm text-gray-600">
+                {documents.find(d => d.id === selectedDocumentId)?.file_name} • {' '}
+                {((documents.find(d => d.id === selectedDocumentId)?.file_size || 0) / 1024).toFixed(2)} KB
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -242,15 +242,23 @@ export default function ProfileSettingsPage() {
 
                       {gstRegistered && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">GST/HST Number</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Business Number (RT)</label>
                           <input
                             type="text"
                             value={gstNumber}
-                            onChange={(e) => setGstNumber(e.target.value)}
+                            onChange={(e) => {
+                              // Only allow the exact format: 9 digits + 2 letters + 4 digits
+                              const input = e.target.value.toUpperCase()
+                              if (input === '' || /^\d{0,9}[A-Z]{0,2}\d{0,4}$/.test(input)) {
+                                setGstNumber(input)
+                              }
+                            }}
                             placeholder="123456789RT0001"
+                            maxLength={15}
+                            pattern="\d{9}[A-Z]{2}\d{4}"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
-                          <p className="text-xs text-gray-500 mt-1">Format: 9 digits + 2 letters + 5 digits</p>
+                          <p className="text-xs text-gray-500 mt-1">Exactly 15 characters: 9 digits + 2 letters + 4 digits</p>
                         </div>
                       )}
                     </div>

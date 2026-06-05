@@ -126,5 +126,61 @@
     "status": 403,
     "ip": "::1",
     "timestamp": "2026-05-30T16:00:54.257Z"
+  },
+  {
+    "operation": "UPLOAD_DOCUMENT_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/upload",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-06-03T02:14:19.462Z"
+  },
+  {
+    "operation": "UPLOAD_DOCUMENT_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/upload",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-06-03T02:15:27.476Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-06-03T02:29:56.376Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-06-03T02:30:00.931Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-06-04T20:02:45.301Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-06-04T20:04:39.368Z"
+  },
+  {
+    "operation": "CREATE_TRANSACTION_BLOCKED",
+    "method": "POST",
+    "endpoint": "/api/transactions",
+    "status": 403,
+    "ip": "::1",
+    "timestamp": "2026-06-04T20:07:58.869Z"
   }
 ]

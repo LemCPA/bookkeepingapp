@@ -16,7 +16,7 @@ interface DbData {
   billing_history: { id: number; user_id: number; stripe_invoice_id: string; amount: number; currency: string; status: string; period_start: string; period_end: string; paid_at?: string; created_at: string }[]
   payment_methods: { id: number; user_id: number; stripe_payment_method_id: string; last4: string; brand: string; exp_month: number; exp_year: number; is_default: boolean; created_at: string }[]
   stripe_webhooks: { id: number; stripe_event_id: string; event_type: string; processed: boolean; created_at: string }[]
-  vehicle_baseline: { id: number; user_id: number; odometer_reading: number; setup_date: string; notes?: string; created_at: string }[]
+  vehicle_baseline: { id: number; user_id: number; year: number; odometer_reading: number; setup_date: string; notes?: string; created_at: string }[]
   mileage_trips: { id: number; user_id: number; trip_date: string; kilometers: number; destination: string; purpose: string; business_percentage: number; notes?: string; created_at: string; updated_at?: string }[]
   odometer_readings: { id: number; user_id: number; month: string; start_odometer: number; end_odometer: number; business_use_percentage: number; notes?: string; created_at: string; updated_at: string }[]
   nextUserId: number
@@ -784,8 +784,16 @@ export function getGstFilingData(userId: number, startMonth?: string, endMonth?:
   }
 }
 
-export function getIncomeStatementDataByMonths(userId: number, startMonth: string, endMonth: string) {
+export function getIncomeStatementDataByMonths(userId: number, startMonth: string, endMonth: string, homeUsePercentage?: number, vehicleUsePercentage?: number) {
   const db = getDb()
+
+  // Get user's GST registration status
+  const user = db.users.find(u => u.id === userId)
+  const gstRegistered = user?.gst_registered ?? true // Default to registered if not found
+
+  // Use provided percentages or default to 100%
+  const defaultHomeUsePercentage = homeUsePercentage ?? 100
+  const defaultVehicleUsePercentage = vehicleUsePercentage ?? 100
 
   // Generate list of months between start and end
   // Parse dates explicitly and validate format
@@ -805,7 +813,6 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
     throw new Error(`Invalid month values. startMonth=${startMonth}, endMonth=${endMonth}`)
   }
 
-  console.log('Income statement: Parsing dates - startMonth:', startMonth, '[', startYear, String(startM).padStart(2, '0'), '], endMonth:', endMonth, '[', endYear, String(endM).padStart(2, '0'), ']')
 
   // Generate months array
   const months: string[] = []
@@ -820,11 +827,36 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
     }
   }
 
-  console.log('Income statement: Generated months array:', months)
 
-  // Get all income and expense accounts for this user
-  const accounts = db.chart_of_accounts
+  // Get all income and expense accounts for this user from database
+  const userAccounts = db.chart_of_accounts
     .filter(a => a.user_id === userId && a.type && ['INCOME', 'EXPENSE'].includes(a.type))
+    .sort((a, b) => {
+      // Handle undefined codes (HOME/VEHICLE parent accounts)
+      if (!a.code || !b.code) return (a.code ? -1 : b.code ? 1 : 0)
+      return a.code.localeCompare(b.code)
+    })
+
+  // Also include accounts from DEFAULT_ACCOUNTS that aren't in user's chart yet
+  // This ensures all standard accounts show in the report, even with $0 balance
+  const defaultExpenseIncomeAccounts = DEFAULT_ACCOUNTS.filter(
+    acc => acc.code && ['EXPENSE', 'INCOME'].includes(acc.type || '')
+  )
+
+  const userAccountCodes = new Set(userAccounts.map(a => a.code))
+  const missingAccounts = defaultExpenseIncomeAccounts
+    .filter(acc => !userAccountCodes.has(acc.code))
+    .map((acc, index) => ({
+      id: -(index + 1), // Negative IDs for virtual accounts to avoid conflicts
+      code: acc.code!,
+      name: acc.name,
+      type: acc.type || 'EXPENSE',
+      user_id: userId,
+      parent_account_id: acc.parent_account_id,
+    }))
+
+  // Combine user accounts with missing default accounts
+  const accounts = [...userAccounts, ...missingAccounts]
     .sort((a, b) => {
       // Handle undefined codes (HOME/VEHICLE parent accounts)
       if (!a.code || !b.code) return (a.code ? -1 : b.code ? 1 : 0)
@@ -840,14 +872,48 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
     })
   })
 
-  // Calculate balances (exclude vehicle expenses from regular accounts, they'll be calculated separately)
+  // Calculate balances (exclude home and vehicle expenses from regular accounts, they'll be calculated separately)
   db.transactions
     .filter(t => t.user_id === userId && !t.is_vehicle_expense)
     .forEach(t => {
       const account = db.chart_of_accounts.find(a => a.id === t.account_id)
       const tMonth = t.transaction_date.substring(0, 7)
       if (account && months.includes(tMonth) && accountData[account.id]) {
-        accountData[account.id][tMonth] = (accountData[account.id][tMonth] || 0) + t.amount
+        // Skip home business-use expenses (9945-*) - they're calculated from the deductible amount
+        if (account.code && account.code.startsWith('9945') && account.code.includes('-')) {
+          return // Skip, will be added separately as deductible amount
+        }
+
+        // For non-registered users: use total amount (includes tax)
+        // For registered users: use pretax amount (tax is separate)
+        const displayAmount = !gstRegistered
+          ? (t.amount || 0) + (t.gst_hst_amount || 0)  // Total for non-registered
+          : (t.amount || 0)  // Pretax for registered
+
+        accountData[account.id][tMonth] = (accountData[account.id][tMonth] || 0) + displayAmount
+      }
+    })
+
+  // Calculate home expenses separately (deductible amount only)
+  const homeExpensesByMonth: { [month: string]: number } = {}
+  months.forEach(m => {
+    homeExpensesByMonth[m] = 0
+  })
+
+  db.transactions
+    .filter(t => t.user_id === userId && !t.is_vehicle_expense)
+    .forEach(t => {
+      const account = db.chart_of_accounts.find(a => a.id === t.account_id)
+      const tMonth = t.transaction_date.substring(0, 7)
+      if (account && months.includes(tMonth) && account.code && account.code.startsWith('9945') && account.code.includes('-')) {
+        // This is a home business-use expense (codes like 9945-01, 9945-02, etc.)
+        // For non-registered users: use total amount (includes tax)
+        // For registered users: use pretax amount (tax is separate)
+        const baseAmount = !gstRegistered
+          ? (t.amount || 0) + (t.gst_hst_amount || 0)  // Total for non-registered
+          : (t.amount || 0)  // Pretax for registered
+        const deductibleAmount = baseAmount * (defaultHomeUsePercentage / 100)
+        homeExpensesByMonth[tMonth] = (homeExpensesByMonth[tMonth] || 0) + deductibleAmount
       }
     })
 
@@ -862,13 +928,19 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
     .forEach(t => {
       const tMonth = t.transaction_date.substring(0, 7)
       if (months.includes(tMonth)) {
-        const businessUsePercentage = t.business_use_percentage || 100
-        const deductibleAmount = t.amount * (businessUsePercentage / 100)
+        // Use the default vehicle business use percentage (set in Vehicle Expenses Report, stored in Supabase)
+        const businessUsePercentage = defaultVehicleUsePercentage
+        // For non-registered users: use total amount (includes tax)
+        // For registered users: use pretax amount (tax is separate)
+        const baseAmount = !gstRegistered
+          ? (t.amount || 0) + (t.gst_hst_amount || 0)  // Total for non-registered
+          : (t.amount || 0)  // Pretax for registered
+        const deductibleAmount = baseAmount * (businessUsePercentage / 100)
         vehicleExpensesByMonth[tMonth] = (vehicleExpensesByMonth[tMonth] || 0) + deductibleAmount
       }
     })
 
-  // Calculate totals per month (including vehicle expenses)
+  // Calculate totals per month (including home and vehicle expenses)
   const monthlyTotals: { [month: string]: { income: number; expenses: number; netIncome: number } } = {}
   months.forEach(m => {
     let income = 0
@@ -876,9 +948,13 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
     accounts.forEach(a => {
       const balance = accountData[a.id][m] || 0
       if (a.type === 'INCOME') income += balance
-      if (a.type === 'EXPENSE') expenses += balance
+      if (a.type === 'EXPENSE' && !(a.code && a.code.startsWith('9945') && a.code.includes('-'))) {
+        // Don't include home expense accounts (9945-*) as they're calculated from deductible amount
+        expenses += balance
+      }
     })
-    // Add motor vehicle expenses to total expenses
+    // Add home and vehicle deductible expenses to total expenses
+    expenses += homeExpensesByMonth[m] || 0
     expenses += vehicleExpensesByMonth[m] || 0
     monthlyTotals[m] = {
       income,
@@ -896,26 +972,34 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
   // Calculate grand totals
   let totalIncome = 0
   let totalExpenses = 0
+  let totalHomeExpenses = 0
   let totalVehicleExpenses = 0
 
   accounts.forEach(a => {
     const total = accountTotals[a.id] || 0
     if (a.type === 'INCOME') totalIncome += total
-    if (a.type === 'EXPENSE') totalExpenses += total
+    if (a.type === 'EXPENSE' && !(a.code && a.code.startsWith('9945') && a.code.includes('-'))) {
+      // Don't include home expense accounts (9945-*) as they're calculated from deductible amount
+      totalExpenses += total
+    }
   })
 
-  // Add motor vehicle expenses to total
+  // Add home and vehicle deductible expenses to total
   months.forEach(m => {
+    totalHomeExpenses += homeExpensesByMonth[m] || 0
     totalVehicleExpenses += vehicleExpensesByMonth[m] || 0
   })
-  totalExpenses += totalVehicleExpenses
+  totalExpenses += totalHomeExpenses + totalVehicleExpenses
 
-  // Build accounts list with motor vehicle expenses as a virtual account
-  // Exclude all motor vehicle accounts (5220-5229) from the display and show only the total
+  // Build accounts list with home and vehicle deductible expenses as virtual accounts
+  // Exclude home (9945-*) and vehicle (5220-5229) accounts from the display and show only totals
   const accountsList = accounts
     .filter(a => {
+      // Exclude Business-Use-of-Home accounts (codes 9945-*)
+      if (a.code && a.code.startsWith('9945') && a.code.includes('-')) {
+        return false
+      }
       // Exclude all Motor Vehicle Expense accounts (codes 5220-5229)
-      // We'll show only the total in a single line instead
       if (a.code && a.code >= '5220' && a.code <= '5229') {
         return false
       }
@@ -926,21 +1010,34 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
       type: a.type,
       name: a.name,
       code: a.code,
+      parent_account_id: a.parent_account_id,
       monthlyBalances: accountData[a.id],
       total: accountTotals[a.id] || 0,
     }))
 
-  // Add motor vehicle expenses as a single line item showing the total
-  if (totalVehicleExpenses > 0) {
-    accountsList.push({
-      id: 99999, // Virtual ID for motor vehicle expenses total
-      type: 'EXPENSE',
-      name: 'Total Vehicle Expenses',
-      code: 'MOTOR',
-      monthlyBalances: vehicleExpensesByMonth,
-      total: totalVehicleExpenses,
-    })
-  }
+  // Add home deductible expenses as a single line item showing the total
+  // Always show, even if $0, so all account categories are visible
+  accountsList.push({
+    id: 99998, // Virtual ID for home expenses total
+    type: 'EXPENSE',
+    name: 'Business-Use-of-Home Expenses',
+    code: 'HOME',
+    parent_account_id: undefined,
+    monthlyBalances: homeExpensesByMonth,
+    total: months.reduce((sum, m) => sum + (homeExpensesByMonth[m] || 0), 0),
+  })
+
+  // Add motor vehicle deductible expenses as a single line item showing the total
+  // Always show, even if $0, so all account categories are visible
+  accountsList.push({
+    id: 99999, // Virtual ID for motor vehicle expenses total
+    type: 'EXPENSE',
+    name: 'Total Vehicle Expenses',
+    code: 'MOTOR',
+    parent_account_id: undefined,
+    monthlyBalances: vehicleExpensesByMonth,
+    total: months.reduce((sum, m) => sum + (vehicleExpensesByMonth[m] || 0), 0),
+  })
 
   console.log('Income statement: Returning months array:', months)
   return {
@@ -1000,7 +1097,29 @@ export function getExpenseByCategoryData(userId: number, startMonth: string, end
     ? selectedCategories
     : allExpenseAccounts.map(a => a.id)
 
-  const accounts = allExpenseAccounts.filter(a => categoriesToShow.includes(a.id))
+  // For selected parent categories, also include their children
+  let accountsToInclude: number[] = []
+  categoriesToShow.forEach(selectedId => {
+    accountsToInclude.push(selectedId)
+    // Find all child accounts (accounts whose code starts with parent's code + '-')
+    const selectedAccount = allExpenseAccounts.find(a => a.id === selectedId)
+    if (selectedAccount && selectedAccount.code) {
+      const childAccounts = allExpenseAccounts.filter(a =>
+        a.code && a.code.startsWith(selectedAccount.code + '-')
+      )
+      childAccounts.forEach(child => {
+        if (!accountsToInclude.includes(child.id)) {
+          accountsToInclude.push(child.id)
+        }
+      })
+    }
+  })
+
+  const accounts = allExpenseAccounts.filter(a => accountsToInclude.includes(a.id))
+
+  // Get user's GST registration status
+  const user = db.users.find(u => u.id === userId)
+  const gstRegistered = user?.gst_registered ?? true // Default to registered if not found
 
   // Initialize data structure
   const categoryData: { [accountId: number]: { [month: string]: number } } = {}
@@ -1013,14 +1132,38 @@ export function getExpenseByCategoryData(userId: number, startMonth: string, end
 
   // Calculate balances from transactions
   db.transactions
-    .filter(t => t.user_id === userId && !t.is_vehicle_expense)
+    .filter(t => t.user_id === userId)
     .forEach(t => {
       const account = db.chart_of_accounts.find(a => a.id === t.account_id)
       const tMonth = t.transaction_date.substring(0, 7)
       if (account && months.includes(tMonth) && categoryData[account.id]) {
-        categoryData[account.id][tMonth] = (categoryData[account.id][tMonth] || 0) + t.amount
+        // For non-registered users: use total amount (includes tax)
+        // For registered users: use pretax amount (tax is separate)
+        const displayAmount = !gstRegistered
+          ? (t.amount || 0) + (t.gst_hst_amount || 0)  // Total for non-registered
+          : (t.amount || 0)  // Pretax for registered
+        categoryData[account.id][tMonth] = (categoryData[account.id][tMonth] || 0) + displayAmount
       }
     })
+
+  // Roll up child account totals to parent accounts
+  accounts.forEach(parentAccount => {
+    if (parentAccount.code) {
+      const childAccounts = accounts.filter(a =>
+        a.code && a.code.startsWith(parentAccount.code + '-')
+      )
+      if (childAccounts.length > 0) {
+        // For each month, sum child totals into parent
+        months.forEach(m => {
+          let childSum = 0
+          childAccounts.forEach(child => {
+            childSum += categoryData[child.id][m] || 0
+          })
+          categoryData[parentAccount.id][m] = childSum
+        })
+      }
+    }
+  })
 
   // Calculate monthly totals per month
   const monthlyTotals: { [month: string]: number } = {}
@@ -2131,32 +2274,43 @@ export function getUnprocessedWebhooks() {
 }
 
 // Vehicle Baseline queries (Mileage tracking for CRA deductions)
-export function getVehicleBaseline(userId: number) {
+export function getVehicleBaseline(userId: number, year?: number) {
   const db = getDb()
-  return db.vehicle_baseline.find(v => v.user_id === userId)
+  if (year) {
+    // Get baseline for specific year
+    return db.vehicle_baseline.find(v => v.user_id === userId && v.year === year)
+  }
+  // Fallback: return most recent baseline
+  return db.vehicle_baseline
+    .filter(v => v.user_id === userId)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
 }
 
 export function setVehicleBaseline(
   userId: number,
   odometerReading: number,
+  year?: number,
   notes?: string,
   setupDate?: string
 ) {
   const db = getDb()
-  const existing = db.vehicle_baseline.find(v => v.user_id === userId)
+  const yearToUse = year || new Date().getFullYear()
   const dateToUse = setupDate || new Date().toISOString().split('T')[0]
 
+  const existing = db.vehicle_baseline.find(v => v.user_id === userId && v.year === yearToUse)
+
   if (existing) {
-    // Update existing baseline
+    // Update existing baseline for this year
     existing.odometer_reading = odometerReading
     if (notes !== undefined) existing.notes = notes
     existing.setup_date = dateToUse
   } else {
-    // Create new baseline
+    // Create new baseline for this year
     const id = db.nextVehicleBaselineId++
     db.vehicle_baseline.push({
       id,
       user_id: userId,
+      year: yearToUse,
       odometer_reading: odometerReading,
       setup_date: dateToUse,
       notes,

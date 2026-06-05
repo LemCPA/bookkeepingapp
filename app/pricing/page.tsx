@@ -129,7 +129,7 @@ export default function PricingPage() {
                 <ul className="space-y-2 text-slate-700 text-sm">
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Receipt scanning (unlimited)</span>
+                    <span>Receipt scanning</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
@@ -142,18 +142,6 @@ export default function PricingPage() {
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
                     <span>Basic reports</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-red-500 mr-3 font-bold">✕</span>
-                    <span>Advanced reports</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-red-500 mr-3 font-bold">✕</span>
-                    <span>Bank reconciliation</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-red-500 mr-3 font-bold">✕</span>
-                    <span>Invoice management</span>
                   </li>
                 </ul>
               </div>
@@ -183,7 +171,7 @@ export default function PricingPage() {
               </div>
 
               <div className="mb-4">
-                <p className="text-slate-600 text-sm mb-2">For growing businesses</p>
+                <p className="text-slate-600 text-sm mb-2">Most popular</p>
               </div>
 
               {/* Price */}
@@ -215,27 +203,15 @@ export default function PricingPage() {
                 <ul className="space-y-2 text-slate-700 text-sm">
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Advanced financial reports</span>
+                    <span>GST/HST reports</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Bank reconciliation</span>
+                    <span>Income reports</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Tax summary (GST/HST ready)</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Invoice management</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-red-500 mr-3 font-bold">✕</span>
-                    <span>Team members access</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-red-500 mr-3 font-bold">✕</span>
-                    <span>Advanced analytics</span>
+                    <span>Home & vehicle expense tracking</span>
                   </li>
                 </ul>
               </div>
@@ -259,16 +235,16 @@ export default function PricingPage() {
               </div>
 
               <div className="mb-4">
-                <p className="text-slate-600 text-sm mb-2">For established teams</p>
+                <p className="text-slate-600 text-sm mb-2">For bigger operations</p>
               </div>
 
               {/* Price */}
               <div className="mb-6">
                 <p className="text-4xl font-bold text-slate-900">
-                  $20<span className="text-lg text-slate-600">/month</span>
+                  $29<span className="text-lg text-slate-600">/month</span>
                 </p>
                 <p className="text-slate-600 text-sm mt-2">
-                  150 transactions per month, resets monthly
+                  Unlimited transactions per month
                 </p>
               </div>
 
@@ -291,19 +267,7 @@ export default function PricingPage() {
                 <ul className="space-y-2 text-slate-700 text-sm">
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Team members access</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Advanced analytics</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Priority support</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>150 transactions/month</span>
+                    <span>Mileage tracking (CRA-compliant)</span>
                   </li>
                 </ul>
               </div>

@@ -28,11 +28,9 @@ interface InvoicingSummary {
 }
 
 export default function InvoicingPage() {
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [invoices, setInvoices] = useState<InvoiceTransaction[]>([])
   const [summary, setSummary] = useState<InvoicingSummary | null>(null)
   const [loading, setLoading] = useState(true)
-  const [uploadingFile, setUploadingFile] = useState(false)
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'sent' | 'overdue' | 'paid'>('all')
   const [dateRange, setDateRange] = useState<'all' | 'thisMonth' | 'last3Months' | 'thisYear' | 'custom'>('all')
   const [customFromDate, setCustomFromDate] = useState('')
@@ -87,57 +85,6 @@ export default function InvoicingPage() {
     }
   }
 
-  async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    // Check file type
-    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
-    if (!validTypes.includes(file.type)) {
-      alert('Please upload a PDF or image file (PDF, JPG, PNG)')
-      return
-    }
-
-    setUploadingFile(true)
-    try {
-      const formData = new FormData()
-      formData.append('files', file)
-
-      const authenticatedFetch = createAuthenticatedFetch()
-      const response = await authenticatedFetch('/api/bulk-scan-documents', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const data = await response.json()
-
-      if (response.ok || response.status === 207) {
-        // 200 = full success, 207 = partial success
-        const message = data.message || `Processed ${data.analyzedCount} document(s)`
-        if (data.errors && data.errors.length > 0) {
-          alert(`${message}\n\nErrors:\n${data.errors.join('\n')}`)
-        } else {
-          alert(`${message}`)
-        }
-        // Refresh invoices list if any were processed
-        if (data.analyzedCount > 0) {
-          fetchInvoices()
-        }
-      } else {
-        const errorMsg = data.errors ? data.errors.join('\n') : 'Failed to upload invoice'
-        alert(`Error: ${data.message || errorMsg}`)
-      }
-    } catch (error) {
-      console.error('Error uploading file:', error)
-      alert('Error uploading file. Please try again.')
-    } finally {
-      setUploadingFile(false)
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    }
-  }
 
   const getStatusBadge = (invoice: InvoiceTransaction) => {
     if (invoice.reconciliation_status === 'CLEARED') {
@@ -194,20 +141,6 @@ export default function InvoicingPage() {
             >
               + New Invoice
             </Link>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingFile}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base"
-            >
-              {uploadingFile ? '⏳ Uploading...' : '⬆ Upload Invoice'}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
           </div>
         </div>
       </div>

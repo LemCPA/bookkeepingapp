@@ -3,7 +3,7 @@ import { getDb, saveDb } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
-import { supabase, getUserFromSupabase } from '@/lib/supabase-db'
+import { supabase, getUserFromSupabase, getBusinessUsePercentagesFromSupabase } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,6 +51,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // Fetch business use percentages from Supabase
+    const percentages = await getBusinessUsePercentagesFromSupabase(userId)
+
     // Convert stored numeric rate to province code for backward compatibility
     const rateToProvince: { [key: number]: string } = {
       5: 'ab',   // Default to Alberta for 5% GST
@@ -74,6 +77,8 @@ export async function GET(request: NextRequest) {
       postal_code: user.postal_code || '',
       phone: user.phone || '',
       business_email: user.business_email || '',
+      home_business_use_percentage: percentages?.home_business_use_percentage ?? 100,
+      vehicle_business_use_percentage: percentages?.vehicle_business_use_percentage ?? 100,
     })
   } catch (error: any) {
     console.error('Error fetching user settings:', error)
@@ -131,6 +136,8 @@ export async function POST(request: NextRequest) {
       postal_code,
       phone,
       business_email,
+      home_business_use_percentage,
+      vehicle_business_use_percentage,
     } = body
 
     const db = getDb()
@@ -145,7 +152,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid GST/HST rate. Must be 0, 5, 13, or 15.' }, { status: 400 })
     }
 
-    // Prepare update object
+    // Validate percentages if provided
+    if (home_business_use_percentage !== undefined) {
+      if (!Number.isInteger(home_business_use_percentage) || home_business_use_percentage < 0 || home_business_use_percentage > 100) {
+        return NextResponse.json({ error: 'Home business use percentage must be an integer between 0 and 100.' }, { status: 400 })
+      }
+    }
+    if (vehicle_business_use_percentage !== undefined) {
+      if (!Number.isInteger(vehicle_business_use_percentage) || vehicle_business_use_percentage < 0 || vehicle_business_use_percentage > 100) {
+        return NextResponse.json({ error: 'Vehicle business use percentage must be an integer between 0 and 100.' }, { status: 400 })
+      }
+    }
+
+    // Prepare update object for JSON database
     const updateData: any = {}
     if (default_gst_hst_rate !== undefined) updateData.default_gst_hst_rate = default_gst_hst_rate
     if (default_gst_hst_province !== undefined) updateData.default_gst_hst_province = default_gst_hst_province
@@ -158,6 +177,8 @@ export async function POST(request: NextRequest) {
     if (postal_code !== undefined) updateData.postal_code = postal_code
     if (phone !== undefined) updateData.phone = phone
     if (business_email !== undefined) updateData.business_email = business_email
+    if (home_business_use_percentage !== undefined) updateData.home_business_use_percentage = home_business_use_percentage
+    if (vehicle_business_use_percentage !== undefined) updateData.vehicle_business_use_percentage = vehicle_business_use_percentage
 
     // Always update JSON database (reliable, works offline)
     Object.assign(user, updateData)
@@ -187,6 +208,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Fetch updated percentages
+    const updatedPercentages = await getBusinessUsePercentagesFromSupabase(userId)
+
     return NextResponse.json({
       success: true,
       default_gst_hst_rate: user.default_gst_hst_rate,
@@ -200,6 +224,8 @@ export async function POST(request: NextRequest) {
       postal_code: user.postal_code,
       phone: user.phone,
       business_email: user.business_email,
+      home_business_use_percentage: updatedPercentages?.home_business_use_percentage ?? 100,
+      vehicle_business_use_percentage: updatedPercentages?.vehicle_business_use_percentage ?? 100,
     })
   } catch (error: any) {
     console.error('Error updating user settings:', error)

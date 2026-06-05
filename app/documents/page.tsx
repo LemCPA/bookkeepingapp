@@ -32,6 +32,7 @@ export default function DocumentsPage() {
   const [error, setError] = useState('')
   const [gstHstAmount, setGstHstAmount] = useState<number>(0)
   const [gstHstRate, setGstHstRate] = useState<number>(0)
+  const [selectedAccountId, setSelectedAccountId] = useState<number>(0)
 
   useEffect(() => {
     // Load PDF.js from CDN and set up
@@ -51,7 +52,14 @@ export default function DocumentsPage() {
         if (!r.ok) throw new Error('Failed to fetch accounts')
         return r.json()
       })
-      .then(setAccounts)
+      .then((loadedAccounts) => {
+        setAccounts(loadedAccounts)
+        // Set default account to first expense account
+        const defaultAccount = loadedAccounts.find((a: ChartOfAccount) => a.type === 'EXPENSE')
+        if (defaultAccount) {
+          setSelectedAccountId(defaultAccount.id)
+        }
+      })
       .catch(() => setAccounts([]))
   }, [])
 
@@ -68,20 +76,26 @@ export default function DocumentsPage() {
       setProcessingStatus(`Converting PDF page ${pageNum} of ${Math.min(pdf.numPages, 3)}...`)
 
       const page = await pdf.getPage(pageNum)
-      const viewport = page.getViewport({ scale: 2 })
+      // Use 5x scale for maximum clarity - makes text large enough for Claude Vision to read reliably
+      const viewport = page.getViewport({ scale: 5 })
 
       const canvas = document.createElement('canvas')
       canvas.width = viewport.width
       canvas.height = viewport.height
 
       const context = canvas.getContext('2d')!
+      // Fill with white background first to ensure clear contrast
+      context.fillStyle = 'white'
+      context.fillRect(0, 0, canvas.width, canvas.height)
+
       await page.render({
         canvasContext: context,
         viewport: viewport,
       }).promise
 
+      // Use PNG format (better for text/numbers) instead of JPEG for improved OCR accuracy
       const blob = await new Promise<Blob | null>(resolve => {
-        canvas.toBlob(resolve, 'image/jpeg', 0.9)
+        canvas.toBlob(resolve, 'image/png')
       })
       if (blob) {
         images.push(blob)
@@ -93,7 +107,7 @@ export default function DocumentsPage() {
 
   async function analyzeImage(imageBlob: Blob, pageNum: number): Promise<ExtractedData> {
     const formData = new FormData()
-    formData.append('file', imageBlob, `page-${pageNum}.jpg`)
+    formData.append('file', imageBlob, `page-${pageNum}.png`)
 
     const authenticatedFetch = createAuthenticatedFetch()
     const response = await authenticatedFetch('/api/analyze-document', {
@@ -180,25 +194,18 @@ export default function DocumentsPage() {
   async function createTransaction() {
     if (!extractedData) return
 
-    try {
-      // Find the account based on extracted account type
-      let accountId = accounts[0]?.id
-      if (extractedData.account_type === 'EXPENSE') {
-        // Find an expense account
-        const expenseAccount = accounts.find(a => a.type === 'EXPENSE')
-        if (expenseAccount) accountId = expenseAccount.id
-      } else if (extractedData.account_type === 'ASSET') {
-        // Find an asset account
-        const assetAccount = accounts.find(a => a.type === 'ASSET')
-        if (assetAccount) accountId = assetAccount.id
-      }
+    if (!selectedAccountId) {
+      setError('Please select an account')
+      return
+    }
 
+    try {
       const authenticatedFetch = createAuthenticatedFetch()
       const response = await authenticatedFetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          account_id: accountId,
+          account_id: selectedAccountId,
           transaction_date: extractedData.date || new Date().toISOString().split('T')[0],
           amount: extractedData.amount || 0,
           description: extractedData.description || extractedData.vendor_name || 'Document entry',
@@ -213,6 +220,7 @@ export default function DocumentsPage() {
       alert('Transaction created successfully!')
       setFile(null)
       setExtractedData(null)
+      setSelectedAccountId(0)
     } catch (err: any) {
       setError(err.message || 'Failed to create transaction')
     }
@@ -262,6 +270,24 @@ export default function DocumentsPage() {
             <h2 className="text-xl font-bold">Extracted Data</h2>
 
             <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Account <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedAccountId}
+                  onChange={(e) => setSelectedAccountId(parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={0}>Select an account...</option>
+                  {accounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.code} - {account.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Date</label>
                 <p className="text-gray-900">{extractedData.date || 'Not found'}</p>
@@ -324,7 +350,8 @@ export default function DocumentsPage() {
 
             <button
               onClick={createTransaction}
-              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+              disabled={!selectedAccountId}
+              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Create Transaction
             </button>
@@ -335,6 +362,7 @@ export default function DocumentsPage() {
                 setFile(null)
                 setGstHstAmount(0)
                 setGstHstRate(0)
+                setSelectedAccountId(0)
               }}
               className="w-full bg-gray-300 text-gray-800 py-2 rounded-lg hover:bg-gray-400"
             >

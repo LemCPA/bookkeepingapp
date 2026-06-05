@@ -276,7 +276,7 @@ function NewTransactionContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-red-600 mb-1">Amount *</label>
+            <label className="block text-sm font-medium text-red-600 mb-1">Amount Before Tax *</label>
             <input
               type="number"
               required
@@ -299,7 +299,7 @@ function NewTransactionContent() {
                 onChange={() => setFormData({ ...formData, taxIncluded: false })}
                 className="w-4 h-4 text-blue-600"
               />
-              <span className="ml-3 font-medium text-gray-900">Subtotal (tax added on top)</span>
+              <span className="ml-3 font-medium text-gray-900">Pretax Amount (tax added on top)</span>
               <span className="ml-auto text-sm text-gray-500">e.g., $100 + $13 tax = $113</span>
             </label>
             <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
@@ -487,7 +487,7 @@ function NewTransactionContent() {
               return (
                 <div className="text-sm text-blue-800 space-y-1">
                   <div className="flex justify-between">
-                    <span>Subtotal (before tax):</span>
+                    <span>Pretax Amount:</span>
                     <span className="font-medium">${baseAmount.toFixed(2)}</span>
                   </div>
                   {totalRate > 0 && (

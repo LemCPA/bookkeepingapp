@@ -282,7 +282,7 @@ function LandingPage() {
               MOST POPULAR
             </div>
             <h3 className="text-2xl font-bold mb-2">Starter</h3>
-            <p className="mb-6 opacity-90">Most popular after trial ends</p>
+            <p className="mb-6 opacity-90">Most popular for sole proprietors</p>
             <div className="text-4xl font-bold mb-8">$9<span className="text-lg opacity-90">/month</span></div>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
@@ -291,15 +291,15 @@ function LandingPage() {
               </li>
               <li className="flex items-start">
                 <span className="text-amber-400 mr-3 text-xl">✓</span>
-                <span>Advanced financial reports</span>
+                <span>Transaction tracking</span>
               </li>
               <li className="flex items-start">
                 <span className="text-amber-400 mr-3 text-xl">✓</span>
-                <span>GST/HST report</span>
+                <span>GST/HST tracking</span>
               </li>
               <li className="flex items-start">
                 <span className="text-amber-400 mr-3 text-xl">✓</span>
-                <span>Invoice management</span>
+                <span>Income reports</span>
               </li>
             </ul>
             <Link
@@ -313,7 +313,7 @@ function LandingPage() {
           {/* Professional Plan */}
           <div className="bg-white rounded-lg shadow p-8 border border-gray-200">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
-            <p className="text-gray-600 mb-6">For growing businesses & teams</p>
+            <p className="text-gray-600 mb-6">For bigger operations</p>
             <div className="text-4xl font-bold text-gray-900 mb-8">$29<span className="text-lg text-gray-600">/month</span></div>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
@@ -322,7 +322,11 @@ function LandingPage() {
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 text-xl">✓</span>
-                <span className="text-gray-700">Expense analysis & trends</span>
+                <span className="text-gray-700">Mileage tracking (CRA-compliant)</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Home & vehicle expense tracking</span>
               </li>
             </ul>
             <Link

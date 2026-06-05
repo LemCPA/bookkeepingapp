@@ -222,7 +222,7 @@ export default function EditTransactionPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-red-600 mb-1">Amount <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-red-600 mb-1">Amount Before Tax <span className="text-red-500">*</span></label>
             <input
               type="number"
               step="0.01"

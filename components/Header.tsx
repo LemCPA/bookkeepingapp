@@ -20,10 +20,10 @@ const authenticatedNavItems: NavItem[] = [
     { href: '/reports/income-statement', label: 'Income Statement' },
     { href: '/reports/expense-categories', label: 'Expenses by Category' },
     { href: '/reports/vehicle-expenses', label: 'Vehicle Expenses' },
+    { href: '/reports/home-expenses', label: 'Home Expenses' },
     { href: '/reports/gst-filing', label: 'GST Filing' },
   ]},
   { href: '/mileage', label: 'Mileage' },
-  { href: '/recurring-transactions', label: 'Recurring' },
   { label: 'Settings', icon: '⚙️', submenu: [
     { href: '/settings/profile', label: 'Business Profile' },
     { href: '/settings/gst', label: 'Default GST/HST' },
@@ -366,7 +366,7 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="bg-blue-700 border-t border-blue-500 fixed top-[80px] left-0 right-0 bottom-0 w-full z-[9999] overflow-y-auto" style={{ backgroundColor: '#1e40af' }}>
+        <div className="bg-blue-700 border-t border-blue-500 fixed top-[80px] left-0 right-0 w-full z-[9999] max-h-[calc(100vh-80px)] overflow-y-auto" style={{ backgroundColor: '#1e40af' }}>
           <div className="w-full px-3 py-3 flex flex-wrap gap-2 bg-blue-700" style={{ backgroundColor: '#1e40af' }}>
             {isAuthenticated ? (
               authenticatedNavItems.map((item) => (

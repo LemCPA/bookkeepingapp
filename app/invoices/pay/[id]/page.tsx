@@ -134,7 +134,7 @@ export default function InvoicePaymentPage() {
 
           <div className="space-y-4 mb-6">
             <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
+              <span>Pretax Amount</span>
               <span>$0.00</span>
             </div>
             <div className="flex justify-between text-gray-600">

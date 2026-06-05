@@ -4,6 +4,18 @@ import React, { useEffect, useState } from 'react'
 import { createAuthenticatedFetch } from '@/lib/auth'
 import { formatCurrency } from '@/lib/utils'
 
+// Format currency without decimals and no dollar sign (for monthly columns)
+const formatMonthAmount = (value: number) => {
+  const formatted = formatCurrency(value)
+  return formatted.replace(/\$/, '').replace(/\.\d+/, '').trim()
+}
+
+// Format currency without decimals but with dollar sign (for totals)
+const formatTotalAmount = (value: number) => {
+  const formatted = formatCurrency(value)
+  return formatted.replace(/\.\d+/, '')
+}
+
 interface ExpenseCategory {
   id: number
   type: string
@@ -22,14 +34,73 @@ interface ExpenseCategoriesData {
 
 export default function ExpenseCategoriesPage() {
   const currentYear = new Date().getFullYear()
-  const [year, setYear] = useState(currentYear.toString())
-  const [startMonth, setStartMonth] = useState(`${currentYear}-01`)
-  const [endMonth, setEndMonth] = useState(`${currentYear}-12`)
+
+  const [year, setYear] = useState<string>(() => {
+    try {
+      return localStorage.getItem('expenseCategoriesYear') || currentYear.toString()
+    } catch {
+      return currentYear.toString()
+    }
+  })
+
+  const [startMonth, setStartMonth] = useState<string>(() => {
+    try {
+      return localStorage.getItem('expenseCategoriesStartMonth') || `${currentYear}-01`
+    } catch {
+      return `${currentYear}-01`
+    }
+  })
+
+  const [endMonth, setEndMonth] = useState<string>(() => {
+    try {
+      return localStorage.getItem('expenseCategoriesEndMonth') || `${currentYear}-12`
+    } catch {
+      return `${currentYear}-12`
+    }
+  })
+
   const [data, setData] = useState<ExpenseCategoriesData | null>(null)
   const [allCategories, setAllCategories] = useState<ExpenseCategory[]>([])
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([])
+
+  const [selectedCategories, setSelectedCategories] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('expenseCategoriesSelected')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Save year to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('expenseCategoriesYear', year)
+    } catch (error) {
+      console.error('Failed to save year to localStorage:', error)
+    }
+  }, [year])
+
+  // Save start/end months to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('expenseCategoriesStartMonth', startMonth)
+      localStorage.setItem('expenseCategoriesEndMonth', endMonth)
+    } catch (error) {
+      console.error('Failed to save months to localStorage:', error)
+    }
+  }, [startMonth, endMonth])
+
+  // Save selected categories to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('expenseCategoriesSelected', JSON.stringify(selectedCategories))
+    } catch (error) {
+      console.error('Failed to save selected categories to localStorage:', error)
+    }
+  }, [selectedCategories])
 
   // Load categories
   useEffect(() => {
@@ -235,27 +306,27 @@ export default function ExpenseCategoriesPage() {
           {/* Right Content - Expense Report */}
           <div className="lg:col-span-3">
             {data && (
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {/* Header */}
-                <div className="bg-white rounded-lg shadow-md p-6 text-center">
-                  <h2 className="text-lg font-bold">Expenses by Category</h2>
+                <div className="bg-white rounded-lg shadow-md p-4 text-center">
+                  <h2 className="text-lg font-bold mb-1">Expenses by Category</h2>
                   <p className="text-sm text-gray-600">
                     {startMonth} to {endMonth}
                   </p>
                 </div>
 
                 {/* Table */}
-                <div className="bg-white rounded-lg shadow-md p-6 overflow-x-auto">
+                <div className="bg-white rounded-lg shadow-md p-4 overflow-x-auto">
                   <table className="w-full border-collapse text-sm">
                     <thead>
                       <tr className="border-b-2 border-gray-800">
-                        <th className="text-left py-2 px-2 font-bold text-gray-800">Category</th>
+                        <th className="text-left py-1 px-2 font-bold text-gray-800">Category</th>
                         {data.months.map(month => (
-                          <th key={month} className="text-right py-2 px-2 font-bold text-gray-800 whitespace-nowrap">
+                          <th key={month} className="text-right py-1 px-2 font-bold text-gray-800 whitespace-nowrap">
                             {getMonthName(month)}
                           </th>
                         ))}
-                        <th className="text-right py-2 px-2 font-bold text-gray-800 border-l-2 border-gray-400">Total</th>
+                        <th className="text-right py-1 px-2 font-bold text-gray-800 border-l-2 border-gray-400">Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -268,17 +339,17 @@ export default function ExpenseCategoriesPage() {
                       ) : (
                         <>
                           {data.categories.map((category, idx) => (
-                            <tr key={category.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                              <td className="py-2 px-2 text-gray-800 font-medium">
+                            <tr key={category.id} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>
+                              <td className="py-1 px-2 text-gray-800 font-medium">
                                 {category.name}
                               </td>
                               {data.months.map(month => (
-                                <td key={month} className="py-2 px-2 text-right text-gray-700">
-                                  {formatCurrency(category.monthlyBalances[month] || 0)}
+                                <td key={month} className="py-1 px-2 text-right text-gray-700">
+                                  {formatMonthAmount(category.monthlyBalances[month] || 0)}
                                 </td>
                               ))}
-                              <td className="py-2 px-2 text-right font-semibold text-gray-900 border-l-2 border-gray-400">
-                                {formatCurrency(category.total)}
+                              <td className="py-1 px-2 text-right font-semibold text-gray-900 border-l-2 border-gray-400">
+                                {formatTotalAmount(category.total)}
                               </td>
                             </tr>
                           ))}
@@ -288,11 +359,11 @@ export default function ExpenseCategoriesPage() {
                             <td className="py-3 px-2">Monthly Total</td>
                             {data.months.map(month => (
                               <td key={month} className="py-3 px-2 text-right">
-                                {formatCurrency(data.monthlyTotals[month] || 0)}
+                                {formatMonthAmount(data.monthlyTotals[month] || 0)}
                               </td>
                             ))}
                             <td className="py-3 px-2 text-right border-l-2 border-gray-400">
-                              {formatCurrency(data.grandTotal)}
+                              {formatTotalAmount(data.grandTotal)}
                             </td>
                           </tr>
                         </>

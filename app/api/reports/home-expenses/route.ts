@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getDb, saveDb } from '@/lib/db'
+import { getDb } from '@/lib/db'
 import { getBusinessUsePercentagesFromSupabase } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
@@ -20,28 +20,31 @@ export async function GET(request: NextRequest) {
     const user = db.users.find(u => u.id === userId)
     const gstRegistered = user?.gst_registered ?? true // Default to registered if not found
 
-    // Filter vehicle expenses for the user within date range
-    const vehicleTransactions = db.transactions.filter((t) => {
-      if (t.user_id !== userId || !t.is_vehicle_expense) return false
+    // Get all Business-Use-of-Home accounts for this user (code starting with 9945)
+    const homeAccounts = db.chart_of_accounts
+      .filter((a) => a.user_id === userId && a.code && a.code.startsWith('9945') && a.code.includes('-'))
+      .sort((a, b) => (a.code || '').localeCompare(b.code || ''))
+
+    const homeAccountIds = homeAccounts.map((a) => a.id)
+
+    // Filter home expenses for the user within date range
+    const homeTransactions = db.transactions.filter((t) => {
+      if (t.user_id !== userId) return false
+      if (!t.account_id || !homeAccountIds.includes(t.account_id)) return false
 
       const txnMonth = t.transaction_date.slice(0, 7)
       return txnMonth >= startMonth && txnMonth <= endMonth
     })
 
-    // Get all vehicle expense accounts (9281-*)
-    const vehicleAccounts = db.chart_of_accounts
-      .filter((a) => a.user_id === userId && a.code && a.code.startsWith('9281') && a.code.includes('-'))
-      .sort((a, b) => (a.code || '').localeCompare(b.code || ''))
-
     // Calculate totals and GST by account
     const accountTotals: { [accountId: number]: number } = {}
     const accountGst: { [accountId: number]: number } = {}
-    vehicleAccounts.forEach((account) => {
+    homeAccounts.forEach((account) => {
       accountTotals[account.id] = 0
       accountGst[account.id] = 0
     })
 
-    vehicleTransactions.forEach((t) => {
+    homeTransactions.forEach((t) => {
       if (t.account_id && accountTotals.hasOwnProperty(t.account_id)) {
         // For non-registered users: use total amount (includes tax)
         // For registered users: use pretax amount (tax is separate)
@@ -53,15 +56,15 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Get vehicle business use percentage from query parameter (client localStorage) or fall back to Supabase
-    let defaultVehicleUsePercentage = parseInt(searchParams.get('vehiclePercentage') || '0')
-    if (!defaultVehicleUsePercentage) {
+    // Get home business use percentage from query parameter (client localStorage) or fall back to Supabase
+    let homeUsePercentage = parseInt(searchParams.get('homePercentage') || '0')
+    if (!homeUsePercentage) {
       const percentages = await getBusinessUsePercentagesFromSupabase(userId)
-      defaultVehicleUsePercentage = percentages?.vehicle_business_use_percentage ?? 100
+      homeUsePercentage = percentages?.home_business_use_percentage ?? 100
     }
 
-    // Calculate totals
-    const totalVehicleExpenses = vehicleTransactions.reduce((sum, t) => {
+    // Calculate total home expenses
+    const totalHomeExpenses = homeTransactions.reduce((sum, t) => {
       // For non-registered users: use total amount (includes tax)
       // For registered users: use pretax amount (tax is separate)
       const displayAmount = !gstRegistered
@@ -69,34 +72,27 @@ export async function GET(request: NextRequest) {
         : (t.amount || 0)  // Pretax for registered
       return sum + displayAmount
     }, 0)
-    const totalGst = vehicleTransactions.reduce((sum, t) => sum + (t.gst_hst_amount || 0), 0)
+    const totalGst = homeTransactions.reduce((sum, t) => sum + (t.gst_hst_amount || 0), 0)
 
-    // Calculate deductible amount using per-transaction percentages (if available)
-    // Falls back to default percentage for transactions without one
-    let totalDeductibleAmount = 0
-    let totalDeductibleGst = 0
+    // For non-registered: totalHomeExpenses is already the full amount (includes tax)
+    // For registered: need to add tax to get the full amount for display
+    const totalWithGst = gstRegistered ? totalHomeExpenses + totalGst : totalHomeExpenses
 
-    vehicleTransactions.forEach((t) => {
-      // Use transaction-level percentage if available, otherwise use default
-      const txPercentage = (t.business_use_percentage ?? defaultVehicleUsePercentage) / 100
-      // For non-registered users: use total amount (includes tax)
-      // For registered users: use pretax amount (tax is separate)
-      const baseAmount = !gstRegistered
-        ? (t.amount || 0) + (t.gst_hst_amount || 0)  // Total for non-registered
-        : (t.amount || 0)  // Pretax for registered
-      totalDeductibleAmount += baseAmount * txPercentage
-      totalDeductibleGst += (t.gst_hst_amount || 0) * txPercentage
-    })
+    // Apply business use percentage to calculate deductible amounts
+    // For registered: deductible is based on pretax amount
+    // For non-registered: deductible is based on total (which already includes tax)
+    const deductibleAmount = totalHomeExpenses * (homeUsePercentage / 100)
+    const deductibleGst = totalGst * (homeUsePercentage / 100)
 
     // Build category breakdown with GST
-    const categoryBreakdown = vehicleAccounts.map((account) => {
+    const categoryBreakdown = homeAccounts.map((account) => {
       const amount = accountTotals[account.id] || 0
       // For non-registered users: amount already includes tax, so don't add it again
       // For registered users: amount is pretax, so add tax separately
       const gst = gstRegistered ? (accountGst[account.id] || 0) : 0
       const total = amount + gst
-      // Apply default percentage to each category
-      const deductibleCategoryTotal = total * (defaultVehicleUsePercentage / 100)
+      // Apply business use percentage to each category
+      const deductibleCategoryTotal = total * (homeUsePercentage / 100)
       return {
         id: account.id,
         name: account.name || '',
@@ -108,34 +104,30 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({
-      totalVehicleExpenses,
+      totalHomeExpenses,
       totalGst,
-      businessUsePercentage: defaultVehicleUsePercentage,
-      deductibleAmount: totalDeductibleAmount,
-      deductibleGst: totalDeductibleGst,
+      totalWithGst,
+      homeUsePercentage,
+      deductibleAmount,
+      deductibleGst,
       categoryBreakdown,
-      transactions: vehicleTransactions.map((t) => {
+      transactions: homeTransactions.map((t) => {
         const account = db.chart_of_accounts.find(a => a.id === t.account_id)
         const accountName = account?.name || ''
-        // Strip "Motor Vehicle Expenses - " prefix from account name
-        const cleanAccountName = accountName.startsWith('Motor Vehicle Expenses - ')
-          ? accountName.replace('Motor Vehicle Expenses - ', '')
-          : accountName
         return {
           id: t.id,
           transaction_date: t.transaction_date,
           description: t.description,
           amount: t.amount,
-          business_use_percentage: t.business_use_percentage,
-          account_name: cleanAccountName,
+          account_name: accountName,
           gst_hst_amount: t.gst_hst_amount || 0,
         }
       }),
     })
   } catch (error: any) {
-    console.error('[VEHICLE EXPENSES API]', error)
+    console.error('[HOME EXPENSES API]', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch vehicle expenses' },
+      { error: error.message || 'Failed to fetch home expenses' },
       { status: 500 }
     )
   }

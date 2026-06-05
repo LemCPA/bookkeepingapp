@@ -8,6 +8,24 @@
       "gst_registered": true,
       "gst_number": "123456789RT0001",
       "created_at": "2026-06-02T19:37:32.351Z"
+    },
+    {
+      "id": 2,
+      "email": "ted@lemcpa.ca",
+      "password_hash": "$2a$10$hguCk1AidyfXZ5J9j.8LNus1t80UscYRNVTjO9VVc1hliQgh2GeK2",
+      "name": "Ted Lem",
+      "email_verified": true,
+      "gst_registered": true,
+      "default_gst_hst_rate": 13,
+      "created_at": "2026-06-03T02:31:21.775Z",
+      "gst_number": "123456889RT0001",
+      "business_name": "ABC",
+      "address_street": "4936 Yonge St",
+      "city": "North York",
+      "province": "ON",
+      "postal_code": "M2N 6S3",
+      "phone": "6473251833",
+      "business_email": "Ted_Lem@outlook.com"
     }
   ],
   "clients": [
@@ -363,10 +381,1145 @@
       "category": "VEHICLE",
       "user_id": 1,
       "parent_account_id": 24
+    },
+    {
+      "id": 41,
+      "code": "8000",
+      "name": "Gross Business Income",
+      "type": "INCOME",
+      "user_id": 2
+    },
+    {
+      "id": 42,
+      "code": "8230",
+      "name": "Other Income",
+      "type": "INCOME",
+      "user_id": 2
+    },
+    {
+      "id": 43,
+      "code": "8521",
+      "name": "Advertising",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 44,
+      "code": "8523",
+      "name": "Meals and Entertainment",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 45,
+      "code": "8590",
+      "name": "Bad Debts",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 46,
+      "code": "8690",
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 47,
+      "code": "8710",
+      "name": "Interest and Bank Charges",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 48,
+      "code": "8760",
+      "name": "Business Taxes, Fees, Licenses, and Memberships",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 49,
+      "code": "8810",
+      "name": "Office Expenses",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 50,
+      "code": "8811",
+      "name": "Office Stationery and Supplies",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 51,
+      "code": "8860",
+      "name": "Professional Fees (Accounting, Legal)",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 52,
+      "code": "8871",
+      "name": "Management and Administration Fees",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 53,
+      "code": "8910",
+      "name": "Rent",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 54,
+      "code": "8960",
+      "name": "Repairs and Maintenance",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 55,
+      "code": "9060",
+      "name": "Salaries, Wages, and Benefits",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 56,
+      "code": "9180",
+      "name": "Property Taxes",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 57,
+      "code": "9200",
+      "name": "Travel Expenses",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 58,
+      "code": "9220",
+      "name": "Utilities",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 59,
+      "code": "9224",
+      "name": "Fuel Costs (Excluding Motor Vehicles)",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 60,
+      "code": "9270",
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 61,
+      "code": "9275",
+      "name": "Delivery, Freight, and Express",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 62,
+      "code": "9936",
+      "name": "Capital Cost Allowance (CCA)",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 63,
+      "code": "9945",
+      "name": "Business-Use-of-Home Expenses",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 64,
+      "code": "9281",
+      "name": "Motor Vehicle Expenses",
+      "type": "EXPENSE",
+      "user_id": 2
+    },
+    {
+      "id": 65,
+      "code": "9945-01",
+      "name": "Heat",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 63
+    },
+    {
+      "id": 66,
+      "code": "9945-02",
+      "name": "Electricity",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 63
+    },
+    {
+      "id": 67,
+      "code": "9945-03",
+      "name": "Insurance (Home)",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 63
+    },
+    {
+      "id": 68,
+      "code": "9945-04",
+      "name": "Property Tax",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 63
+    },
+    {
+      "id": 69,
+      "code": "9945-05",
+      "name": "Mortgage Interest",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 63
+    },
+    {
+      "id": 70,
+      "code": "9945-06",
+      "name": "Repairs and Maintenance (Home)",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 63
+    },
+    {
+      "id": 71,
+      "code": "9945-07",
+      "name": "Supplies (Home)",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 63
+    },
+    {
+      "id": 72,
+      "code": "9945-08",
+      "name": "Telephone",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 63
+    },
+    {
+      "id": 73,
+      "code": "9945-09",
+      "name": "Rent (Home)",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 63
+    },
+    {
+      "id": 74,
+      "code": "9281-01",
+      "name": "Fuel & Oil",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 64
+    },
+    {
+      "id": 75,
+      "code": "9281-02",
+      "name": "Interest",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 64
+    },
+    {
+      "id": 76,
+      "code": "9281-03",
+      "name": "Insurance (Vehicle)",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 64
+    },
+    {
+      "id": 77,
+      "code": "9281-04",
+      "name": "License & Registration",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 64
+    },
+    {
+      "id": 78,
+      "code": "9281-05",
+      "name": "Maintenance & Repairs",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 64
+    },
+    {
+      "id": 79,
+      "code": "9281-06",
+      "name": "Lease/Rental",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 64
+    },
+    {
+      "id": 80,
+      "code": "9281-07",
+      "name": "Parking",
+      "type": "EXPENSE",
+      "user_id": 2,
+      "parent_account_id": 64
     }
   ],
-  "transactions": [],
-  "documents": [],
+  "transactions": [
+    {
+      "id": 41,
+      "user_id": 2,
+      "account_id": 43,
+      "transaction_date": "2024-09-21",
+      "amount": 100,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 11.5,
+      "gst_hst_included": false,
+      "description": "Bell telecommunications services",
+      "type": "RECEIPT",
+      "created_at": "2026-06-04T02:06:02.137Z",
+      "updated_at": "2026-06-04T02:06:02.137Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 42,
+      "user_id": 2,
+      "account_id": 41,
+      "transaction_date": "2024-09-21",
+      "amount": 884.96,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 115.04,
+      "gst_hst_included": true,
+      "description": "Bell telecommunications services",
+      "type": "INVOICE",
+      "created_at": "2026-06-04T02:07:15.186Z",
+      "updated_at": "2026-06-04T02:07:15.186Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 43,
+      "user_id": 2,
+      "account_id": 72,
+      "transaction_date": "2024-06-04",
+      "amount": 88.5,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 11.5,
+      "gst_hst_included": true,
+      "description": "Monthly mobile service charge",
+      "type": "RECEIPT",
+      "created_at": "2026-06-04T03:02:45.444Z",
+      "updated_at": "2026-06-04T03:02:45.444Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "HOME"
+    },
+    {
+      "id": 44,
+      "user_id": 2,
+      "account_id": 78,
+      "transaction_date": "2024-11-05",
+      "amount": 884.96,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 115.04480000000001,
+      "gst_hst_included": true,
+      "description": "BCA - Articles of Dissolution",
+      "type": "RECEIPT",
+      "created_at": "2026-06-04T03:16:00.700Z",
+      "updated_at": "2026-06-04T03:16:13.735Z",
+      "is_vehicle_expense": true,
+      "business_use_percentage": 100,
+      "category": "VEHICLE"
+    },
+    {
+      "id": 45,
+      "user_id": 2,
+      "account_id": 66,
+      "transaction_date": "2026-06-04",
+      "amount": 1769.91,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 230.09,
+      "gst_hst_included": true,
+      "description": "dfd",
+      "type": "RECEIPT",
+      "created_at": "2026-06-04T20:10:08.609Z",
+      "updated_at": "2026-06-04T20:10:08.609Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "HOME"
+    },
+    {
+      "id": 46,
+      "user_id": 2,
+      "account_id": "50",
+      "transaction_date": "2025-06-04",
+      "amount": 1000,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 130,
+      "gst_hst_included": true,
+      "description": "Mobile phone monthly recurring charge",
+      "type": "RECEIPT",
+      "created_at": "2026-06-04T23:08:11.101Z",
+      "updated_at": "2026-06-04T23:08:11.101Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 47,
+      "user_id": 2,
+      "account_id": 41,
+      "transaction_date": "2025-12-09",
+      "amount": 2000,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 260,
+      "gst_hst_included": true,
+      "description": "December 2025",
+      "type": "INVOICE",
+      "created_at": "2026-06-04T23:10:45.997Z",
+      "updated_at": "2026-06-04T23:10:45.997Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 48,
+      "user_id": 2,
+      "account_id": "58",
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Bell telecommunications services",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:05:54.130Z",
+      "updated_at": "2026-06-05T00:05:54.130Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 49,
+      "user_id": 2,
+      "account_id": "58",
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Monthly charges & credits",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:08:56.903Z",
+      "updated_at": "2026-06-05T00:08:56.903Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 50,
+      "user_id": 2,
+      "account_id": 43,
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Monthly charges & credits",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:10:02.773Z",
+      "updated_at": "2026-06-05T00:10:02.773Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 51,
+      "user_id": 2,
+      "account_id": "58",
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Monthly charges & credits",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:14:00.489Z",
+      "updated_at": "2026-06-05T00:14:00.489Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 52,
+      "user_id": 2,
+      "account_id": 58,
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Bell telecommunications services",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:17:20.447Z",
+      "updated_at": "2026-06-05T00:17:20.447Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 53,
+      "user_id": 2,
+      "account_id": 58,
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Bell telecommunications services",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:18:24.354Z",
+      "updated_at": "2026-06-05T00:18:24.354Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 54,
+      "user_id": 2,
+      "account_id": 49,
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Monthly charges & credits",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:32:16.033Z",
+      "updated_at": "2026-06-05T00:32:16.033Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 55,
+      "user_id": 2,
+      "account_id": 58,
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Bell telecommunications services",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:44:02.247Z",
+      "updated_at": "2026-06-05T00:44:02.247Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 56,
+      "user_id": 2,
+      "account_id": 70,
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Bell telecommunications services",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:46:21.723Z",
+      "updated_at": "2026-06-05T00:46:21.723Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "HOME"
+    },
+    {
+      "id": 57,
+      "user_id": 2,
+      "account_id": 74,
+      "transaction_date": "2025-09-21",
+      "amount": 61.00000000000001,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": true,
+      "description": "Bell services",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T00:48:52.777Z",
+      "updated_at": "2026-06-05T00:48:52.777Z",
+      "is_vehicle_expense": true,
+      "business_use_percentage": 100,
+      "category": "VEHICLE"
+    },
+    {
+      "id": 58,
+      "user_id": 2,
+      "account_id": 57,
+      "transaction_date": "2026-09-21",
+      "amount": 884.96,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 115.04,
+      "gst_hst_included": true,
+      "description": "Bell services",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T03:06:11.573Z",
+      "updated_at": "2026-06-05T03:06:11.573Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 59,
+      "user_id": 2,
+      "account_id": 41,
+      "transaction_date": "2026-09-21",
+      "amount": 2212.39,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 287.61,
+      "gst_hst_included": true,
+      "description": "Bell telecommunications services",
+      "type": "INVOICE",
+      "created_at": "2026-06-05T03:06:58.259Z",
+      "updated_at": "2026-06-05T03:06:58.259Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 60,
+      "user_id": 2,
+      "account_id": 74,
+      "transaction_date": "2026-09-21",
+      "amount": 221.24,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 28.76,
+      "gst_hst_included": true,
+      "description": "Bell telecommunications services",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T03:20:27.045Z",
+      "updated_at": "2026-06-05T03:20:27.045Z",
+      "is_vehicle_expense": true,
+      "business_use_percentage": 100,
+      "category": "VEHICLE"
+    },
+    {
+      "id": 61,
+      "user_id": 2,
+      "account_id": 42,
+      "transaction_date": "2025-09-21",
+      "amount": 68.93,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.93,
+      "gst_hst_included": false,
+      "description": "Gigabit Fibre 1.5 Unlimited internet service",
+      "type": "INVOICE",
+      "created_at": "2026-06-05T05:15:45.676Z",
+      "updated_at": "2026-06-05T05:15:45.676Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    }
+  ],
+  "documents": [
+    {
+      "id": 1,
+      "transaction_id": 1,
+      "file_name": "2025 12 05 Lucky-compressed.jpeg",
+      "file_path": "receipts/2/1/1780453957923-2025 12 05 Lucky-compressed.jpeg",
+      "file_size": 63890,
+      "uploaded_at": "2026-06-03T02:32:38.562Z"
+    },
+    {
+      "id": 2,
+      "transaction_id": 2,
+      "file_name": "2025 12 09 Dec rent.pdf",
+      "file_path": "receipts/2/2/1780455932316-2025 12 09 Dec rent.pdf",
+      "file_size": 81312,
+      "uploaded_at": "2026-06-03T03:05:32.852Z"
+    },
+    {
+      "id": 3,
+      "transaction_id": 3,
+      "file_name": "2025-10-01 receipt.pdf",
+      "file_path": "receipts/2/3/1780456006596-2025-10-01 receipt.pdf",
+      "file_size": 179724,
+      "uploaded_at": "2026-06-03T03:06:46.808Z"
+    },
+    {
+      "id": 4,
+      "transaction_id": 4,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/4/1780458045955-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T03:40:46.274Z"
+    },
+    {
+      "id": 5,
+      "transaction_id": 5,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/5/1780459954736-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T04:12:35.360Z"
+    },
+    {
+      "id": 6,
+      "transaction_id": 6,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/6/1780488279799-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T12:04:40.433Z"
+    },
+    {
+      "id": 7,
+      "transaction_id": 7,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/7/1780488583982-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T12:09:44.430Z"
+    },
+    {
+      "id": 8,
+      "transaction_id": 8,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/8/1780488803823-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T12:13:24.100Z"
+    },
+    {
+      "id": 9,
+      "transaction_id": 9,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/9/1780511226977-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T18:27:07.396Z"
+    },
+    {
+      "id": 10,
+      "transaction_id": 10,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/10/1780518176341-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T20:22:56.968Z"
+    },
+    {
+      "id": 11,
+      "transaction_id": 11,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/11/1780518265874-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T20:24:26.627Z"
+    },
+    {
+      "id": 12,
+      "transaction_id": 12,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/12/1780518474878-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T20:27:55.056Z"
+    },
+    {
+      "id": 13,
+      "transaction_id": 13,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/13/1780518622034-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T20:30:22.223Z"
+    },
+    {
+      "id": 14,
+      "transaction_id": 14,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/14/1780520933622-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T21:08:53.938Z"
+    },
+    {
+      "id": 15,
+      "transaction_id": 15,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/15/1780521396722-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T21:16:36.918Z"
+    },
+    {
+      "id": 16,
+      "transaction_id": 16,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/16/1780521844100-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T21:24:04.544Z"
+    },
+    {
+      "id": 17,
+      "transaction_id": 17,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/17/1780522272088-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T21:31:12.268Z"
+    },
+    {
+      "id": 18,
+      "transaction_id": 18,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/18/1780525381609-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T22:23:02.265Z"
+    },
+    {
+      "id": 19,
+      "transaction_id": 19,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/19/1780526882935-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T22:48:03.219Z"
+    },
+    {
+      "id": 20,
+      "transaction_id": 20,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/20/1780527896609-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T23:04:56.876Z"
+    },
+    {
+      "id": 21,
+      "transaction_id": 21,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/21/1780529359367-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T23:29:19.905Z"
+    },
+    {
+      "id": 22,
+      "transaction_id": 22,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/22/1780529435567-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T23:30:35.859Z"
+    },
+    {
+      "id": 23,
+      "transaction_id": 23,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/23/1780529969033-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T23:39:29.230Z"
+    },
+    {
+      "id": 24,
+      "transaction_id": 24,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/24/1780530232223-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T23:43:52.507Z"
+    },
+    {
+      "id": 25,
+      "transaction_id": 25,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/25/1780530271049-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-03T23:44:31.261Z"
+    },
+    {
+      "id": 26,
+      "transaction_id": 26,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/26/1780533255847-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T00:34:16.085Z"
+    },
+    {
+      "id": 27,
+      "transaction_id": 27,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/27/1780533934692-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T00:45:34.926Z"
+    },
+    {
+      "id": 28,
+      "transaction_id": 28,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/28/1780534357483-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T00:52:37.850Z"
+    },
+    {
+      "id": 29,
+      "transaction_id": 29,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/29/1780534404621-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T00:53:25.058Z"
+    },
+    {
+      "id": 30,
+      "transaction_id": 30,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/30/1780534506539-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T00:55:06.782Z"
+    },
+    {
+      "id": 31,
+      "transaction_id": 31,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/31/1780535279042-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:07:59.361Z"
+    },
+    {
+      "id": 32,
+      "transaction_id": 32,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/32/1780535389961-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:09:50.213Z"
+    },
+    {
+      "id": 33,
+      "transaction_id": 33,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/33/1780535481066-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:11:21.510Z"
+    },
+    {
+      "id": 34,
+      "transaction_id": 34,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/34/1780535643338-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:14:03.522Z"
+    },
+    {
+      "id": 35,
+      "transaction_id": 35,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/35/1780535936085-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:18:56.368Z"
+    },
+    {
+      "id": 36,
+      "transaction_id": 36,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/36/1780536265474-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:24:25.655Z"
+    },
+    {
+      "id": 37,
+      "transaction_id": 37,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/37/1780536491438-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:28:11.681Z"
+    },
+    {
+      "id": 38,
+      "transaction_id": 38,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/38/1780536721030-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:32:01.306Z"
+    },
+    {
+      "id": 39,
+      "transaction_id": 39,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/39/1780537077143-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:37:57.297Z"
+    },
+    {
+      "id": 40,
+      "transaction_id": 40,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/40/1780537452257-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T01:44:12.424Z"
+    },
+    {
+      "id": 41,
+      "transaction_id": 41,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/41/1780538762488-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T02:06:02.863Z"
+    },
+    {
+      "id": 42,
+      "transaction_id": 42,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/42/1780538835326-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T02:07:15.750Z"
+    },
+    {
+      "id": 43,
+      "transaction_id": 43,
+      "file_name": "2025 12 05 Lucky-compressed.jpeg",
+      "file_path": "receipts/2/43/1780542165744-2025 12 05 Lucky-compressed.jpeg",
+      "file_size": 63890,
+      "uploaded_at": "2026-06-04T03:02:46.526Z"
+    },
+    {
+      "id": 44,
+      "transaction_id": 44,
+      "file_name": "2025 11 05 Payment_Receipt for Ontario government for Flip Trading dissolution.pdf",
+      "file_path": "receipts/2/44/1780542960881-2025 11 05 Payment_Receipt for Ontario government for Flip Trading dissolution.pdf",
+      "file_size": 145956,
+      "uploaded_at": "2026-06-04T03:16:01.392Z"
+    },
+    {
+      "id": 45,
+      "transaction_id": 45,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/45/1780603809346-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-04T20:10:09.954Z"
+    },
+    {
+      "id": 46,
+      "transaction_id": 46,
+      "file_name": "2025 12 05 Lucky-compressed.jpeg",
+      "file_path": "receipts/2/46/1780614491369-2025 12 05 Lucky-compressed.jpeg",
+      "file_size": 63890,
+      "uploaded_at": "2026-06-04T23:08:11.732Z"
+    },
+    {
+      "id": 47,
+      "transaction_id": 47,
+      "file_name": "2025 12 09 Dec rent.pdf",
+      "file_path": "receipts/2/47/1780614646454-2025 12 09 Dec rent.pdf",
+      "file_size": 81312,
+      "uploaded_at": "2026-06-04T23:10:46.891Z"
+    },
+    {
+      "id": 48,
+      "transaction_id": 48,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/48/1780617954370-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:05:54.954Z"
+    },
+    {
+      "id": 49,
+      "transaction_id": 49,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/49/1780618137030-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:08:57.227Z"
+    },
+    {
+      "id": 50,
+      "transaction_id": 50,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/50/1780618203025-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:10:03.505Z"
+    },
+    {
+      "id": 51,
+      "transaction_id": 51,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/51/1780618440667-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:14:00.899Z"
+    },
+    {
+      "id": 52,
+      "transaction_id": 52,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/52/1780618640666-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:17:21.135Z"
+    },
+    {
+      "id": 53,
+      "transaction_id": 53,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/53/1780618704530-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:18:25.000Z"
+    },
+    {
+      "id": 54,
+      "transaction_id": 54,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/54/1780619536460-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:32:16.786Z"
+    },
+    {
+      "id": 55,
+      "transaction_id": 55,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/55/1780620243009-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:44:03.314Z"
+    },
+    {
+      "id": 56,
+      "transaction_id": 56,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/56/1780620381843-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:46:22.018Z"
+    },
+    {
+      "id": 57,
+      "transaction_id": 57,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/57/1780620532906-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T00:48:53.086Z"
+    },
+    {
+      "id": 58,
+      "transaction_id": 58,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/58/1780628771878-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T03:06:12.520Z"
+    },
+    {
+      "id": 59,
+      "transaction_id": 59,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/59/1780628818422-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T03:06:58.951Z"
+    },
+    {
+      "id": 60,
+      "transaction_id": 60,
+      "file_name": "2025 09 30 Bell.pdf",
+      "file_path": "receipts/2/60/1780629627317-2025 09 30 Bell.pdf",
+      "file_size": 153133,
+      "uploaded_at": "2026-06-05T03:20:27.786Z"
+    }
+  ],
   "bank_reconciliations": [],
   "reconciliation_items": [],
   "recurring_transactions": [
@@ -424,14 +1577,83 @@
   "billing_history": [],
   "payment_methods": [],
   "stripe_webhooks": [],
-  "vehicle_baseline": [],
-  "mileage_trips": [],
+  "vehicle_baseline": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "odometer_reading": 20000,
+      "setup_date": "2024-01-05",
+      "created_at": "2026-06-03T02:34:53.303Z"
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "year": 2025,
+      "odometer_reading": 30000,
+      "setup_date": "2026-06-05",
+      "created_at": "2026-06-05T06:02:12.685Z"
+    },
+    {
+      "id": 3,
+      "user_id": 2,
+      "year": 2026,
+      "odometer_reading": 40000,
+      "setup_date": "2026-06-05",
+      "created_at": "2026-06-05T06:12:37.430Z"
+    }
+  ],
+  "mileage_trips": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "trip_date": "2026-06-05",
+      "kilometers": 400,
+      "destination": "Hamilton",
+      "purpose": "business",
+      "business_percentage": 100,
+      "created_at": "2026-06-05T06:13:00.391Z",
+      "updated_at": "2026-06-05T06:13:23.227Z"
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "trip_date": "2025-02-05",
+      "kilometers": 800,
+      "destination": "dfda",
+      "purpose": "business",
+      "business_percentage": 100,
+      "created_at": "2026-06-05T06:16:35.631Z",
+      "updated_at": "2026-06-05T06:16:35.631Z"
+    },
+    {
+      "id": 3,
+      "user_id": 2,
+      "trip_date": "2026-01-05",
+      "kilometers": 2000,
+      "destination": "Casey",
+      "purpose": "business",
+      "business_percentage": 50,
+      "created_at": "2026-06-05T06:17:07.580Z",
+      "updated_at": "2026-06-05T06:17:07.580Z"
+    },
+    {
+      "id": 4,
+      "user_id": 2,
+      "trip_date": "2026-04-07",
+      "kilometers": 20,
+      "destination": "Iceland",
+      "purpose": "business",
+      "business_percentage": 100,
+      "created_at": "2026-06-05T06:20:38.092Z",
+      "updated_at": "2026-06-05T06:20:38.092Z"
+    }
+  ],
   "odometer_readings": [],
-  "nextUserId": 2,
+  "nextUserId": 3,
   "nextClientId": 3,
-  "nextAccountId": 41,
-  "nextTransactionId": 1,
-  "nextDocumentId": 1,
+  "nextAccountId": 81,
+  "nextTransactionId": 62,
+  "nextDocumentId": 61,
   "nextBankReconciliationId": 1,
   "nextReconciliationItemId": 1,
   "nextRecurringTransactionId": 4,
@@ -440,7 +1662,7 @@
   "nextBillingHistoryId": 1,
   "nextPaymentMethodId": 1,
   "nextStripeWebhookId": 1,
-  "nextVehicleBaselineId": 1,
-  "nextMileageTripId": 1,
+  "nextVehicleBaselineId": 4,
+  "nextMileageTripId": 5,
   "nextOdometerReadingId": 1
 }

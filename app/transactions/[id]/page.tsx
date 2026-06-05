@@ -596,7 +596,6 @@ export default function TransactionDetailPage() {
                     return (
                       <iframe
                         src={url}
-                        alt="Receipt"
                         className="w-full h-full border-0"
                         onError={() => {
                           console.error('PDF failed to load from:', url)

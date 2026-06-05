@@ -76,12 +76,35 @@ export async function POST(request: NextRequest) {
       const existingCodes = new Set(existingAccounts.map(acc => acc.code))
       let addedCount = 0
 
-      // Add any missing default accounts
-      DEFAULT_ACCOUNTS.forEach(acc => {
-        // Only create accounts that have a code (skip HOME/VEHICLE sub-accounts which have no code)
-        if (acc.code && !existingCodes.has(acc.code)) {
-          createAccount(acc.code, acc.name, acc.type, userId, acc.category)
-          addedCount++
+      // Map to store parent account IDs by code (e.g., '9945' -> 123)
+      const parentAccountIds: { [key: string]: number } = {}
+
+      // First pass: create all parent accounts (without parent_account_id)
+      const parentAccounts = DEFAULT_ACCOUNTS.filter(acc =>
+        acc.code &&
+        !acc.code.includes('-') &&
+        !existingCodes.has(acc.code)
+      )
+
+      parentAccounts.forEach(acc => {
+        const result = createAccount(acc.code!, acc.name, acc.type, userId, acc.category)
+        parentAccountIds[acc.code!] = result.lastID
+        addedCount++
+      })
+
+      // Second pass: create child accounts with parent_account_id references
+      const childAccounts = DEFAULT_ACCOUNTS.filter(acc => acc.code && acc.code.includes('-'))
+
+      childAccounts.forEach(acc => {
+        if (!existingCodes.has(acc.code)) {
+          // Extract parent code from child code (e.g., '9945-01' -> '9945')
+          const parentCode = acc.code!.split('-')[0]
+          const parentId = parentAccountIds[parentCode]
+
+          if (parentId) {
+            createAccount(acc.code!, acc.name, acc.type, userId, acc.category, parentId)
+            addedCount++
+          }
         }
       })
 

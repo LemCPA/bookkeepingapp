@@ -37,9 +37,17 @@ export default function MileagePage() {
   const [trips, setTrips] = useState<MileageTrip[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [selectedYear, setSelectedYear] = useState<number>(() => {
+    try {
+      return parseInt(localStorage.getItem('mileageYear') || String(new Date().getFullYear()))
+    } catch {
+      return new Date().getFullYear()
+    }
+  })
   const [hasBaseline, setHasBaseline] = useState(false)
   const [baseline, setBaseline] = useState<VehicleBaseline | null>(null)
+  const [baselineInput, setBaselineInput] = useState<string>('')
+  const [savingBaseline, setSavingBaseline] = useState(false)
   const [sortColumn, setSortColumn] = useState<'date' | 'destination' | 'purpose' | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
@@ -47,19 +55,36 @@ export default function MileagePage() {
     checkBaseline()
   }, [])
 
+  // Save selected year to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('mileageYear', selectedYear.toString())
+    } catch (error) {
+      console.error('Failed to save mileage year to localStorage:', error)
+    }
+  }, [selectedYear])
+
   const checkBaseline = async () => {
     try {
       const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
-      const response = await authenticatedFetch('/api/mileage/baseline')
+      const response = await authenticatedFetch(`/api/mileage/baseline?year=${selectedYear}`)
+      console.log('[checkBaseline] Response status:', response.status, 'year:', selectedYear)
+
       if (response.ok) {
         const data = await response.json()
+        console.log('[checkBaseline] Data received:', data)
+
         // Check if baseline exists - either via data.baseline property or data.id property
         const baselineExists = !!(data.baseline || data.id)
+        console.log('[checkBaseline] Baseline exists:', baselineExists)
+
         setHasBaseline(baselineExists)
         if (baselineExists) {
           setBaseline(data)
           fetchTrips()
         }
+      } else {
+        console.error('[checkBaseline] Response not ok:', response.status)
       }
     } catch (err) {
       console.error('Error checking baseline:', err)
@@ -83,10 +108,9 @@ export default function MileagePage() {
   }
 
   useEffect(() => {
-    if (hasBaseline) {
-      fetchTrips()
-    }
-  }, [selectedYear, hasBaseline])
+    // When year changes, check for baseline and fetch trips for that year
+    checkBaseline()
+  }, [selectedYear])
 
   // Refetch baseline and trips when page regains focus (e.g., returning from settings)
   useEffect(() => {
@@ -97,6 +121,39 @@ export default function MileagePage() {
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
   }, [])
+
+  const handleSaveBaseline = async () => {
+    if (!baselineInput || isNaN(parseInt(baselineInput))) {
+      alert('Please enter a valid odometer reading')
+      return
+    }
+
+    setSavingBaseline(true)
+    try {
+      const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
+      const response = await authenticatedFetch('/api/mileage/baseline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          odometerReading: parseInt(baselineInput),
+          year: selectedYear,
+        }),
+      })
+
+      if (response.ok) {
+        setBaselineInput('')
+        // Refresh baseline data
+        checkBaseline()
+      } else {
+        alert('Failed to save baseline')
+      }
+    } catch (err) {
+      console.error('Error saving baseline:', err)
+      alert('Error saving baseline')
+    } finally {
+      setSavingBaseline(false)
+    }
+  }
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this trip?')) return
@@ -155,29 +212,6 @@ export default function MileagePage() {
     ? (trips.reduce((sum, t) => sum + t.businessPercentage, 0) / trips.length).toFixed(1)
     : '0'
 
-  if (!hasBaseline && !loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-24 pb-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Mileage Tracking</h1>
-            <p className="text-gray-600">Track your business vehicle mileage for CRA deductions</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-600 mb-6 text-lg">Let's get started! First, set your vehicle's baseline odometer reading.</p>
-            <Link
-              href="/mileage/setup"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition inline-block"
-            >
-              Set Up Vehicle Baseline
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 pt-12 pb-12">
       <div className="max-w-7xl mx-auto px-4">
@@ -197,25 +231,6 @@ export default function MileagePage() {
 
         {/* Baseline Odometer, Year Selector, and CRA Rate - All in One Line */}
         <div className="mb-6 flex items-center gap-8 flex-wrap">
-          {/* Baseline Odometer Reading */}
-          {baseline && (baseline.odometerReading || baseline.id) && (
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="text-xs text-gray-600 uppercase tracking-wide">Beginning ODO</p>
-                <p className="text-lg font-bold text-blue-600">{baseline.odometerReading?.toLocaleString()} km</p>
-                {baseline.setupDate && (
-                  <p className="text-xs text-gray-500">Set {parseLocalDate(baseline.setupDate).toLocaleDateString('en-CA')}</p>
-                )}
-              </div>
-              <Link
-                href="/mileage/setup"
-                className="text-blue-600 hover:text-blue-800 text-xs font-medium whitespace-nowrap"
-              >
-                Update
-              </Link>
-            </div>
-          )}
-
           {/* Year Selector */}
           <div className="flex items-center gap-2">
             <label className="text-gray-700 font-medium text-sm">Year:</label>
@@ -224,10 +239,28 @@ export default function MileagePage() {
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
-              {[2024, 2025, 2026, 2027].map(year => (
+              {[2025, 2026, 2027, 2028, 2029, 2030].map(year => (
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
+          </div>
+
+          {/* Baseline Odometer Reading - Always Editable */}
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <label className="text-xs text-gray-600 uppercase tracking-wide">Beginning ODO:</label>
+            <input
+              type="number"
+              value={baselineInput || (baseline?.odometerReading || 100000)}
+              onChange={(e) => setBaselineInput(e.target.value)}
+              className="px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-32 font-bold text-blue-600"
+            />
+            <button
+              onClick={handleSaveBaseline}
+              disabled={savingBaseline}
+              className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 text-xs font-medium whitespace-nowrap"
+            >
+              {savingBaseline ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </div>
 
@@ -238,21 +271,19 @@ export default function MileagePage() {
         )}
 
         {/* Summary Cards */}
-        {!loading && trips.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-lg shadow p-3">
-              <p className="text-gray-600 text-xs mb-1">Total Trips</p>
-              <p className="text-2xl font-bold text-gray-900">{totalTrips}</p>
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white rounded-lg shadow p-4">
+              <p className="text-gray-600 text-xs mb-1 uppercase">Total Trips</p>
+              <p className="text-3xl font-bold text-gray-900">{totalTrips}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-3">
-              <p className="text-gray-600 text-xs mb-1">Total Kilometers</p>
-              <p className="text-2xl font-bold text-gray-900">{totalKm.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 mt-0.5">km</p>
+            <div className="bg-white rounded-lg shadow p-4">
+              <p className="text-gray-600 text-xs mb-1 uppercase">Total Distance</p>
+              <p className="text-3xl font-bold text-gray-900">{totalKm.toLocaleString()} <span className="text-lg">km</span></p>
             </div>
-            <div className="bg-white rounded-lg shadow p-3">
-              <p className="text-gray-600 text-xs mb-1">Business Kilometers</p>
-              <p className="text-2xl font-bold text-blue-600">{totalBusinessKm.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 mt-0.5">avg {avgBusinessUse}% use</p>
+            <div className="bg-white rounded-lg shadow p-4">
+              <p className="text-gray-600 text-xs mb-1 uppercase">Business Distance</p>
+              <p className="text-3xl font-bold text-blue-600">{totalBusinessKm.toLocaleString()} <span className="text-lg">km</span></p>
             </div>
           </div>
         )}

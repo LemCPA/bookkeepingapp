@@ -187,7 +187,7 @@ export default function NewRecurringTransactionPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount Before Tax *</label>
             <input
               type="number"
               required

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     // Try Supabase Storage first (production)
     if (supabase !== null && process.env.NEXT_PUBLIC_SUPABASE_URL) {
       try {
-        console.log('Attempting Supabase upload to bucket: documents, path:', storagePath)
+        console.log('Attempting Supabase upload to bucket: T2125, path:', storagePath)
 
         const { error: uploadError } = await supabase.storage
           .from('T2125')
