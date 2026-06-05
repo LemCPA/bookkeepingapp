@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react"
 import { compressImage, getCompressionRatio } from "@/lib/image-compression"
 import { createAuthenticatedFetch } from "@/lib/auth"
 import { DEFAULT_ACCOUNTS } from "@/lib/default-accounts"
+import { parseFlexibleDate, validateDate } from "@/lib/date-parser"
+import { assessImageQuality, enhanceImageForOcr, type ImageQuality } from "@/lib/image-quality"
 
 interface ExtractedData {
   date: string
@@ -37,6 +39,7 @@ export default function ReceiptsPage() {
   const [analyzing, setAnalyzing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const [imageQualityWarnings, setImageQualityWarnings] = useState<string[]>([])
 
   // Transaction type is locked based on document type
   const transactionType = documentType === 'invoice' ? 'INVOICE' : 'RECEIPT'
@@ -153,14 +156,30 @@ export default function ReceiptsPage() {
     if (isImage) {
       setCompressing(true)
       const reader = new FileReader()
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         setPreview(e.target?.result as string)
+
+        // Assess image quality for mobile camera issues
+        try {
+          const quality = await assessImageQuality(file)
+          if (quality.warnings.length > 0) {
+            setImageQualityWarnings(quality.warnings)
+            console.log('Image quality warnings:', quality.warnings)
+          } else {
+            setImageQualityWarnings([])
+          }
+        } catch (err) {
+          console.warn('Could not assess image quality:', err)
+          setImageQualityWarnings([])
+        }
+
         setCompressing(false)
       }
       reader.readAsDataURL(file)
     } else if (isPdf) {
       // For PDF, just show a preview icon
       setPreview('pdf-file')
+      setImageQualityWarnings([])
       setCompressing(false)
     }
   }
@@ -458,9 +477,16 @@ export default function ReceiptsPage() {
 
       console.log(`Calculated GST: Amount $${finalAmount} with ${finalGstRate}% rate = $${finalGstAmount}`)
 
+      // Parse the extracted date (Claude may return various formats)
+      const parsedDate = analysis.date ? parseFlexibleDate(analysis.date) : null
+      const finalDate = (parsedDate && validateDate(parsedDate)) ? parsedDate : new Date().toISOString().split('T')[0]
+      if (analysis.date && !parsedDate) {
+        console.warn('Could not parse extracted date:', analysis.date)
+      }
+
       // Set extracted data with sensible defaults
       setExtractedData({
-        date: analysis.date || new Date().toISOString().split('T')[0],
+        date: finalDate,
         amount: finalAmount,
         description: analysis.description || analysis.vendor_name || "Receipt",
         vendor: analysis.vendor_name,

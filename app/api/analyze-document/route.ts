@@ -58,14 +58,27 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
           },
           {
             type: 'text',
-            text: `Extract information from this receipt or invoice. Follow these rules carefully:
+            text: `Extract information from this receipt or invoice. This image may be from a mobile camera - focus on clarity and context clues if the image is slightly blurry or at an angle.
 
 FINDING THE AMOUNT (CRITICAL - THIS IS YOUR PRIMARY JOB):
-Search for "Amount Due", "Total Due", "Balance Due", "Total", or "Please Pay"
+Search for "Amount Due", "Total Due", "Balance Due", "Total", "Grand Total", "Net Total", "TOTAL", "Please Pay", "Amount to Pay"
 - Look to the RIGHT of these phrases for a $ sign and the number
+- If a subtotal + tax = total pattern exists, use the final total line
+- Look for the LARGEST currency amount if no explicit label found
 - Example: "Amount Due        $68.93" → extract as 68.93 (not string, real number)
 - Strip symbols: $ £ € ¥ commas
 - Valid range: 0.01 to 999999.99 (reject 0 or null unless genuinely blank)
+
+VENDOR NAME (appears near top, often first bold text or business letterhead):
+- Look for company/business name near the top of the document
+- Often appears in a header, letterhead, or first few lines
+- May include suffixes like Ltd, Inc, LLC, Corp, Inc., Ltd.
+- Return the business legal name if visible, null if not found
+
+DATE EXTRACTION:
+- Extract any date found on the document in whatever format shown
+- Formats can be: MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD, Month DD, YYYY, etc.
+- Return as a string without normalization (just extract what you see)
 
 ACCOUNT TYPE (ASSET vs EXPENSE):
 - EXPENSE (default): rent, utilities, office supplies, meals, services, subscriptions
@@ -74,13 +87,13 @@ ACCOUNT TYPE (ASSET vs EXPENSE):
 
 GST/HST DETAILS:
 - Extract the GST/HST rate if shown (5, 13, etc.)
-- Extract the GST/HST amount if shown separately
+- Extract the GST/HST amount if shown separately on a "GST", "HST", or "Tax" line
 - If not shown: rate=0, amount=0
 
 Now extract and return ONLY this JSON (no markdown, no explanations, no extra text):
 
 {
-  "date": "YYYY-MM-DD or null",
+  "date": "extracted date string or null",
   "amount": <number or null>,
   "description": "what was purchased",
   "vendor_name": "business name or null",
