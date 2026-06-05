@@ -25,9 +25,9 @@ export async function PUT(request: NextRequest) {
       vehiclePercentage
     )
 
-    if (!result.success) {
+    if (!result || !result.success) {
       return NextResponse.json(
-        { error: result.error || 'Failed to update percentages' },
+        { error: result?.error || 'Failed to update percentages' },
         { status: 500 }
       )
     }
