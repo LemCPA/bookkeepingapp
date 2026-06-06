@@ -30,7 +30,7 @@ interface Invoice {
 }
 
 const PLAN_DETAILS = {
-  starter: { name: 'Starter', price: '$10/month', uploads: '50 uploads/month' },
+  starter: { name: 'Starter', price: '$10/month', uploads: '60 uploads/month' },
   growth: { name: 'Growth', price: '$20/month', uploads: '200 uploads/month' },
   free: { name: 'Free', price: 'Free', uploads: 'Limited access' },
 }

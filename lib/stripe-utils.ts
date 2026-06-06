@@ -18,7 +18,7 @@ export const PRICING_PLANS = {
     name: 'Starter',
     price: 10,
     interval: 'month',
-    uploads_limit: 50,
+    uploads_limit: 60,
     stripe_price_id: process.env.STRIPE_STARTER_PRICE_ID || '',
   },
   growth: {
