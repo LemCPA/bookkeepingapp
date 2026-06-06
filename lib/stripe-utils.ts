@@ -16,24 +16,17 @@ function getStripe(): Stripe {
 export const PRICING_PLANS = {
   starter: {
     name: 'Starter',
-    price: 9,
+    price: 10,
     interval: 'month',
-    clients_limit: 5,
+    uploads_limit: 50,
     stripe_price_id: process.env.STRIPE_STARTER_PRICE_ID || '',
   },
-  professional: {
-    name: 'Professional',
-    price: 29,
+  growth: {
+    name: 'Growth',
+    price: 20,
     interval: 'month',
-    clients_limit: null,
-    stripe_price_id: process.env.STRIPE_PROFESSIONAL_PRICE_ID || '',
-  },
-  enterprise: {
-    name: 'Enterprise',
-    price: 99,
-    interval: 'month',
-    clients_limit: null,
-    stripe_price_id: process.env.STRIPE_ENTERPRISE_PRICE_ID || '',
+    uploads_limit: 200,
+    stripe_price_id: process.env.STRIPE_GROWTH_PRICE_ID || '',
   },
 }
 
