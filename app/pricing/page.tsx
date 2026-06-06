@@ -41,7 +41,7 @@ export default function PricingPage() {
     setLoading(true)
     try {
       // Get auth token from localStorage
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
 
       if (!token) {
         alert('Please log in again')
