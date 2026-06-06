@@ -9,6 +9,7 @@ export default function PricingPage() {
   const [userPlan, setUserPlan] = useState<string | null>(null)
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null)
   const [daysRemaining, setDaysRemaining] = useState(0)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     // Check if user is logged in by fetching dashboard data
@@ -31,10 +32,31 @@ export default function PricingPage() {
     checkAuth()
   }, [])
 
-  const handleUpgrade = (plan: string) => {
-    if (plan === 'starter' || plan === 'professional') {
-      // Redirect to payment/upgrade flow
-      window.location.href = `/upgrade?plan=${plan}`
+  const handleSubscribe = async (plan: 'starter' | 'growth') => {
+    if (!isLoggedIn) {
+      window.location.href = '/login'
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      })
+
+      if (response.ok) {
+        const { url } = await response.json()
+        window.location.href = url
+      } else {
+        alert('Error creating checkout session')
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Error creating checkout session')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -171,63 +193,67 @@ export default function PricingPage() {
               </div>
 
               <div className="mb-4">
-                <p className="text-slate-600 text-sm mb-2">Most popular</p>
+                <p className="text-slate-600 text-sm mb-2">Perfect for growing businesses</p>
               </div>
 
               {/* Price */}
               <div className="mb-6">
                 <p className="text-4xl font-bold text-slate-900">
-                  $9<span className="text-lg text-slate-600">/month</span>
+                  $10<span className="text-lg text-slate-600">/month</span>
                 </p>
                 <p className="text-slate-600 text-sm mt-2">
-                  50 transactions per month, resets monthly
+                  50 uploads per month, resets monthly
                 </p>
               </div>
 
               {/* CTA */}
               <button
-                onClick={() => handleUpgrade('starter')}
-                disabled={userPlan === 'starter'}
+                onClick={() => handleSubscribe('starter')}
+                disabled={userPlan === 'starter' || loading}
                 className={`w-full py-3 rounded-lg font-semibold mb-6 transition-all ${
                   userPlan === 'starter'
                     ? 'bg-slate-100 text-slate-600 cursor-default'
                     : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                 }`}
               >
-                {userPlan === 'starter' ? 'Your Current Plan' : 'Upgrade to Starter'}
+                {loading ? 'Loading...' : userPlan === 'starter' ? 'Your Current Plan' : 'Subscribe to Starter'}
               </button>
 
               {/* Features */}
               <div className="space-y-3">
-                <p className="font-semibold text-slate-900 text-sm mb-4">Everything in Free, plus:</p>
+                <p className="font-semibold text-slate-900 text-sm mb-4">Includes:</p>
                 <ul className="space-y-2 text-slate-700 text-sm">
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Receipt scanning & OCR</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Transaction tracking</span>
+                  </li>
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
                     <span>GST/HST reports</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Income reports</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-3 font-bold">✓</span>
-                    <span>Home & vehicle expense tracking</span>
+                    <span>Income & expense reports</span>
                   </li>
                 </ul>
               </div>
             </div>
           </div>
 
-          {/* Professional Plan */}
+          {/* Growth Plan */}
           <div className={`rounded-lg border-2 transition-all ${
-            userPlan === 'professional'
+            userPlan === 'growth'
               ? 'border-blue-500 bg-blue-50 shadow-lg'
               : 'border-slate-200 bg-white shadow'
           }`}>
             <div className="p-8">
               <div className="flex items-baseline justify-between mb-4">
-                <h2 className="text-2xl font-bold text-slate-900">Professional</h2>
-                {userPlan === 'professional' && (
+                <h2 className="text-2xl font-bold text-slate-900">Growth</h2>
+                {userPlan === 'growth' && (
                   <span className="text-xs font-semibold bg-blue-500 text-white px-3 py-1 rounded-full">
                     Current Plan
                   </span>
@@ -235,30 +261,30 @@ export default function PricingPage() {
               </div>
 
               <div className="mb-4">
-                <p className="text-slate-600 text-sm mb-2">For bigger operations</p>
+                <p className="text-slate-600 text-sm mb-2">For active businesses</p>
               </div>
 
               {/* Price */}
               <div className="mb-6">
                 <p className="text-4xl font-bold text-slate-900">
-                  $29<span className="text-lg text-slate-600">/month</span>
+                  $20<span className="text-lg text-slate-600">/month</span>
                 </p>
                 <p className="text-slate-600 text-sm mt-2">
-                  Unlimited transactions per month
+                  200 uploads per month, resets monthly
                 </p>
               </div>
 
               {/* CTA */}
               <button
-                onClick={() => handleUpgrade('professional')}
-                disabled={userPlan === 'professional'}
+                onClick={() => handleSubscribe('growth')}
+                disabled={userPlan === 'growth' || loading}
                 className={`w-full py-3 rounded-lg font-semibold mb-6 transition-all ${
-                  userPlan === 'professional'
+                  userPlan === 'growth'
                     ? 'bg-slate-100 text-slate-600 cursor-default'
                     : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                 }`}
               >
-                {userPlan === 'professional' ? 'Your Current Plan' : 'Upgrade to Professional'}
+                {loading ? 'Loading...' : userPlan === 'growth' ? 'Your Current Plan' : 'Subscribe to Growth'}
               </button>
 
               {/* Features */}
@@ -268,6 +294,14 @@ export default function PricingPage() {
                   <li className="flex items-start">
                     <span className="text-green-500 mr-3 font-bold">✓</span>
                     <span>Mileage tracking (CRA-compliant)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>4x higher upload limit</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-3 font-bold">✓</span>
+                    <span>Priority support</span>
                   </li>
                 </ul>
               </div>
