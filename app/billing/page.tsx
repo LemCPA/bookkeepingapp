@@ -30,10 +30,9 @@ interface Invoice {
 }
 
 const PLAN_DETAILS = {
-  starter: { name: 'Starter', price: '$9/month', clients: '5 clients' },
-  professional: { name: 'Professional', price: '$29/month', clients: 'Unlimited clients' },
-  enterprise: { name: 'Enterprise', price: '$99/month', clients: 'Custom features' },
-  free: { name: 'Free', price: 'Free', clients: 'Limited access' },
+  starter: { name: 'Starter', price: '$10/month', uploads: '50 uploads/month' },
+  growth: { name: 'Growth', price: '$20/month', uploads: '200 uploads/month' },
+  free: { name: 'Free', price: 'Free', uploads: 'Limited access' },
 }
 
 export default function BillingPage() {
@@ -170,7 +169,7 @@ export default function BillingPage() {
                 {PLAN_DETAILS[currentPlan]?.price}
               </p>
               <p className="text-blue-600 mt-1">
-                {PLAN_DETAILS[currentPlan]?.clients}
+                {PLAN_DETAILS[currentPlan]?.uploads}
               </p>
 
               {isTrialing && (
@@ -208,8 +207,8 @@ export default function BillingPage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-bold mb-4">Upgrade Your Plan</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {['professional', 'enterprise'].map((plan) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {['growth'].map((plan) => (
               <div key={plan} className="border rounded-lg p-4">
                 <h3 className="text-xl font-bold mb-2">
                   {PLAN_DETAILS[plan as keyof typeof PLAN_DETAILS]?.name}
@@ -218,7 +217,7 @@ export default function BillingPage() {
                   {PLAN_DETAILS[plan as keyof typeof PLAN_DETAILS]?.price}
                 </p>
                 <p className="text-gray-600 mb-4">
-                  {PLAN_DETAILS[plan as keyof typeof PLAN_DETAILS]?.clients}
+                  {PLAN_DETAILS[plan as keyof typeof PLAN_DETAILS]?.uploads}
                 </p>
                 <button
                   onClick={() => handleUpgrade(plan)}
