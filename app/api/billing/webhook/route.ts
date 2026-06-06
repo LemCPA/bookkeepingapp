@@ -3,7 +3,7 @@ import {
   verifyWebhookSignature,
   handleSubscriptionEvent,
 } from '@/lib/stripe-utils'
-import { getDb, saveDb } from '@/lib/db'
+import { getDb, saveDb, clearDbCache } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -109,8 +109,9 @@ export async function POST(request: NextRequest) {
     // Log webhook event
     console.log('Webhook event received:', handled.type, handled.data)
 
-    // Save database
+    // Save database and clear cache
     saveDb(db)
+    clearDbCache()
 
     return NextResponse.json({ received: true })
   } catch (error) {
