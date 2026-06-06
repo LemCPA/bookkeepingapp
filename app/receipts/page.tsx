@@ -912,6 +912,22 @@ export default function ReceiptsPage() {
             <p className="text-xs text-gray-600 mt-2">
               {preview === 'pdf-file' ? 'PDF file - check details below' : 'Receipt image - check details below'}
             </p>
+
+            {/* Image Quality Warnings */}
+            {imageQualityWarnings.length > 0 && (
+              <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm font-medium text-yellow-800 mb-2">⚠️ Photo Quality Issues</p>
+                <ul className="text-xs text-yellow-700 space-y-1">
+                  {imageQualityWarnings.map((warning, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-yellow-600 mt-0.5">•</span>
+                      <span>{warning}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs text-yellow-700 mt-2">💡 Try retaking the photo in better lighting or at a straighter angle</p>
+              </div>
+            )}
           </div>
         )}
 
