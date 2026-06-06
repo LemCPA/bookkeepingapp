@@ -308,6 +308,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: extractedData,
       userId,
+      debug: {
+        rawResponse: jsonText.substring(0, 500), // First 500 chars of Claude's response for debugging
+      }
     })
   } catch (error: any) {
     console.error('Document analysis error:', error)
