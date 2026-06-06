@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getUser } from '@/lib/db'
+import { getUser, getDb, saveDb } from '@/lib/db'
 import { createCheckoutSession, PRICING_PLANS } from '@/lib/stripe-utils'
 
 export const dynamic = 'force-dynamic'
@@ -32,6 +32,15 @@ export async function POST(request: NextRequest) {
         const { createStripeCustomer } = await import('@/lib/stripe-utils')
         user.stripe_customer_id = await createStripeCustomer(user.email, user.name)
         console.log(`[CHECKOUT] Auto-created Stripe customer: ${user.stripe_customer_id}`)
+
+        // CRITICAL: Save the stripe_customer_id back to database
+        const db = getDb()
+        const dbUser = db.users.find(u => u.id === user.id)
+        if (dbUser) {
+          dbUser.stripe_customer_id = user.stripe_customer_id
+          saveDb(db)
+          console.log(`[CHECKOUT] Saved stripe_customer_id to database for user ${user.id}`)
+        }
       } catch (error) {
         console.error('[CHECKOUT] Failed to auto-create Stripe customer:', error)
         return NextResponse.json(
