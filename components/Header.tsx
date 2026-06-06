@@ -24,6 +24,7 @@ const authenticatedNavItems: NavItem[] = [
     { href: '/reports/gst-filing', label: 'GST Filing' },
   ]},
   { href: '/mileage', label: 'Mileage' },
+  { href: '/pricing', label: 'Pricing' },
   { label: 'Settings', icon: '⚙️', submenu: [
     { href: '/settings/profile', label: 'Business Profile' },
     { href: '/settings/gst', label: 'Default GST/HST' },
