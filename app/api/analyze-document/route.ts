@@ -58,9 +58,7 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
           },
           {
             type: 'text',
-            text: `FIRST - Describe what you see at the BOTTOM of this receipt (the last 5-10 lines). What text do you see? Include exact text like "Total:", amounts, any labels.
-
-THEN - Extract information from this receipt or invoice. This image may be from a mobile camera - focus on clarity and context clues if the image is slightly blurry or at an angle.
+            text: `Extract information from this receipt or invoice. This image may be from a mobile camera - focus on clarity and context clues if the image is slightly blurry or at an angle.
 
 FINDING THE AMOUNT (CRITICAL - FOLLOW THIS ALGORITHM):
 
@@ -118,7 +116,9 @@ GST/HST DETAILS:
 - Extract the GST/HST amount if shown separately on a "GST", "HST", or "Tax" line
 - If not shown: rate=0, amount=0
 
-Now extract and return ONLY this JSON (no markdown, no explanations, no extra text):
+RESPONSE FORMAT - CRITICAL:
+Return ONLY valid JSON. No text before or after. No markdown. No explanations.
+The response MUST be parseable as JSON or extraction will fail.
 
 {
   "date": "extracted date string or null",
@@ -129,7 +129,9 @@ Now extract and return ONLY this JSON (no markdown, no explanations, no extra te
   "account_type": "EXPENSE or ASSET or null",
   "gst_hst_amount": 0,
   "gst_hst_rate": 0
-}`,
+}
+
+Remember: ONLY JSON. No other text.`,
           },
         ],
       },
