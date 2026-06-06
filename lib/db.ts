@@ -852,7 +852,7 @@ export function getIncomeStatementDataByMonths(userId: number, startMonth: strin
       name: acc.name,
       type: acc.type || 'EXPENSE',
       user_id: userId,
-      parent_account_id: acc.parent_account_id,
+      parent_account_id: null,
     }))
 
   // Combine user accounts with missing default accounts
