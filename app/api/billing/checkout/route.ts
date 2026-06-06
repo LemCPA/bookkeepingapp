@@ -26,11 +26,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Auto-create Stripe customer if needed
     if (!user.stripe_customer_id) {
-      return NextResponse.json(
-        { error: 'Stripe customer not set up' },
-        { status: 400 }
-      )
+      try {
+        const { createStripeCustomer } = await import('@/lib/stripe-utils')
+        user.stripe_customer_id = await createStripeCustomer(user.email, user.name)
+        console.log(`[CHECKOUT] Auto-created Stripe customer: ${user.stripe_customer_id}`)
+      } catch (error) {
+        console.error('[CHECKOUT] Failed to auto-create Stripe customer:', error)
+        return NextResponse.json(
+          { error: 'Failed to set up payment method' },
+          { status: 500 }
+        )
+      }
     }
 
     const baseUrl = request.headers.get('origin') || 'http://localhost:3000'
