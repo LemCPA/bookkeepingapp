@@ -217,7 +217,7 @@ export default function PricingPage() {
                   $10<span className="text-lg text-slate-600">/month</span>
                 </p>
                 <p className="text-slate-600 text-sm mt-2">
-                  50 uploads per month, resets monthly
+                  60 uploads per month, resets monthly
                 </p>
               </div>
 
