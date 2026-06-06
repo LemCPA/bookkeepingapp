@@ -61,16 +61,30 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
             text: `Extract information from this receipt or invoice. This image may be from a mobile camera - focus on clarity and context clues if the image is slightly blurry or at an angle.
 
 FINDING THE AMOUNT (CRITICAL - THIS IS YOUR PRIMARY JOB):
-Search for "Amount Due", "Total Due", "Balance Due", "Total:", "Grand Total", "Net Total", "TOTAL", "Please Pay", "Amount to Pay", "Total Due"
-- Look to the RIGHT of these phrases for a $ sign and the number
-- If a subtotal + HST/GST/Tax pattern exists, look for the FINAL TOTAL line (sum of subtotal + tax)
-- Look for amounts at the BOTTOM of the receipt (where totals typically appear)
-- Look for the LARGEST currency amount if no explicit label found
-- Example: "Total: $26.60" or "Total: 26.60" → extract as 26.60 (real number)
-- Example: "Subtotal: $23.54, HST: $3.06, Total: $26.60" → extract the final $26.60 (not subtotal)
-- Strip symbols: $ £ € ¥ commas
-- Strip leading zeros: "026.60" should become 26.60
-- Valid range: 0.01 to 999999.99 (reject 0 or null unless genuinely blank)
+THIS IS THE MOST IMPORTANT FIELD - EXTRACT IT ACCURATELY OR THE USER CANNOT PROCESS THE RECEIPT.
+
+Search for total amounts in this priority order:
+1. "Total:" followed by a dollar amount (most common, especially on thermal receipts)
+2. "Amount Due", "Total Due", "Balance Due", "Please Pay", "Amount to Pay"
+3. "Grand Total", "Net Total", "TOTAL", "Final Total"
+4. If multiple dollar amounts exist: look for the BOTTOM-MOST line (totals are at the end)
+5. Look for pattern: Subtotal + Tax = Total (use the final number)
+6. Look for currency symbol: $ £ € ¥ followed immediately by digits
+
+CRITICAL THERMAL RECEIPT PATTERN:
+On thermal receipts, totals often appear as: "Total:        $26.60" or "Total: 26.60"
+The amount comes RIGHT AFTER the colon, possibly with spacing
+Example on Canada Computers: "Subtotal: $23.54" / "HST: $3.06" / "Total: $26.60" → extract 26.60
+
+DO NOT EXTRACT:
+- Line item prices (smaller amounts scattered through middle)
+- Subtotals (only extract the final TOTAL)
+- Tax amounts alone (extract the final total that includes tax)
+
+Amount must be a real number (26.60, not "26.60" as string)
+Strip symbols: $ £ € ¥ commas
+Strip leading zeros: "026.60" → 26.60
+Valid range: 0.01 to 999999.99
 
 VENDOR NAME (appears near top, often first bold text or business letterhead):
 - Look for company/business name near the top of the document
@@ -267,10 +281,13 @@ export async function POST(request: NextRequest) {
       gst_hst_amount: extractedData.gst_hst_amount
     })
 
-    if (!extractedData.amount) {
-      console.warn('⚠️ NO AMOUNT EXTRACTED - User will need to enter manually')
+    if (!extractedData.amount || extractedData.amount === 0) {
+      console.warn('⚠️ NO AMOUNT EXTRACTED - Claude returned:', extractedData.amount, '- User will need to enter manually')
+      console.warn('⚠️ Raw extracted value was:', extractedData.amount)
     } else if (extractedData.amount < 1) {
       console.warn('⚠️ SUSPICIOUSLY LOW AMOUNT:', extractedData.amount, '- may be extraction error')
+    } else {
+      console.log('✅ Amount successfully extracted:', extractedData.amount)
     }
 
     // Log extracted data for debugging
