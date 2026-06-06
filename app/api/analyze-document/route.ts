@@ -60,40 +60,40 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
             type: 'text',
             text: `Extract information from this receipt or invoice. This image may be from a mobile camera - focus on clarity and context clues if the image is slightly blurry or at an angle.
 
-FINDING THE AMOUNT (CRITICAL - THIS IS YOUR PRIMARY JOB):
-THIS IS THE MOST IMPORTANT FIELD. IF YOU CANNOT FIND IT, SAY SO - DO NOT RETURN 0 OR NULL.
+FINDING THE AMOUNT (CRITICAL - FOLLOW THIS ALGORITHM):
 
-LOOK AT THE ENTIRE RECEIPT STRUCTURE:
-1. Top: Store header, date, transaction info
-2. Middle: Line items with individual prices (ignore these!)
-3. Bottom: Summary section with amounts
+STEP 1: Scan the receipt from BOTTOM to TOP
+STEP 2: Find the first line that contains the word "Total" (case-insensitive)
+STEP 3: Extract everything after "Total" on that line
+STEP 4: Look for a dollar sign $ or digits
+STEP 5: Extract the number that follows (format: XX.XX)
 
-THE TOTAL IS ALWAYS AT THE VERY BOTTOM IN THIS PATTERN:
-  Subtotal:  $XX.XX
-  Tax/HST:   $X.XX
-  Total:     $XX.XX  ← THIS IS WHAT WE NEED
+MECHANICAL EXAMPLES:
+- Line reads: "Total: $26.60" → Extract "26.60"
+- Line reads: "Total $26.60" → Extract "26.60"
+- Line reads: "TOTAL: $26.60" → Extract "26.60"
+- Line reads: "Total:        $26.60" (with spaces) → Extract "26.60"
+- Line reads: "Subtotal: $23.54" "HST: $3.06" "Total: $26.60" → ONLY extract from the "Total" line = 26.60
 
-EXAMPLES OF WHAT TO EXTRACT:
-- "Total: $26.60" → extract 26.60
-- "Total:    $26.60" (with spaces) → extract 26.60
-- "TOTAL $26.60" → extract 26.60
-- "Total $26.60" → extract 26.60
-- Thermal receipt showing "Total:" followed by amount → extract that amount
-- If you see "Subtotal: $23.54" and "HST: $3.06" and "Total: $26.60" → extract 26.60 (NOT 23.54 or 3.06)
+CANADA COMPUTERS THERMAL RECEIPT PATTERN (VERY COMMON):
+You will see at the bottom:
+  Subtotal:    $23.54
+  HST:         $3.06
+  Total:       $26.60
 
-CRITICAL: Look specifically at the BOTTOM 20% of the receipt for the total line.
+Find the line that says "Total:" - that line contains the amount we need.
 
-DO NOT EXTRACT (IGNORE THESE):
-- Line item prices ($22.99, $0.55, etc in the middle section)
-- Subtotal alone (only take the final TOTAL)
-- Tax/HST amount alone (that's not the total)
+WHAT TO IGNORE:
+- Do NOT extract subtotal ($23.54)
+- Do NOT extract tax ($3.06)
+- Do NOT extract line item prices ($22.99, $0.55) from middle of receipt
+- Only extract the "Total:" amount
 
-If you find text that says "Total:" or "TOTAL" at the bottom, extract the number next to it.
-The amount comes AFTER the label, possibly with $ symbol.
-
-Return as real number: 26.60 (not string, not 0, not null)
-Strip: $ £ € ¥ commas spaces
+CRITICAL: If you see "Total:" followed by any number, that is the amount.
+Extract as real number: 26.60
+Remove: $ £ € ¥ commas spaces
 Valid range: 0.01 to 999999.99
+If you CANNOT find "Total:" line, return null (do NOT return 0)
 
 VENDOR NAME (appears near top, often first bold text or business letterhead):
 - Look for company/business name near the top of the document
