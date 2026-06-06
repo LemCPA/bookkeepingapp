@@ -40,9 +40,21 @@ export default function PricingPage() {
 
     setLoading(true)
     try {
+      // Get auth token from localStorage
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+
+      if (!token) {
+        alert('Please log in again')
+        window.location.href = '/login'
+        return
+      }
+
       const response = await fetch('/api/billing/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ plan }),
       })
 
@@ -50,7 +62,10 @@ export default function PricingPage() {
         const { url } = await response.json()
         window.location.href = url
       } else {
-        alert('Error creating checkout session')
+        const error = await response.json()
+        console.error('Checkout error response:', { status: response.status, error })
+        const errorMsg = error.error || `Server error (${response.status})`
+        alert(`Checkout Error: ${errorMsg}`)
       }
     } catch (error) {
       console.error('Checkout error:', error)
@@ -209,14 +224,16 @@ export default function PricingPage() {
               {/* CTA */}
               <button
                 onClick={() => handleSubscribe('starter')}
-                disabled={userPlan === 'starter' || loading}
+                disabled={userPlan === 'starter' || loading || !isLoggedIn}
                 className={`w-full py-3 rounded-lg font-semibold mb-6 transition-all ${
                   userPlan === 'starter'
                     ? 'bg-slate-100 text-slate-600 cursor-default'
+                    : !isLoggedIn
+                    ? 'bg-slate-300 text-slate-600 cursor-default'
                     : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                 }`}
               >
-                {loading ? 'Loading...' : userPlan === 'starter' ? 'Your Current Plan' : 'Subscribe to Starter'}
+                {!isLoggedIn ? 'Log in to Subscribe' : loading ? 'Loading...' : userPlan === 'starter' ? 'Your Current Plan' : 'Subscribe to Starter'}
               </button>
 
               {/* Features */}
@@ -277,14 +294,16 @@ export default function PricingPage() {
               {/* CTA */}
               <button
                 onClick={() => handleSubscribe('growth')}
-                disabled={userPlan === 'growth' || loading}
+                disabled={userPlan === 'growth' || loading || !isLoggedIn}
                 className={`w-full py-3 rounded-lg font-semibold mb-6 transition-all ${
                   userPlan === 'growth'
                     ? 'bg-slate-100 text-slate-600 cursor-default'
+                    : !isLoggedIn
+                    ? 'bg-slate-300 text-slate-600 cursor-default'
                     : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                 }`}
               >
-                {loading ? 'Loading...' : userPlan === 'growth' ? 'Your Current Plan' : 'Subscribe to Growth'}
+                {!isLoggedIn ? 'Log in to Subscribe' : loading ? 'Loading...' : userPlan === 'growth' ? 'Your Current Plan' : 'Subscribe to Growth'}
               </button>
 
               {/* Features */}
