@@ -116,10 +116,14 @@ GST/HST DETAILS:
 - Extract the GST/HST amount if shown separately on a "GST", "HST", or "Tax" line
 - If not shown: rate=0, amount=0
 
-RESPONSE FORMAT - CRITICAL:
-Return ONLY valid JSON. No text before or after. No markdown. No explanations.
-The response MUST be parseable as JSON or extraction will fail.
+RESPONSE FORMAT - ABSOLUTELY CRITICAL:
+Your entire response must be ONLY a valid JSON object.
+Start with { and end with }
+Do NOT include any text before or after the JSON.
+Do NOT include markdown code blocks.
+Do NOT include any explanations or descriptions.
 
+Respond ONLY with this exact structure:
 {
   "date": "extracted date string or null",
   "amount": <number or null>,
@@ -131,7 +135,7 @@ The response MUST be parseable as JSON or extraction will fail.
   "gst_hst_rate": 0
 }
 
-Remember: ONLY JSON. No other text.`,
+Your response must be valid JSON that starts with { and ends with }. Nothing else.`,
           },
         ],
       },
