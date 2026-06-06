@@ -61,12 +61,15 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
             text: `Extract information from this receipt or invoice. This image may be from a mobile camera - focus on clarity and context clues if the image is slightly blurry or at an angle.
 
 FINDING THE AMOUNT (CRITICAL - THIS IS YOUR PRIMARY JOB):
-Search for "Amount Due", "Total Due", "Balance Due", "Total", "Grand Total", "Net Total", "TOTAL", "Please Pay", "Amount to Pay"
+Search for "Amount Due", "Total Due", "Balance Due", "Total:", "Grand Total", "Net Total", "TOTAL", "Please Pay", "Amount to Pay", "Total Due"
 - Look to the RIGHT of these phrases for a $ sign and the number
-- If a subtotal + tax = total pattern exists, use the final total line
+- If a subtotal + HST/GST/Tax pattern exists, look for the FINAL TOTAL line (sum of subtotal + tax)
+- Look for amounts at the BOTTOM of the receipt (where totals typically appear)
 - Look for the LARGEST currency amount if no explicit label found
-- Example: "Amount Due        $68.93" → extract as 68.93 (not string, real number)
+- Example: "Total: $26.60" or "Total: 26.60" → extract as 26.60 (real number)
+- Example: "Subtotal: $23.54, HST: $3.06, Total: $26.60" → extract the final $26.60 (not subtotal)
 - Strip symbols: $ £ € ¥ commas
+- Strip leading zeros: "026.60" should become 26.60
 - Valid range: 0.01 to 999999.99 (reject 0 or null unless genuinely blank)
 
 VENDOR NAME (appears near top, often first bold text or business letterhead):
@@ -222,6 +225,16 @@ export async function POST(request: NextRequest) {
       const parts = amountStr.split('.')
       if (parts.length > 2) {
         amountStr = parts[0] + '.' + parts.slice(1).join('')
+      }
+
+      // Remove leading zeros before decimal point (e.g., "026.60" -> "26.60")
+      // But preserve "0.xx" format (e.g., "0.50" should stay "0.50")
+      if (amountStr.includes('.')) {
+        const [beforeDecimal, afterDecimal] = amountStr.split('.')
+        const cleanedBeforeDecimal = beforeDecimal.replace(/^0+/, '') || '0'
+        amountStr = cleanedBeforeDecimal + '.' + afterDecimal
+      } else {
+        amountStr = amountStr.replace(/^0+/, '') || '0'
       }
 
       const amount = Number(amountStr)
