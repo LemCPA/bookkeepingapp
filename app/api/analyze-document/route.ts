@@ -58,7 +58,9 @@ async function analyzeImage(base64: string, mediaType: 'image/jpeg' | 'image/png
           },
           {
             type: 'text',
-            text: `Extract information from this receipt or invoice. This image may be from a mobile camera - focus on clarity and context clues if the image is slightly blurry or at an angle.
+            text: `FIRST - Describe what you see at the BOTTOM of this receipt (the last 5-10 lines). What text do you see? Include exact text like "Total:", amounts, any labels.
+
+THEN - Extract information from this receipt or invoice. This image may be from a mobile camera - focus on clarity and context clues if the image is slightly blurry or at an angle.
 
 FINDING THE AMOUNT (CRITICAL - FOLLOW THIS ALGORITHM):
 
