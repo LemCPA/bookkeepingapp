@@ -54,35 +54,54 @@ export async function POST(request: NextRequest) {
 
     // Save subscription to database
     if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
-      const subscription = event.data.object as any
-      const stripeCustomerId = subscription.customer
+      try {
+        const subscription = event.data.object as any
+        const stripeCustomerId = subscription.customer
 
-      // Find user by stripe_customer_id
-      const user = db.users.find(u => u.stripe_customer_id === stripeCustomerId)
-      if (user) {
-        // Remove old subscription if exists
-        db.subscriptions = db.subscriptions.filter(s => s.user_id !== user.id)
+        // Find user by stripe_customer_id
+        const user = db.users?.find((u: any) => u.stripe_customer_id === stripeCustomerId)
+        if (user) {
+          // Initialize subscriptions array if needed
+          if (!db.subscriptions) {
+            db.subscriptions = []
+          }
 
-        // Add new subscription
-        const planKey = subscription.items.data[0].price.metadata?.plan_key || 'free'
-        db.subscriptions.push({
-          id: db.nextSubscriptionId || 1,
-          user_id: user.id,
-          stripe_customer_id: stripeCustomerId,
-          stripe_subscription_id: subscription.id,
-          plan: planKey,
-          status: subscription.status,
-          trial_end_date: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-          created_at: new Date().toISOString(),
-          canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
-        })
-        db.nextSubscriptionId = (db.nextSubscriptionId || 1) + 1
+          // Remove old subscription if exists
+          db.subscriptions = db.subscriptions.filter((s: any) => s.user_id !== user.id)
 
-        console.log(`[WEBHOOK] Saved subscription for user ${user.id}: ${planKey} (${subscription.status})`)
-      } else {
-        console.warn(`[WEBHOOK] Could not find user with stripe_customer_id: ${stripeCustomerId}`)
+          // Determine plan based on price ID
+          let planKey = 'starter' // default
+          const priceId = subscription.items?.data?.[0]?.price?.id
+          if (priceId) {
+            // Map Stripe price IDs to plan names
+            if (priceId === process.env.STRIPE_GROWTH_PRICE_ID) {
+              planKey = 'growth'
+            } else if (priceId === process.env.STRIPE_STARTER_PRICE_ID) {
+              planKey = 'starter'
+            }
+          }
+
+          // Add new subscription
+          db.subscriptions.push({
+            id: (db.subscriptions.length || 0) + 1,
+            user_id: user.id,
+            stripe_customer_id: stripeCustomerId,
+            stripe_subscription_id: subscription.id,
+            plan: planKey,
+            status: subscription.status,
+            trial_end_date: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            created_at: new Date().toISOString(),
+            canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+          })
+
+          console.log(`[WEBHOOK] Saved subscription for user ${user.id}: ${planKey} (${subscription.status})`)
+        } else {
+          console.warn(`[WEBHOOK] Could not find user with stripe_customer_id: ${stripeCustomerId}`)
+        }
+      } catch (error) {
+        console.error('[WEBHOOK] Error saving subscription:', error)
       }
     }
 
