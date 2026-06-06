@@ -11,7 +11,11 @@ export async function POST(request: NextRequest) {
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
 
+  console.log('[WEBHOOK] Incoming webhook request')
+  console.log('[WEBHOOK] Event type may be determinable from body')
+
   if (!signature) {
+    console.error('[WEBHOOK] Missing stripe-signature header')
     return NextResponse.json(
       { error: 'Missing stripe-signature header' },
       { status: 400 }
@@ -19,7 +23,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    console.log('[WEBHOOK] Verifying signature and parsing event...')
     const event = verifyWebhookSignature(body, signature)
+    console.log('[WEBHOOK] Event verified! Type:', event.type)
     const db = getDb()
 
     // Handle invoice payment events (charge.succeeded for payment links)
@@ -47,8 +53,11 @@ export async function POST(request: NextRequest) {
 
     // Handle subscription events
     const handled = handleSubscriptionEvent(event)
+    console.log('[WEBHOOK] handleSubscriptionEvent returned:', handled ? handled.type : 'null')
+
     if (!handled) {
       // Ignore unhandled event types
+      console.log('[WEBHOOK] Event type not handled, returning')
       return NextResponse.json({ received: true })
     }
 
@@ -57,9 +66,12 @@ export async function POST(request: NextRequest) {
       try {
         const subscription = event.data.object as any
         const stripeCustomerId = subscription.customer
+        console.log('[WEBHOOK] Processing subscription event for customer:', stripeCustomerId)
 
         // Find user by stripe_customer_id
         const user = db.users?.find((u: any) => u.stripe_customer_id === stripeCustomerId)
+        console.log('[WEBHOOK] User lookup result:', user ? `Found user ${user.id}` : 'User not found')
+
         if (user) {
           // Initialize subscriptions array if needed
           if (!db.subscriptions) {
