@@ -3,6 +3,7 @@ import { hashPassword, isValidPassword } from '@/lib/bcrypt-utils'
 import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
 import { getDb, saveDb, getUserByEmail, createAccount } from '@/lib/db'
 import { getUserByEmailFromSupabase, createUserInSupabase } from '@/lib/supabase-db'
+import { createStripeCustomer } from '@/lib/stripe-utils'
 import { DEFAULT_ACCOUNTS } from '@/lib/default-accounts'
 
 export async function POST(request: NextRequest) {
@@ -61,6 +62,31 @@ export async function POST(request: NextRequest) {
       }
       db.users.push(newUser)
       saveDb(db)
+    }
+
+    // Create Stripe customer for new user
+    let stripeCustomerId: string | null = null
+    try {
+      stripeCustomerId = await createStripeCustomer(email, name)
+      console.log(`[SIGNUP] Created Stripe customer: ${stripeCustomerId} for user ${newUser.id}`)
+    } catch (error) {
+      console.warn(`[SIGNUP] Failed to create Stripe customer for ${email}:`, error)
+      // Don't fail signup if Stripe creation fails
+    }
+
+    // Add stripe_customer_id to user object
+    if (stripeCustomerId) {
+      newUser.stripe_customer_id = stripeCustomerId
+
+      // If user was created in JSON fallback, save the updated db
+      if (!await getUserByEmailFromSupabase(email)) {
+        const db = getDb()
+        const userIndex = db.users.findIndex(u => u.id === newUser.id)
+        if (userIndex !== -1) {
+          db.users[userIndex].stripe_customer_id = stripeCustomerId
+          saveDb(db)
+        }
+      }
     }
 
     // Automatically create default accounts for new user (only accounts with codes)
