@@ -52,7 +52,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    // Log webhook event for now
+    // Save subscription to database
+    if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
+      const subscription = event.data.object as any
+      const stripeCustomerId = subscription.customer
+
+      // Find user by stripe_customer_id
+      const user = db.users.find(u => u.stripe_customer_id === stripeCustomerId)
+      if (user) {
+        // Remove old subscription if exists
+        db.subscriptions = db.subscriptions.filter(s => s.user_id !== user.id)
+
+        // Add new subscription
+        const planKey = subscription.items.data[0].price.metadata?.plan_key || 'free'
+        db.subscriptions.push({
+          id: db.nextSubscriptionId || 1,
+          user_id: user.id,
+          stripe_customer_id: stripeCustomerId,
+          stripe_subscription_id: subscription.id,
+          plan: planKey,
+          status: subscription.status,
+          trial_end_date: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          created_at: new Date().toISOString(),
+          canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+        })
+        db.nextSubscriptionId = (db.nextSubscriptionId || 1) + 1
+
+        console.log(`[WEBHOOK] Saved subscription for user ${user.id}: ${planKey} (${subscription.status})`)
+      } else {
+        console.warn(`[WEBHOOK] Could not find user with stripe_customer_id: ${stripeCustomerId}`)
+      }
+    }
+
+    // Log webhook event
     console.log('Webhook event received:', handled.type, handled.data)
 
     // Save database
