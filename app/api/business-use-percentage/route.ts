@@ -19,7 +19,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // TODO: Update percentages in Supabase when implemented
-    const result = { success: true }
+    const result = { success: true, error: null }
 
     if (!result || !result.success) {
       return NextResponse.json(
