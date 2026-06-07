@@ -18,7 +18,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const result = await updateBusinessUsePercentagesInSupabase(
+    // const result = await updateBusinessUsePercentagesInSupabase(
       userId,
       homePercentage,
       vehiclePercentage

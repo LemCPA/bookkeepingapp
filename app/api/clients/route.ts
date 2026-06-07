@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Try to get clients from Supabase first, fall back to JSON
-    let clients = await getClientsFromSupabase(userId)
+    // let clients = await getClientsFromSupabase(userId)
+    let clients = getClients(userId)
     if (!clients || clients.length === 0) {
       clients = getClients(userId)
     }

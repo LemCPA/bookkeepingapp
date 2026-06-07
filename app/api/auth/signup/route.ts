@@ -42,11 +42,9 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password)
 
-    // Try to create user in Supabase first
-    let newUser = await createUserInSupabase(email, passwordHash, name)
-
-    // If Supabase is not available, fall back to JSON
-    if (!newUser) {
+    // Create user in JSON database
+    let newUser = null
+    {
       const db = getDb()
       const userId = db.nextUserId++
       newUser = {

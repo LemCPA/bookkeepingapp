@@ -56,7 +56,7 @@ async function saveTransactionToSupabase(
   type: string
 ): Promise<boolean> {
   try {
-    const result = await createTransactionInSupabase(
+    // const result = await createTransactionInSupabase(
       userId,
       0, // clientId - set to 0 for now
       accountId,

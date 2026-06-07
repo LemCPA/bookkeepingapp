@@ -15,11 +15,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Lookup user in database (try Supabase first, then JSON)
-    let user = await getUserByEmailFromSupabase(email)
-    if (!user) {
-      user = getUserByEmail(email)
-    }
+    // Lookup user in database
+    const user = getUserByEmail(email)
 
     if (!user) {
       return NextResponse.json(

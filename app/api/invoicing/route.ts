@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     // Try to get transactions from Supabase first (production), fallback to JSON (development)
     let allTransactions: any[] = []
     try {
-      const supabaseTransactions = await getTransactionsFromSupabase(userId)
+      // const supabaseTransactions = await getTransactionsFromSupabase(userId)
       if (supabaseTransactions && supabaseTransactions.length > 0) {
         console.log('[INVOICING] Loaded from Supabase:', supabaseTransactions.length, 'transactions')
         allTransactions = supabaseTransactions
