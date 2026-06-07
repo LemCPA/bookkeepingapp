@@ -35,14 +35,20 @@ export async function getSubscriptionFromSupabase(userId: number) {
       .from('subscriptions')
       .select('*')
       .eq('user_id', userUuid)
-      .single()
+      .order('created_at', { ascending: false })
 
     if (error && error.code !== 'PGRST116') {
       console.error('[SUPABASE] Error fetching subscription:', error)
       return null
     }
 
-    return data || null
+    if (!data || data.length === 0) {
+      return null
+    }
+
+    // Return the most recent ACTIVE subscription, or the most recent one if none are active
+    const activeSubscription = data.find(sub => sub.status === 'active')
+    return activeSubscription || data[0]
   } catch (err) {
     console.error('[SUPABASE] Exception fetching subscription:', err)
     return null
