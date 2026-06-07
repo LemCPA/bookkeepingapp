@@ -123,6 +123,8 @@ export async function getUserFromSupabase(userId: number) {
 export async function updateUserStripeCustomerId(userId: number, stripeCustomerId: string) {
   try {
     const userUuid = numericIdToUuid(userId)
+    console.log(`[SUPABASE] Updating stripe_customer_id for user ${userId} (UUID: ${userUuid})`)
+
     const { data, error } = await supabase
       .from('users')
       .update({ stripe_customer_id: stripeCustomerId })
@@ -134,7 +136,12 @@ export async function updateUserStripeCustomerId(userId: number, stripeCustomerI
       return false
     }
 
-    console.log('[SUPABASE] User stripe_customer_id updated for user', userId)
+    if (!data || data.length === 0) {
+      console.error('[SUPABASE] Update returned no rows - user may not exist with UUID:', userUuid)
+      return false
+    }
+
+    console.log('[SUPABASE] User stripe_customer_id updated successfully for user', userId)
     return true
   } catch (err) {
     console.error('[SUPABASE] Exception updating user:', err)
