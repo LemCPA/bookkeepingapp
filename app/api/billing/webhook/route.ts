@@ -81,9 +81,22 @@ export async function POST(request: NextRequest) {
 
           console.log(`[WEBHOOK] Determined plan: ${planKey} (metadata: ${subscription.metadata?.plan}, priceId: ${subscription.items?.data?.[0]?.price?.id})`)
 
-          // Save subscription to Supabase (convert numeric user_id to UUID)
+          // Convert user_id to UUID (only if numeric - user from local DB)
+          // If user came from Supabase, user.id is already a UUID
+          let userId: string
+          if (typeof user.id === 'string' && user.id.includes('-')) {
+            // Already a UUID (from Supabase)
+            userId = user.id
+            console.log('[WEBHOOK] User from Supabase, using UUID directly')
+          } else {
+            // Numeric ID (from local DB), convert to UUID
+            userId = numericIdToUuid(user.id as number)
+            console.log(`[WEBHOOK] User from local DB, converted ID ${user.id} to UUID`)
+          }
+
+          // Save subscription to Supabase
           const subscriptionData = {
-            user_id: numericIdToUuid(user.id),
+            user_id: userId,
             stripe_customer_id: stripeCustomerId,
             stripe_subscription_id: subscription.id,
             plan: planKey,
