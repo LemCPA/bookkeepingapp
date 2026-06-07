@@ -10,6 +10,7 @@ export default function PricingPage() {
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null)
   const [daysRemaining, setDaysRemaining] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
 
   useEffect(() => {
     // Check if user is logged in by fetching dashboard data
@@ -49,13 +50,16 @@ export default function PricingPage() {
         return
       }
 
+      // Add _annual suffix if annual billing is selected
+      const finalPlan = billingPeriod === 'annual' ? `${plan}_annual` : plan
+
       const response = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan: finalPlan }),
       })
 
       if (response.ok) {
@@ -119,6 +123,32 @@ export default function PricingPage() {
             </p>
           </div>
         )}
+
+        {/* Billing Period Toggle */}
+        <div className="flex justify-center mb-12">
+          <div className="inline-flex rounded-lg border border-slate-300 bg-white p-1">
+            <button
+              onClick={() => setBillingPeriod('monthly')}
+              className={`px-6 py-2 rounded-md font-semibold transition-all ${
+                billingPeriod === 'monthly'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-700 hover:text-slate-900'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod('annual')}
+              className={`px-6 py-2 rounded-md font-semibold transition-all ${
+                billingPeriod === 'annual'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-700 hover:text-slate-900'
+              }`}
+            >
+              Annual <span className="text-sm ml-1">(Save up to $48)</span>
+            </button>
+          </div>
+        </div>
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
@@ -214,8 +244,16 @@ export default function PricingPage() {
               {/* Price */}
               <div className="mb-6">
                 <p className="text-4xl font-bold text-slate-900">
-                  $10<span className="text-lg text-slate-600">/month</span>
+                  {billingPeriod === 'monthly' ? '$12' : '$120'}
+                  <span className="text-lg text-slate-600">
+                    {billingPeriod === 'monthly' ? '/month' : '/year'}
+                  </span>
                 </p>
+                {billingPeriod === 'annual' && (
+                  <p className="text-green-600 font-semibold text-sm mt-2">
+                    💰 Save $24/year ($2/month)
+                  </p>
+                )}
                 <p className="text-slate-600 text-sm mt-2">
                   30 uploads per month, resets monthly
                 </p>
@@ -284,8 +322,16 @@ export default function PricingPage() {
               {/* Price */}
               <div className="mb-6">
                 <p className="text-4xl font-bold text-slate-900">
-                  $20<span className="text-lg text-slate-600">/month</span>
+                  {billingPeriod === 'monthly' ? '$24' : '$240'}
+                  <span className="text-lg text-slate-600">
+                    {billingPeriod === 'monthly' ? '/month' : '/year'}
+                  </span>
                 </p>
+                {billingPeriod === 'annual' && (
+                  <p className="text-green-600 font-semibold text-sm mt-2">
+                    💰 Save $48/year ($4/month)
+                  </p>
+                )}
                 <p className="text-slate-600 text-sm mt-2">
                   200 uploads per month, resets monthly
                 </p>
@@ -303,7 +349,7 @@ export default function PricingPage() {
                     : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                 }`}
               >
-                {!isLoggedIn ? 'Log in to Subscribe' : loading ? 'Loading...' : userPlan === 'growth' ? 'Your Current Plan' : 'Subscribe to Growth'}
+                {!isLoggedIn ? 'Log in to Subscribe' : loading ? 'Loading...' : userPlan === 'growth' ? 'Your Current Plan' : `Subscribe to Growth`}
               </button>
 
               {/* Features */}
