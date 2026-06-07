@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { v5 as uuidv5 } from 'uuid'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_SECRET
@@ -16,14 +17,24 @@ export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 })
 
 /**
+ * Convert numeric user ID to deterministic UUID for Supabase
+ * Uses UUID v5 with a fixed namespace to ensure same ID always generates same UUID
+ */
+const USER_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
+export function numericIdToUuid(userId: number): string {
+  return uuidv5(userId.toString(), USER_NAMESPACE)
+}
+
+/**
  * Get subscription for a user from Supabase
  */
 export async function getSubscriptionFromSupabase(userId: number) {
   try {
+    const userUuid = numericIdToUuid(userId)
     const { data, error } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', userUuid)
       .single()
 
     if (error && error.code !== 'PGRST116') {
@@ -42,7 +53,7 @@ export async function getSubscriptionFromSupabase(userId: number) {
  * Save subscription to Supabase
  */
 export async function saveSubscriptionToSupabase(subscription: {
-  user_id: number
+  user_id: string // UUID (converted from numeric ID)
   stripe_customer_id: string
   stripe_subscription_id: string
   plan: string
@@ -105,10 +116,11 @@ export async function getUserFromSupabase(userId: number) {
  */
 export async function updateUserStripeCustomerId(userId: number, stripeCustomerId: string) {
   try {
+    const userUuid = numericIdToUuid(userId)
     const { data, error } = await supabase
       .from('users')
       .update({ stripe_customer_id: stripeCustomerId })
-      .eq('id', userId)
+      .eq('id', userUuid)
       .select()
 
     if (error) {
@@ -116,7 +128,7 @@ export async function updateUserStripeCustomerId(userId: number, stripeCustomerI
       return false
     }
 
-    console.log('[SUPABASE] User stripe_customer_id updated:', data)
+    console.log('[SUPABASE] User stripe_customer_id updated for user', userId)
     return true
   } catch (err) {
     console.error('[SUPABASE] Exception updating user:', err)

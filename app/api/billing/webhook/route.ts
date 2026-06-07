@@ -3,7 +3,7 @@ import {
   verifyWebhookSignature,
   handleSubscriptionEvent,
 } from '@/lib/stripe-utils'
-import { saveSubscriptionToSupabase, findUserByStripeCustomerId } from '@/lib/supabase-db'
+import { saveSubscriptionToSupabase, findUserByStripeCustomerId, numericIdToUuid } from '@/lib/supabase-db'
 import { getDb } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -81,9 +81,9 @@ export async function POST(request: NextRequest) {
 
           console.log(`[WEBHOOK] Determined plan: ${planKey} (metadata: ${subscription.metadata?.plan}, priceId: ${subscription.items?.data?.[0]?.price?.id})`)
 
-          // Save subscription to Supabase
+          // Save subscription to Supabase (convert numeric user_id to UUID)
           const subscriptionData = {
-            user_id: user.id,
+            user_id: numericIdToUuid(user.id),
             stripe_customer_id: stripeCustomerId,
             stripe_subscription_id: subscription.id,
             plan: planKey,
