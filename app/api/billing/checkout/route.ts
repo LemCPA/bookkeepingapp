@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { getUser } from '@/lib/db'
 import { createCheckoutSession, PRICING_PLANS } from '@/lib/stripe-utils'
-import { updateUserStripeCustomerId, ensureUserInSupabase } from '@/lib/supabase-db'
+import { updateUserStripeCustomerId } from '@/lib/supabase-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,16 +27,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Ensure user exists in Supabase (required for webhook subscription lookup)
-    const supabaseUser = await ensureUserInSupabase(user.id, user.email, user.name)
-    if (!supabaseUser) {
-      console.error(`[CHECKOUT] Failed to ensure user exists in Supabase for user ${user.id}`)
-      return NextResponse.json(
-        { error: 'Failed to initialize billing account' },
-        { status: 500 }
-      )
-    }
-
     // Auto-create Stripe customer if needed
     if (!user.stripe_customer_id) {
       try {
@@ -44,16 +34,14 @@ export async function POST(request: NextRequest) {
         user.stripe_customer_id = await createStripeCustomer(user.email, user.name)
         console.log(`[CHECKOUT] Auto-created Stripe customer: ${user.stripe_customer_id}`)
 
-        // CRITICAL: Save the stripe_customer_id to Supabase
+        // Save the stripe_customer_id to Supabase for webhook lookup
+        // This allows the webhook to map stripe_customer_id back to local user_id
         const saved = await updateUserStripeCustomerId(user.id, user.stripe_customer_id)
         if (saved) {
           console.log(`[CHECKOUT] Saved stripe_customer_id to Supabase for user ${user.id}`)
         } else {
-          console.error(`[CHECKOUT] Failed to save stripe_customer_id to Supabase for user ${user.id}`)
-          return NextResponse.json(
-            { error: 'Failed to save payment setup' },
-            { status: 500 }
-          )
+          // Log but don't fail - the webhook will still work if we can find the user another way
+          console.warn(`[CHECKOUT] Failed to save stripe_customer_id to Supabase for user ${user.id}, continuing anyway`)
         }
       } catch (error) {
         console.error('[CHECKOUT] Failed to auto-create Stripe customer:', error)

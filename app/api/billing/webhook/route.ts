@@ -4,6 +4,7 @@ import {
   handleSubscriptionEvent,
 } from '@/lib/stripe-utils'
 import { saveSubscriptionToSupabase, findUserByStripeCustomerId } from '@/lib/supabase-db'
+import { getDb } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,8 +44,21 @@ export async function POST(request: NextRequest) {
         const stripeCustomerId = subscription.customer
         console.log('[WEBHOOK] Processing subscription event for customer:', stripeCustomerId)
 
-        // Find user by stripe_customer_id in Supabase
-        const user = await findUserByStripeCustomerId(stripeCustomerId)
+        // Find user by stripe_customer_id - try Supabase first, then fall back to local DB
+        let user = await findUserByStripeCustomerId(stripeCustomerId)
+
+        if (!user) {
+          // Fall back to local database lookup
+          const db = getDb()
+          const localUser = db.users.find((u: any) => u.stripe_customer_id === stripeCustomerId)
+          if (localUser) {
+            user = localUser
+            console.log('[WEBHOOK] Found user in local database:', user.id)
+          }
+        } else {
+          console.log('[WEBHOOK] Found user in Supabase:', user.id)
+        }
+
         console.log('[WEBHOOK] User lookup result:', user ? `Found user ${user.id}` : 'User not found')
 
         if (user) {
