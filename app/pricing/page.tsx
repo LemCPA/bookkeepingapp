@@ -81,22 +81,6 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="text-xl font-bold text-blue-600">
-              📊 BookKeep
-            </Link>
-            {isLoggedIn && (
-              <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
-                Back to Dashboard
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
