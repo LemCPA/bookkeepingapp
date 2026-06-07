@@ -70,15 +70,14 @@ export async function POST(request: NextRequest) {
 
     // Add stripe_customer_id to user object
     if (stripeCustomerId) {
-      newUser.stripe_customer_id = stripeCustomerId
+      (newUser as any).stripe_customer_id = stripeCustomerId
 
-      // If user was created in JSON fallback, save the updated db
-        const db = getDb()
-        const userIndex = db.users.findIndex(u => u.id === newUser.id)
-        if (userIndex !== -1) {
-          db.users[userIndex].stripe_customer_id = stripeCustomerId
-          saveDb(db)
-        }
+      // Save the updated user with stripe_customer_id to database
+      const db = getDb()
+      const userIndex = db.users.findIndex(u => u.id === newUser.id)
+      if (userIndex !== -1) {
+        db.users[userIndex].stripe_customer_id = stripeCustomerId
+        saveDb(db)
       }
     }
 
