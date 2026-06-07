@@ -73,13 +73,49 @@ export async function POST(request: NextRequest) {
           console.log('[WEBHOOK] Processing subscription event for customer:', stripeCustomerId)
         }
 
-        // Find user by stripe_customer_id from Supabase only (no local DB fallback)
+        // Find user by stripe_customer_id from Supabase
         let user = await findUserByStripeCustomerId(stripeCustomerId)
 
         if (user) {
-          console.log('[WEBHOOK] Found user in Supabase:', user.id)
+          console.log('[WEBHOOK] Found user in Supabase by stripe_customer_id:', user.id)
         } else {
-          console.log('[WEBHOOK] User not found for customer:', stripeCustomerId)
+          // Fallback: Try to find user by email from Stripe customer
+          console.log('[WEBHOOK] User not found by stripe_customer_id, trying email lookup...')
+          try {
+            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+              apiVersion: '2024-04-10' as any,
+            })
+            const customer = await stripe.customers.retrieve(stripeCustomerId)
+            if (customer && 'email' in customer && customer.email) {
+              console.log(`[WEBHOOK] Found Stripe customer email: ${customer.email}`)
+
+              // Look up user by email in Supabase
+              const { data: userByEmail } = await supabase
+                .from('users')
+                .select('*')
+                .eq('email', customer.email)
+                .single()
+
+              if (userByEmail) {
+                user = userByEmail
+                console.log('[WEBHOOK] Found user in Supabase by email:', user.id)
+
+                // Update the user's stripe_customer_id for future lookups
+                await supabase
+                  .from('users')
+                  .update({ stripe_customer_id: stripeCustomerId })
+                  .eq('id', user.id)
+
+                console.log('[WEBHOOK] Updated user stripe_customer_id')
+              }
+            }
+          } catch (err) {
+            console.error('[WEBHOOK] Email fallback lookup failed:', err)
+          }
+        }
+
+        if (!user) {
+          console.log('[WEBHOOK] Could not find user by stripe_customer_id or email')
         }
 
         console.log('[WEBHOOK] User lookup result:', user ? `Found user ${user.id}` : 'User not found')
