@@ -4,7 +4,7 @@ import {
   verifyWebhookSignature,
   handleSubscriptionEvent,
 } from '@/lib/stripe-utils'
-import { saveSubscriptionToSupabase, findUserByStripeCustomerId, numericIdToUuid } from '@/lib/supabase-db'
+import { saveSubscriptionToSupabase, findUserByStripeCustomerId, numericIdToUuid, supabase } from '@/lib/supabase-db'
 
 export const dynamic = 'force-dynamic'
 
