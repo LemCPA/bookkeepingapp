@@ -127,18 +127,29 @@ export async function POST(request: NextRequest) {
           }
 
           // Save subscription to Supabase
+          // Helper function to safely convert timestamps
+          const toISOString = (timestamp: any) => {
+            if (!timestamp) return null
+            const date = new Date(timestamp * 1000)
+            if (isNaN(date.getTime())) {
+              console.warn('[WEBHOOK] Invalid timestamp:', timestamp)
+              return null
+            }
+            return date.toISOString()
+          }
+
           const subscriptionData = {
             user_id: userId,
             stripe_customer_id: stripeCustomerId,
             stripe_subscription_id: subscription.id,
             plan: planKey,
             status: subscription.status,
-            trial_end_date: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            trial_end_date: toISOString(subscription.trial_end),
+            current_period_start: toISOString(subscription.current_period_start) || new Date().toISOString(),
+            current_period_end: toISOString(subscription.current_period_end) || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+            canceled_at: toISOString(subscription.canceled_at),
           }
 
           const saved = await saveSubscriptionToSupabase(subscriptionData)
