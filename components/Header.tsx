@@ -25,6 +25,7 @@ const authenticatedNavItems: NavItem[] = [
   ]},
   { href: '/mileage', label: 'Mileage' },
   { href: '/pricing', label: 'Pricing' },
+  { href: '/billing', label: 'Billing' },
   { label: 'Settings', icon: '⚙️', submenu: [
     { href: '/settings/profile', label: 'Business Profile' },
     { href: '/settings/gst', label: 'Default GST/HST' },
@@ -244,7 +245,7 @@ export default function Header() {
                   }}
                 >
                   <button
-                    className="text-white hover:bg-blue-700 px-2 py-1 md:px-3 md:py-1.5 text-xs md:text-sm lg:text-[72px] font-medium rounded flex items-center gap-0.5"
+                    className="text-white hover:bg-blue-700 px-2 py-1 md:px-3 md:py-1.5 text-sm md:text-base font-medium rounded flex items-center gap-0.5"
                     style={{ transition: 'background-color 0.3s ease', fontSize: '16px' }}
                     type="button"
                   >
@@ -301,7 +302,7 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-white hover:bg-blue-700 px-2 py-1 md:px-3 md:py-1.5 text-xs md:text-sm lg:text-[72px] font-medium rounded flex items-center gap-0.5"
+                  className="text-white hover:bg-blue-700 px-2 py-1 md:px-3 md:py-1.5 text-sm md:text-base font-medium rounded flex items-center gap-0.5"
                   style={{ transition: 'background-color 0.3s ease', fontSize: '16px' }}
                 >
                   {item.label}
@@ -383,7 +384,7 @@ export default function Header() {
                         type="button"
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 'auto' }}>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'white', display: 'block', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: '16px', fontWeight: 'bold', color: 'white', display: 'block', whiteSpace: 'nowrap' }}>
                             {item.label}
                           </span>
                         </div>
@@ -403,7 +404,7 @@ export default function Header() {
                             <Link
                               key={subitem.href}
                               href={subitem.href}
-                              className="text-gray-900 hover:text-blue-600 hover:bg-gray-200 transition px-2 py-1 text-xs rounded whitespace-nowrap"
+                              className="text-gray-900 hover:text-blue-600 hover:bg-gray-200 transition px-2 py-1 text-sm rounded whitespace-nowrap"
                             >
                               {subitem.label}
                             </Link>
@@ -417,7 +418,7 @@ export default function Header() {
                       className="text-white hover:bg-blue-600 transition px-3 py-1.5 rounded whitespace-nowrap"
                       style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
-                      <span style={{ fontSize: '14px', fontWeight: '700', color: '#FFFFFF', display: 'inline-block', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: '16px', fontWeight: '700', color: '#FFFFFF', display: 'inline-block', whiteSpace: 'nowrap' }}>
                         {item.label}
                       </span>
                     </Link>
