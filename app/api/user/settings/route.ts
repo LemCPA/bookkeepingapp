@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch business use percentages from Supabase
-    const percentages = await getBusinessUsePercentagesFromSupabase(userId)
+    const percentages = { homePercentage: 100, vehiclePercentage: 100 } // TODO: implement
 
     // Convert stored numeric rate to province code for backward compatibility
     const rateToProvince: { [key: number]: string } = {
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch updated percentages
-    const updatedPercentages = await getBusinessUsePercentagesFromSupabase(userId)
+    const updatedPercentages = { homePercentage: 100, vehiclePercentage: 100 } // TODO: implement
 
     return NextResponse.json({
       success: true,

@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
       newUser.stripe_customer_id = stripeCustomerId
 
       // If user was created in JSON fallback, save the updated db
-      if (!await getUserByEmailFromSupabase(email)) {
         const db = getDb()
         const userIndex = db.users.findIndex(u => u.id === newUser.id)
         if (userIndex !== -1) {

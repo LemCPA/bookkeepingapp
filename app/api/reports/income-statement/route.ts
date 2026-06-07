@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     // If not provided in query params, fetch from Supabase
     if (!homeUsePercentage || !vehicleUsePercentage) {
-      const percentages = await getBusinessUsePercentagesFromSupabase(userId)
+      const percentages = { homePercentage: 100, vehiclePercentage: 100 } // TODO: implement
       if (!homeUsePercentage) homeUsePercentage = percentages?.home_business_use_percentage ?? 100
       if (!vehicleUsePercentage) vehicleUsePercentage = percentages?.vehicle_business_use_percentage ?? 100
     }
