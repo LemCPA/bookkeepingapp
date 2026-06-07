@@ -1,8 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createAuthenticatedFetch } from '@/lib/auth'
 import { formatCurrency } from '@/lib/utils'
+import { canAccessReport } from '@/lib/report-access'
 
 interface VehicleExpensesData {
   totalVehicleExpenses: number
@@ -54,6 +56,26 @@ export default function VehicleExpensesPage() {
   const [percentageMode, setPercentageMode] = useState<'all' | 'individual'>('all')
   const [categoryPercentages, setCategoryPercentages] = useState<{ [categoryId: number]: number }>({})
   const [calculatedDeductibleAmount, setCalculatedDeductibleAmount] = useState(0)
+  const [userPlan, setUserPlan] = useState<string>('free')
+  const [hasAccess, setHasAccess] = useState(false)
+
+  // Check subscription access
+  useEffect(() => {
+    async function checkAccess() {
+      try {
+        const response = await fetch('/api/billing/subscription')
+        if (response.ok) {
+          const data = await response.json()
+          setUserPlan(data.plan || 'free')
+          setHasAccess(canAccessReport('vehicle-expenses', data.plan || 'free'))
+        }
+      } catch (err) {
+        console.error('Failed to check subscription:', err)
+        setHasAccess(false)
+      }
+    }
+    checkAccess()
+  }, [])
 
   useEffect(() => {
     // Load saved percentage mode and percentages from localStorage
@@ -172,6 +194,27 @@ export default function VehicleExpensesPage() {
       return categoryPercentages[categoryId]
     }
     return businessUsePercentage
+  }
+
+  // Show upgrade prompt if user doesn't have access
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-2xl mx-auto px-6 py-20">
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Premium Feature</h1>
+            <p className="text-gray-600 mb-6">Vehicle Expenses Report is available on Starter and Growth plans.</p>
+            <p className="text-gray-600 mb-8">You're currently on the <strong>{userPlan}</strong> plan.</p>
+            <Link
+              href="/billing"
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+            >
+              Upgrade Now
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
