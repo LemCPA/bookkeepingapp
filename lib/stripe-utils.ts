@@ -186,6 +186,60 @@ export async function createCheckoutSession(
 }
 
 /**
+ * Update subscription with proration
+ * When user upgrades/downgrades, Stripe automatically prorates the charges
+ */
+export async function updateSubscriptionWithProration(
+  customerId: string,
+  planKey: keyof typeof PRICING_PLANS
+) {
+  try {
+    const plan = PRICING_PLANS[planKey]
+
+    if (!plan.stripe_price_id) {
+      throw new Error(`Stripe price ID not configured for plan: ${planKey}`)
+    }
+
+    // Get customer's active subscription
+    const subscriptions = await getStripe().subscriptions.list({
+      customer: customerId,
+      status: 'active',
+      limit: 1,
+    })
+
+    if (subscriptions.data.length === 0) {
+      throw new Error('No active subscription found')
+    }
+
+    const subscription = subscriptions.data[0]
+    const currentItem = subscription.items.data[0]
+
+    // Update subscription with new price and enable proration
+    const updated = await getStripe().subscriptions.update(
+      subscription.id,
+      {
+        items: [
+          {
+            id: currentItem.id,
+            price: plan.stripe_price_id,
+          },
+        ],
+        proration_behavior: 'create_prorations', // Create invoice for prorated amount
+        metadata: {
+          plan: planKey,
+        },
+      }
+    )
+
+    console.log(`[STRIPE] Updated subscription ${subscription.id} to plan ${planKey} with proration`)
+    return updated
+  } catch (error) {
+    console.error('Error updating subscription with proration:', error)
+    throw error
+  }
+}
+
+/**
  * Get customer portal session
  */
 export async function createBillingPortalSession(

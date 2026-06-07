@@ -202,6 +202,79 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Handle subscription deletion (cancellation)
+    if (event.type === 'customer.subscription.deleted') {
+      try {
+        const subscription = event.data.object as any
+        const stripeCustomerId = subscription.customer
+        console.log('[WEBHOOK] Processing subscription deletion for customer:', stripeCustomerId)
+
+        // Find user by stripe_customer_id
+        let user = await findUserByStripeCustomerId(stripeCustomerId)
+
+        if (!user) {
+          // Fallback: try email lookup
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+            apiVersion: '2024-04-10' as any,
+          })
+          const customer = await stripe.customers.retrieve(stripeCustomerId)
+          if (customer && 'email' in customer && customer.email) {
+            const { data: userByEmail } = await supabase
+              .from('users')
+              .select('*')
+              .eq('email', customer.email)
+              .single()
+            if (userByEmail) {
+              user = userByEmail
+            }
+          }
+        }
+
+        if (user) {
+          // Update subscription status to canceled
+          const userUuid = typeof user.id === 'string' && user.id.includes('-') ? user.id : numericIdToUuid(user.id as number)
+          const { error } = await supabase
+            .from('subscriptions')
+            .update({ status: 'canceled', canceled_at: new Date().toISOString() })
+            .eq('user_id', userUuid)
+            .eq('stripe_customer_id', stripeCustomerId)
+
+          if (error) {
+            console.error('[WEBHOOK] Error updating subscription status to canceled:', error)
+          } else {
+            console.log(`[WEBHOOK] Marked subscription as canceled for user ${user.id}`)
+          }
+        } else {
+          console.warn(`[WEBHOOK] Could not find user for canceled subscription: ${stripeCustomerId}`)
+        }
+      } catch (error) {
+        console.error('[WEBHOOK] Error processing subscription deletion:', error)
+      }
+    }
+
+    // Handle payment failures
+    if (event.type === 'invoice.payment_failed') {
+      try {
+        const invoice = event.data.object as any
+        const stripeCustomerId = invoice.customer
+        console.log('[WEBHOOK] Processing payment failure for customer:', stripeCustomerId)
+
+        // Find user by stripe_customer_id
+        let user = await findUserByStripeCustomerId(stripeCustomerId)
+
+        if (user) {
+          console.log(`[WEBHOOK] Payment failed for user ${user.id} (${stripeCustomerId})`)
+          console.log('[WEBHOOK] User has 14-day grace period to resolve payment')
+          // Grace period logic is handled by access control checking subscription status
+          // No need to update database here - just log the event
+        } else {
+          console.warn(`[WEBHOOK] Could not find user for failed payment: ${stripeCustomerId}`)
+        }
+      } catch (error) {
+        console.error('[WEBHOOK] Error processing payment failure:', error)
+      }
+    }
+
     console.log('Webhook event processed successfully:', handled.type)
 
     return NextResponse.json({ received: true })

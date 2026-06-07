@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { getUser } from '@/lib/db'
-import { createCheckoutSession, PRICING_PLANS } from '@/lib/stripe-utils'
-import { updateUserStripeCustomerId, syncUserToSupabase } from '@/lib/supabase-db'
+import { createCheckoutSession, updateSubscriptionWithProration, PRICING_PLANS } from '@/lib/stripe-utils'
+import { updateUserStripeCustomerId, syncUserToSupabase, getSubscriptionFromSupabase } from '@/lib/supabase-db'
+import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,15 +57,45 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const baseUrl = request.headers.get('origin') || 'http://localhost:3000'
-    const session = await createCheckoutSession(
-      user.stripe_customer_id,
-      plan as keyof typeof PRICING_PLANS,
-      `${baseUrl}/billing?success=true`,
-      `${baseUrl}/pricing`
-    )
+    // Check if user already has an active subscription (upgrade scenario)
+    const existingSubscription = await getSubscriptionFromSupabase(user.id)
 
-    return NextResponse.json({ url: session.url })
+    if (existingSubscription && existingSubscription.status === 'active') {
+      // User is upgrading/downgrading - use subscription update with proration
+      console.log(`[CHECKOUT] User ${user.id} upgrading from ${existingSubscription.plan} to ${plan}`)
+      try {
+        const updatedSubscription = await updateSubscriptionWithProration(
+          user.stripe_customer_id,
+          plan as keyof typeof PRICING_PLANS
+        )
+
+        console.log(`[CHECKOUT] Subscription updated with proration. New subscription: ${updatedSubscription.id}`)
+
+        // Return redirect to billing page (subscription is already updated in Stripe)
+        const baseUrl = request.headers.get('origin') || 'http://localhost:3000'
+        return NextResponse.json({
+          url: `${baseUrl}/billing?success=true&upgraded=true`
+        })
+      } catch (error) {
+        console.error('[CHECKOUT] Error updating subscription with proration:', error)
+        return NextResponse.json(
+          { error: 'Failed to upgrade plan. Please try again.' },
+          { status: 500 }
+        )
+      }
+    } else {
+      // New subscription - use checkout flow
+      console.log(`[CHECKOUT] Creating new subscription for user ${user.id} on plan ${plan}`)
+      const baseUrl = request.headers.get('origin') || 'http://localhost:3000'
+      const session = await createCheckoutSession(
+        user.stripe_customer_id,
+        plan as keyof typeof PRICING_PLANS,
+        `${baseUrl}/billing?success=true`,
+        `${baseUrl}/pricing`
+      )
+
+      return NextResponse.json({ url: session.url })
+    }
   } catch (error) {
     console.error('Checkout error:', error)
     return NextResponse.json(
