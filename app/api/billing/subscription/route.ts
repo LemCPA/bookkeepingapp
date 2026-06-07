@@ -39,33 +39,14 @@ export async function GET(request: NextRequest) {
     )
 
     return NextResponse.json({
-      subscription: {
-        id: subscription.id,
-        plan: subscription.plan,
-        status: subscription.status,
-        stripeCustomerId: subscription.stripe_customer_id,
-        stripeSubscriptionId: subscription.stripe_subscription_id,
-        trialEndDate: subscription.trial_end_date,
-        currentPeriodStart: subscription.current_period_start,
-        currentPeriodEnd: subscription.current_period_end,
-        createdAt: subscription.created_at,
-        canceledAt: subscription.canceled_at,
-      },
-      plan: {
-        id: plan.id,
-        name: plan.name,
-        price: plan.price,
-        priceInCents: plan.priceInCents,
-        maxClients: plan.maxClients,
-      },
-      status: {
-        isActive: status.isActive,
-        isTrialing: status.isTrialing,
-        isPastDue: status.isPastDue,
-        isCanceled: status.isCanceled,
-        daysUntilEnd: status.daysUntilEnd,
-        isExpiringSoon: status.isExpiringSoon,
-      },
+      id: subscription.id,
+      plan: subscription.plan,
+      status: subscription.status,
+      trial_end_date: subscription.trial_end_date,
+      current_period_start: subscription.current_period_start,
+      current_period_end: subscription.current_period_end,
+      created_at: subscription.created_at,
+      canceled_at: subscription.canceled_at,
     })
   } catch (error) {
     console.error('Get subscription error:', error)
