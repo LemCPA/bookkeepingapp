@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     // Get home business use percentage from query parameter (client localStorage) or fall back to Supabase
     let homeUsePercentage = parseInt(searchParams.get('homePercentage') || '0')
     if (!homeUsePercentage) {
-      const percentages = { homePercentage: 100, vehiclePercentage: 100 } // TODO: implement
+      const percentages = { home_business_use_percentage: 100, vehicle_business_use_percentage: 100 } // TODO: implement
       homeUsePercentage = percentages?.home_business_use_percentage ?? 100
     }
 

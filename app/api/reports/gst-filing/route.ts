@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch business use percentages from Supabase
-    const percentages = { homePercentage: 100, vehiclePercentage: 100 } // TODO: implement
+    const percentages = { home_business_use_percentage: 100, vehicle_business_use_percentage: 100 } // TODO: implement
     const homeUsePercentage = percentages?.home_business_use_percentage ?? 100
     const vehicleUsePercentage = percentages?.vehicle_business_use_percentage ?? 100
 
