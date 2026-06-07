@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 import {
   verifyWebhookSignature,
   handleSubscriptionEvent,
 } from '@/lib/stripe-utils'
 import { saveSubscriptionToSupabase, findUserByStripeCustomerId, numericIdToUuid } from '@/lib/supabase-db'
-import { getDb } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,25 +38,48 @@ export async function POST(request: NextRequest) {
     }
 
     // Save subscription to Supabase
-    if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
+    if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated' || event.type === 'charge.succeeded') {
       try {
-        const subscription = event.data.object as any
-        const stripeCustomerId = subscription.customer
-        console.log('[WEBHOOK] Processing subscription event for customer:', stripeCustomerId)
+        let subscription: any = null
+        let stripeCustomerId: string = ''
 
-        // Find user by stripe_customer_id - try Supabase first, then fall back to local DB
-        let user = await findUserByStripeCustomerId(stripeCustomerId)
+        // Handle different event types
+        if (event.type === 'charge.succeeded') {
+          // For charge events, we need to get the subscription ID and fetch the subscription
+          const charge = event.data.object as any
+          stripeCustomerId = charge.customer
+          console.log('[WEBHOOK] Processing charge event for customer:', stripeCustomerId)
 
-        if (!user) {
-          // Fall back to local database lookup
-          const db = getDb()
-          const localUser = db.users.find((u: any) => u.stripe_customer_id === stripeCustomerId)
-          if (localUser) {
-            user = localUser
-            console.log('[WEBHOOK] Found user in local database:', user.id)
+          // Fetch the subscription from Stripe using the customer ID
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+            apiVersion: '2024-04-10' as any,
+          })
+
+          try {
+            const subscriptions = await stripe.subscriptions.list({
+              customer: stripeCustomerId,
+              limit: 1,
+            })
+            subscription = subscriptions.data[0]
+            console.log('[WEBHOOK] Fetched subscription from Stripe:', subscription?.id)
+          } catch (err) {
+            console.error('[WEBHOOK] Error fetching subscription from Stripe:', err)
+            return NextResponse.json({ received: true })
           }
         } else {
+          // For subscription events, use the subscription directly
+          subscription = event.data.object as any
+          stripeCustomerId = subscription.customer
+          console.log('[WEBHOOK] Processing subscription event for customer:', stripeCustomerId)
+        }
+
+        // Find user by stripe_customer_id from Supabase only (no local DB fallback)
+        let user = await findUserByStripeCustomerId(stripeCustomerId)
+
+        if (user) {
           console.log('[WEBHOOK] Found user in Supabase:', user.id)
+        } else {
+          console.log('[WEBHOOK] User not found for customer:', stripeCustomerId)
         }
 
         console.log('[WEBHOOK] User lookup result:', user ? `Found user ${user.id}` : 'User not found')
