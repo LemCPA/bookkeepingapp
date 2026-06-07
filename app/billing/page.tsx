@@ -208,7 +208,7 @@ export default function BillingPage() {
           <h2 className="text-2xl font-bold mb-4">Upgrade Your Plan</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {['growth'].map((plan) => (
+            {(currentPlan === 'free' ? ['starter', 'growth'] : ['growth']).map((plan) => (
               <div key={plan} className="border rounded-lg p-4">
                 <h3 className="text-xl font-bold mb-2">
                   {PLAN_DETAILS[plan as keyof typeof PLAN_DETAILS]?.name}
