@@ -5,6 +5,7 @@ import {
   handleSubscriptionEvent,
 } from '@/lib/stripe-utils'
 import { saveSubscriptionToSupabase, findUserByStripeCustomerId, numericIdToUuid, supabase } from '@/lib/supabase-db'
+import { sendPaymentFailedEmail, sendSubscriptionCancelledEmail } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -244,6 +245,12 @@ export async function POST(request: NextRequest) {
           } else {
             console.log(`[WEBHOOK] Marked subscription as canceled for user ${user.id}`)
           }
+
+          // Send subscription cancelled email notification
+          const emailSent = await sendSubscriptionCancelledEmail(user.email, user.name || 'User')
+          if (emailSent) {
+            console.log(`[WEBHOOK] Subscription cancelled notification email sent to ${user.email}`)
+          }
         } else {
           console.warn(`[WEBHOOK] Could not find user for canceled subscription: ${stripeCustomerId}`)
         }
@@ -265,8 +272,12 @@ export async function POST(request: NextRequest) {
         if (user) {
           console.log(`[WEBHOOK] Payment failed for user ${user.id} (${stripeCustomerId})`)
           console.log('[WEBHOOK] User has 14-day grace period to resolve payment')
-          // Grace period logic is handled by access control checking subscription status
-          // No need to update database here - just log the event
+
+          // Send payment failed email notification
+          const emailSent = await sendPaymentFailedEmail(user.email, user.name || 'User')
+          if (emailSent) {
+            console.log(`[WEBHOOK] Payment failed notification email sent to ${user.email}`)
+          }
         } else {
           console.warn(`[WEBHOOK] Could not find user for failed payment: ${stripeCustomerId}`)
         }
