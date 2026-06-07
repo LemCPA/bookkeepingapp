@@ -62,17 +62,24 @@ export async function POST(request: NextRequest) {
         console.log('[WEBHOOK] User lookup result:', user ? `Found user ${user.id}` : 'User not found')
 
         if (user) {
-          // Determine plan based on price ID
-          let planKey = 'starter' // default
-          const priceId = subscription.items?.data?.[0]?.price?.id
-          if (priceId) {
-            // Map Stripe price IDs to plan names
-            if (priceId === process.env.STRIPE_GROWTH_PRICE_ID) {
-              planKey = 'growth'
-            } else if (priceId === process.env.STRIPE_STARTER_PRICE_ID) {
-              planKey = 'starter'
+          // Determine plan from metadata first, then fall back to price ID mapping
+          let planKey: string = subscription.metadata?.plan || 'starter'
+
+          // If not in metadata, try to map from Stripe price ID
+          if (!subscription.metadata?.plan) {
+            const priceId = subscription.items?.data?.[0]?.price?.id
+            planKey = 'starter' // default
+            if (priceId) {
+              // Map Stripe price IDs to plan names
+              if (priceId === process.env.STRIPE_GROWTH_PRICE_ID) {
+                planKey = 'growth'
+              } else if (priceId === process.env.STRIPE_STARTER_PRICE_ID) {
+                planKey = 'starter'
+              }
             }
           }
+
+          console.log(`[WEBHOOK] Determined plan: ${planKey} (metadata: ${subscription.metadata?.plan}, priceId: ${subscription.items?.data?.[0]?.price?.id})`)
 
           // Save subscription to Supabase
           const subscriptionData = {
