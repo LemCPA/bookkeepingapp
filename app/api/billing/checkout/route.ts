@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getUser } from '@/lib/db'
+import { getUser, getDb, saveDb } from '@/lib/db'
 import { createCheckoutSession, PRICING_PLANS } from '@/lib/stripe-utils'
 import { updateUserStripeCustomerId } from '@/lib/supabase-db'
 
@@ -34,14 +34,24 @@ export async function POST(request: NextRequest) {
         user.stripe_customer_id = await createStripeCustomer(user.email, user.name)
         console.log(`[CHECKOUT] Auto-created Stripe customer: ${user.stripe_customer_id}`)
 
-        // Save the stripe_customer_id to Supabase for webhook lookup
-        // This allows the webhook to map stripe_customer_id back to local user_id
-        const saved = await updateUserStripeCustomerId(user.id, user.stripe_customer_id)
-        if (saved) {
+        // CRITICAL: Save stripe_customer_id to BOTH local database AND Supabase
+        // This ensures the webhook can find the user by stripe_customer_id regardless of which fails
+
+        // Save to local JSON database (primary source of truth)
+        const db = getDb()
+        const localUser = db.users.find((u: any) => u.id === user.id)
+        if (localUser) {
+          localUser.stripe_customer_id = user.stripe_customer_id
+          saveDb(db)
+          console.log(`[CHECKOUT] Saved stripe_customer_id to local database for user ${user.id}`)
+        }
+
+        // Also save to Supabase for production resilience
+        const supabaseSaved = await updateUserStripeCustomerId(user.id, user.stripe_customer_id)
+        if (supabaseSaved) {
           console.log(`[CHECKOUT] Saved stripe_customer_id to Supabase for user ${user.id}`)
         } else {
-          // Log but don't fail - the webhook will still work if we can find the user another way
-          console.warn(`[CHECKOUT] Failed to save stripe_customer_id to Supabase for user ${user.id}, continuing anyway`)
+          console.warn(`[CHECKOUT] Failed to save stripe_customer_id to Supabase, but local DB saved`)
         }
       } catch (error) {
         console.error('[CHECKOUT] Failed to auto-create Stripe customer:', error)
