@@ -70,11 +70,16 @@ export async function POST(request: NextRequest) {
             const priceId = subscription.items?.data?.[0]?.price?.id
             planKey = 'starter' // default
             if (priceId) {
-              // Map Stripe price IDs to plan names
-              if (priceId === process.env.STRIPE_GROWTH_PRICE_ID) {
-                planKey = 'growth'
-              } else if (priceId === process.env.STRIPE_STARTER_PRICE_ID) {
-                planKey = 'starter'
+              // Import PRICING_PLANS to map price IDs reliably without env vars
+              const { PRICING_PLANS } = await import('@/lib/stripe-utils')
+
+              // Map Stripe price IDs to plan names by checking against PRICING_PLANS
+              for (const [plan, config] of Object.entries(PRICING_PLANS)) {
+                if (config.stripe_price_id === priceId) {
+                  planKey = plan
+                  console.log(`[WEBHOOK] Matched priceId ${priceId} to plan ${plan}`)
+                  break
+                }
               }
             }
           }
