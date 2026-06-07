@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getUser, getDb, saveDb } from '@/lib/db'
+import { getUser } from '@/lib/db'
 import { createCheckoutSession, PRICING_PLANS } from '@/lib/stripe-utils'
 import { updateUserStripeCustomerId, syncUserToSupabase } from '@/lib/supabase-db'
 
@@ -40,24 +40,12 @@ export async function POST(request: NextRequest) {
         user.stripe_customer_id = await createStripeCustomer(user.email, user.name)
         console.log(`[CHECKOUT] Auto-created Stripe customer: ${user.stripe_customer_id}`)
 
-        // CRITICAL: Save stripe_customer_id to BOTH local database AND Supabase
-        // This ensures the webhook can find the user by stripe_customer_id regardless of which fails
-
-        // Save to local JSON database (primary source of truth)
-        const db = getDb()
-        const localUser = db.users.find((u: any) => u.id === user.id)
-        if (localUser) {
-          localUser.stripe_customer_id = user.stripe_customer_id
-          saveDb(db)
-          console.log(`[CHECKOUT] Saved stripe_customer_id to local database for user ${user.id}`)
-        }
-
-        // Also save to Supabase for production resilience
+        // CRITICAL: Save stripe_customer_id to Supabase (single source of truth)
         const supabaseSaved = await updateUserStripeCustomerId(user.id, user.stripe_customer_id)
         if (supabaseSaved) {
           console.log(`[CHECKOUT] Saved stripe_customer_id to Supabase for user ${user.id}`)
         } else {
-          console.warn(`[CHECKOUT] Failed to save stripe_customer_id to Supabase, but local DB saved`)
+          console.warn(`[CHECKOUT] Failed to save stripe_customer_id to Supabase`)
         }
       } catch (error) {
         console.error('[CHECKOUT] Failed to auto-create Stripe customer:', error)

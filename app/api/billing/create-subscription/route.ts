@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getUser, getDb } from '@/lib/db'
+import { getUser } from '@/lib/db'
 import { getPlan, calculateTrialEndDate } from '@/lib/billing-utils'
 
 export async function POST(request: NextRequest) {
@@ -31,52 +31,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
-    // Check if user already has an active subscription
-    const db = getDb()
-    const existingSubscription = db.subscriptions.find(
-      s => s.user_id === userId && (s.status === 'active' || s.status === 'trialing')
+    // Note: Subscriptions are now created via Stripe checkout, not via this endpoint
+    // This endpoint is deprecated - use /api/billing/checkout instead
+    return NextResponse.json(
+      { error: 'Use /api/billing/checkout to create subscriptions via Stripe' },
+      { status: 400 }
     )
-    if (existingSubscription) {
-      return NextResponse.json(
-        { error: 'User already has an active subscription' },
-        { status: 400 }
-      )
-    }
-
-    // Create subscription with 14-day trial
-    const trialEndDate = calculateTrialEndDate(14)
-    const subscriptionId = parseInt(Date.now().toString().slice(-9)) // Numeric ID
-
-    // Add subscription to database
-    if (!db.subscriptions) {
-      db.subscriptions = []
-    }
-
-    const stripeSubscriptionId = `sub_${Date.now()}`
-    db.subscriptions.push({
-      id: subscriptionId,
-      user_id: userId,
-      plan: planId,
-      status: 'trialing',
-      stripe_customer_id: '', // Will be set when payment is processed
-      stripe_subscription_id: stripeSubscriptionId,
-      trial_end_date: trialEndDate,
-      current_period_start: new Date().toISOString(),
-      current_period_end: trialEndDate,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-
-    // Return subscription data with trial info
-    return NextResponse.json({
-      subscription: {
-        id: subscriptionId,
-        plan: planId,
-        status: 'trialing',
-        trialEndDate,
-        message: 'Subscription created successfully with 14-day free trial',
-      },
-    })
   } catch (error) {
     console.error('Create subscription error:', error)
     return NextResponse.json(
