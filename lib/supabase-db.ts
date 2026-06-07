@@ -156,6 +156,7 @@ export async function updateUserStripeCustomerId(userId: number, stripeCustomerI
 export async function syncUserToSupabase(userId: number, email: string, name: string) {
   try {
     const userUuid = numericIdToUuid(userId)
+    console.log(`[SUPABASE] Syncing user: ${userId} (${email}) → UUID: ${userUuid}`)
 
     // Upsert user (insert or update if exists)
     const { data, error } = await supabase
@@ -174,7 +175,12 @@ export async function syncUserToSupabase(userId: number, email: string, name: st
       return false
     }
 
-    console.log('[SUPABASE] User synced to Supabase:', userId, '→', userUuid)
+    if (!data || data.length === 0) {
+      console.error('[SUPABASE] Upsert returned no rows for user', userId)
+      return false
+    }
+
+    console.log('[SUPABASE] User synced successfully:', userId, '→', userUuid, 'Data:', data[0])
     return true
   } catch (err) {
     console.error('[SUPABASE] Exception syncing user:', err)
