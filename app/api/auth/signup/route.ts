@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hashPassword, isValidPassword } from '@/lib/bcrypt-utils'
 import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
 import { getDb, saveDb, getUserByEmail, createAccount } from '@/lib/db'
-import { getUserByEmailFromSupabase, createUserInSupabase } from '@/lib/supabase-db'
 import { createStripeCustomer } from '@/lib/stripe-utils'
 import { DEFAULT_ACCOUNTS } from '@/lib/default-accounts'
 

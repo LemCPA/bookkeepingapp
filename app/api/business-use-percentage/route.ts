@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { updateBusinessUsePercentagesInSupabase } from '@/lib/supabase-db'
 
 export async function PUT(request: NextRequest) {
   try {

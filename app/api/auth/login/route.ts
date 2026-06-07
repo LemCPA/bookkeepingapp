@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { comparePassword } from '@/lib/bcrypt-utils'
 import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
 import { getUserByEmail } from '@/lib/db'
-import { getUserByEmailFromSupabase } from '@/lib/supabase-db'
 
 export async function POST(request: NextRequest) {
   try {

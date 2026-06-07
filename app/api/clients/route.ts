@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { getClients, createClient } from '@/lib/db'
-import { getClientsFromSupabase } from '@/lib/supabase-db'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
 

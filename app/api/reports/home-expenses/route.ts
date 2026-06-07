@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { getDb } from '@/lib/db'
-import { getBusinessUsePercentagesFromSupabase } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
   try {

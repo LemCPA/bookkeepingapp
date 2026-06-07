@@ -3,7 +3,6 @@ import path from 'path'
 import { readFileSync } from 'fs'
 import { getDb, saveDb } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { createTransactionInSupabase } from '@/lib/supabase-db'
 
 let client: any = null
 
