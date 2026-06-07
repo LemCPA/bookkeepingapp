@@ -64,27 +64,31 @@ export async function POST(request: NextRequest) {
         if (user) {
           // Determine plan from metadata first, then fall back to price ID mapping
           let planKey: string = subscription.metadata?.plan || 'starter'
+          const priceId = subscription.items?.data?.[0]?.price?.id
 
-          // If not in metadata, try to map from Stripe price ID
-          if (!subscription.metadata?.plan) {
-            const priceId = subscription.items?.data?.[0]?.price?.id
-            planKey = 'starter' // default
-            if (priceId) {
-              // Import PRICING_PLANS to map price IDs reliably without env vars
-              const { PRICING_PLANS } = await import('@/lib/stripe-utils')
+          // If not in metadata, map from Stripe price ID directly (hardcoded for reliability)
+          if (!subscription.metadata?.plan && priceId) {
+            // Known price IDs from Stripe dashboard
+            const STARTER_PRICE = 'price_1TfK0iIQrnQfSGBfHDioggge'
+            const GROWTH_PRICE = 'price_1TfK1pIQrnQfSGBf3bbvoIce'
 
-              // Map Stripe price IDs to plan names by checking against PRICING_PLANS
-              for (const [plan, config] of Object.entries(PRICING_PLANS)) {
-                if (config.stripe_price_id === priceId) {
-                  planKey = plan
-                  console.log(`[WEBHOOK] Matched priceId ${priceId} to plan ${plan}`)
-                  break
-                }
-              }
+            console.log(`[WEBHOOK] Matching priceId: ${priceId}`)
+            console.log(`[WEBHOOK]   against STARTER: ${STARTER_PRICE}`)
+            console.log(`[WEBHOOK]   against GROWTH: ${GROWTH_PRICE}`)
+
+            if (priceId === GROWTH_PRICE) {
+              planKey = 'growth'
+              console.log(`[WEBHOOK] ✅ Matched to GROWTH`)
+            } else if (priceId === STARTER_PRICE) {
+              planKey = 'starter'
+              console.log(`[WEBHOOK] ✅ Matched to STARTER`)
+            } else {
+              console.log(`[WEBHOOK] ⚠️  No match found, defaulting to STARTER`)
+              planKey = 'starter'
             }
           }
 
-          console.log(`[WEBHOOK] Determined plan: ${planKey} (metadata: ${subscription.metadata?.plan}, priceId: ${subscription.items?.data?.[0]?.price?.id})`)
+          console.log(`[WEBHOOK] Final plan: ${planKey} (metadata: ${subscription.metadata?.plan}, priceId: ${priceId})`)
 
           // Convert user_id to UUID (only if numeric - user from local DB)
           // If user came from Supabase, user.id is already a UUID
