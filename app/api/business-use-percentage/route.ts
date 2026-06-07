@@ -19,7 +19,12 @@ export async function PUT(request: NextRequest) {
     }
 
     // TODO: Update percentages in Supabase when implemented
-    const result = { success: true, error: null }
+    const result = {
+      success: true,
+      error: null,
+      home_business_use_percentage: homePercentage,
+      vehicle_business_use_percentage: vehiclePercentage
+    }
 
     if (!result || !result.success) {
       return NextResponse.json(
