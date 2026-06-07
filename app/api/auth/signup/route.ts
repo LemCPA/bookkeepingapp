@@ -27,11 +27,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user already exists (try Supabase first, then JSON)
-    let existingUser = await getUserByEmailFromSupabase(email)
-    if (!existingUser) {
-      existingUser = getUserByEmail(email)
-    }
+    // Check if user already exists
+    const existingUser = getUserByEmail(email)
     if (existingUser) {
       return NextResponse.json(
         { error: 'Email already registered' },
