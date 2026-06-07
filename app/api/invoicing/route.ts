@@ -29,20 +29,14 @@ export async function GET(request: NextRequest) {
       toDateObj.setHours(23, 59, 59, 999)
     }
 
-    // Try to get transactions from Supabase first (production), fallback to JSON (development)
+    // Get transactions from JSON database
+    // TODO: Migrate to Supabase when getTransactionsFromSupabase is implemented
     let allTransactions: any[] = []
     try {
-      // const supabaseTransactions = await getTransactionsFromSupabase(userId)
-      if (supabaseTransactions && supabaseTransactions.length > 0) {
-        console.log('[INVOICING] Loaded from Supabase:', supabaseTransactions.length, 'transactions')
-        allTransactions = supabaseTransactions
-      } else {
-        console.log('[INVOICING] No transactions in Supabase, using JSON fallback')
-        allTransactions = db.transactions
-      }
+      allTransactions = db.transactions.filter((t: any) => t.user_id === userId)
     } catch (error) {
-      console.error('[INVOICING] Error fetching from Supabase, using JSON fallback:', error)
-      allTransactions = db.transactions
+      console.error('[INVOICING] Error fetching transactions:', error)
+      allTransactions = []
     }
 
     // Get all INVOICE type transactions for this user, filtered by date range
