@@ -56,20 +56,10 @@ async function saveTransactionToSupabase(
   type: string
 ): Promise<boolean> {
   try {
-    // const result = await createTransactionInSupabase(
-      userId,
-      0, // clientId - set to 0 for now
-      accountId,
-      date,
-      amount,
-      gstHstRate,
-      gstHstAmount,
-      description,
-      type,
-      '' // reference_number
-    )
+    // TODO: Save to Supabase when implemented
+    // For now, skip transaction saving
 
-    if (result) {
+    if (false) {
       console.log(`[BULK-SCAN] Transaction saved to Supabase successfully`)
       return true
     } else {
