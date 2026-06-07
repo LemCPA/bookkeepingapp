@@ -20,8 +20,8 @@ export const SUBSCRIPTION_PLANS = {
   starter: {
     id: 'starter',
     name: 'Starter',
-    price: 9,
-    priceInCents: 900,
+    price: 10,
+    priceInCents: 1000,
     billingPeriod: 'monthly',
     maxClients: 5,
     features: [
@@ -30,6 +30,23 @@ export const SUBSCRIPTION_PLANS = {
       'Monthly and annual reports',
       'Basic bank reconciliation',
       'GST/HST calculation',
+      '60 uploads per month',
+    ],
+  },
+  growth: {
+    id: 'growth',
+    name: 'Growth',
+    price: 20,
+    priceInCents: 2000,
+    billingPeriod: 'monthly',
+    maxClients: 10,
+    features: [
+      'Up to 10 client accounts',
+      'Advanced transaction management',
+      'Multi-month reporting and trends',
+      'Full bank reconciliation',
+      'GST/HST and tax filing support',
+      '200 uploads per month',
     ],
   },
   professional: {
