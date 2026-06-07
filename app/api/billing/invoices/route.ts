@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getBillingHistory } from '@/lib/db'
+import { getUser } from '@/lib/db'
+import Stripe from 'stripe'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,35 +13,52 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get query parameters
-    const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const user = getUser(userId)
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
-    // Get billing history
-    const billingHistory = getBillingHistory(userId, limit)
+    // Get Stripe customer ID
+    const stripeCustomerId = user.stripe_customer_id
+    if (!stripeCustomerId) {
+      // User has no Stripe customer yet, return empty invoices
+      return NextResponse.json({ invoices: [] })
+    }
 
-    return NextResponse.json({
-      invoices: billingHistory.map(entry => ({
-        id: entry.id,
-        stripeInvoiceId: entry.stripe_invoice_id,
-        amount: entry.amount,
-        amountFormatted: `$${(entry.amount / 100).toFixed(2)}`,
-        currency: entry.currency,
-        status: entry.status,
-        periodStart: entry.period_start,
-        periodEnd: entry.period_end,
-        paidAt: entry.paid_at,
-        createdAt: entry.created_at,
-      })),
-      count: billingHistory.length,
+    // Fetch invoices from Stripe
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+      apiVersion: '2024-04-10' as any,
     })
+
+    const invoices = await stripe.invoices.list({
+      customer: stripeCustomerId,
+      limit: 50,
+    })
+
+    // Format invoices to match expected interface
+    const formattedInvoices = invoices.data.map((invoice) => {
+      const paidDate = invoice.status === 'paid' ? new Date(invoice.created * 1000).toISOString() : undefined
+      return {
+        id: invoice.id,
+        stripe_invoice_id: invoice.id,
+        amount: (invoice.total || 0) / 100, // Convert from cents to dollars
+        amount_formatted: `$${((invoice.total || 0) / 100).toFixed(2)}`,
+        currency: invoice.currency?.toUpperCase() || 'CAD',
+        status: invoice.status || 'draft',
+        period_start: new Date(invoice.period_start * 1000).toISOString(),
+        period_end: new Date(invoice.period_end * 1000).toISOString(),
+        paid_at: paidDate,
+        created_at: new Date(invoice.created * 1000).toISOString(),
+      }
+    })
+
+    console.log(`[INVOICES] Fetched ${formattedInvoices.length} invoices for customer ${stripeCustomerId}`)
+
+    return NextResponse.json({ invoices: formattedInvoices })
   } catch (error) {
-    console.error('Get invoices error:', error)
+    console.error('[INVOICES] Error fetching invoices:', error)
     return NextResponse.json(
-      {
-        error: 'Failed to get invoices',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Failed to fetch invoices', invoices: [] },
       { status: 500 }
     )
   }

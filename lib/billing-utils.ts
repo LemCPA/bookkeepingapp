@@ -30,7 +30,7 @@ export const SUBSCRIPTION_PLANS = {
       'Monthly and annual reports',
       'Basic bank reconciliation',
       'GST/HST calculation',
-      '60 uploads per month',
+      '30 uploads per month',
     ],
   },
   growth: {
