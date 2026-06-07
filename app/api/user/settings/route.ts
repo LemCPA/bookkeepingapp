@@ -3,6 +3,7 @@ import { getDb, saveDb } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
+import { supabase, getUserFromSupabase } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
   try {

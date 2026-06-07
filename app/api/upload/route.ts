@@ -3,6 +3,7 @@ import { createDocument, getTransaction } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
+import { supabase } from '@/lib/supabase-db'
 
 export async function POST(request: NextRequest) {
   try {
