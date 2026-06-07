@@ -146,3 +146,45 @@ export async function findUserByStripeCustomerId(stripeCustomerId: string) {
     return null
   }
 }
+
+/**
+ * Create or ensure user exists in Supabase
+ */
+export async function ensureUserInSupabase(userId: number, email: string, name: string) {
+  try {
+    // First check if user already exists
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .single()
+
+    if (existingUser) {
+      return existingUser
+    }
+
+    // User doesn't exist, create them
+    const { data: newUser, error } = await supabase
+      .from('users')
+      .insert([{
+        id: userId,
+        email,
+        name,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('[SUPABASE] Error creating user:', error)
+      return null
+    }
+
+    console.log('[SUPABASE] User created in Supabase:', userId)
+    return newUser
+  } catch (err) {
+    console.error('[SUPABASE] Exception ensuring user:', err)
+    return null
+  }
+}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { getUser } from '@/lib/db'
 import { createCheckoutSession, PRICING_PLANS } from '@/lib/stripe-utils'
-import { updateUserStripeCustomerId } from '@/lib/supabase-db'
+import { updateUserStripeCustomerId, ensureUserInSupabase } from '@/lib/supabase-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +24,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Invalid plan' },
         { status: 400 }
+      )
+    }
+
+    // Ensure user exists in Supabase (required for webhook subscription lookup)
+    const supabaseUser = await ensureUserInSupabase(user.id, user.email, user.name)
+    if (!supabaseUser) {
+      console.error(`[CHECKOUT] Failed to ensure user exists in Supabase for user ${user.id}`)
+      return NextResponse.json(
+        { error: 'Failed to initialize billing account' },
+        { status: 500 }
       )
     }
 
