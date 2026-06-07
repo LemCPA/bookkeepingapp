@@ -3,7 +3,7 @@ import {
   verifyWebhookSignature,
   handleSubscriptionEvent,
 } from '@/lib/stripe-utils'
-import { getDb, saveDb, clearDbCache } from '@/lib/db'
+import { saveSubscriptionToSupabase, findUserByStripeCustomerId } from '@/lib/supabase-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('stripe-signature')
 
   console.log('[WEBHOOK] Incoming webhook request')
-  console.log('[WEBHOOK] Event type may be determinable from body')
 
   if (!signature) {
     console.error('[WEBHOOK] Missing stripe-signature header')
@@ -26,30 +25,6 @@ export async function POST(request: NextRequest) {
     console.log('[WEBHOOK] Verifying signature and parsing event...')
     const event = verifyWebhookSignature(body, signature)
     console.log('[WEBHOOK] Event verified! Type:', event.type)
-    const db = getDb()
-
-    // Handle invoice payment events (charge.succeeded for payment links)
-    if (event.type === 'charge.succeeded') {
-      const charge = event.data.object as any
-
-      // Check if this is an invoice payment by looking at metadata
-      if (charge.metadata?.type === 'invoice_payment' && charge.metadata?.invoice_id) {
-        const invoiceId = parseInt(charge.metadata.invoice_id)
-        const transaction = db.transactions.find(
-          t => t.id === invoiceId && t.type === 'INVOICE'
-        )
-
-        if (transaction) {
-          // Mark invoice as paid
-          transaction.reconciliation_status = 'CLEARED'
-          ;(transaction as any).paid_date = new Date().toISOString()
-          console.log(`Invoice #${invoiceId} marked as paid via Stripe charge ${charge.id}`)
-        }
-      }
-
-      saveDb(db)
-      return NextResponse.json({ received: true })
-    }
 
     // Handle subscription events
     const handled = handleSubscriptionEvent(event)
@@ -61,26 +36,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    // Save subscription to database
+    // Save subscription to Supabase
     if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
       try {
         const subscription = event.data.object as any
         const stripeCustomerId = subscription.customer
         console.log('[WEBHOOK] Processing subscription event for customer:', stripeCustomerId)
 
-        // Find user by stripe_customer_id
-        const user = db.users?.find((u: any) => u.stripe_customer_id === stripeCustomerId)
+        // Find user by stripe_customer_id in Supabase
+        const user = await findUserByStripeCustomerId(stripeCustomerId)
         console.log('[WEBHOOK] User lookup result:', user ? `Found user ${user.id}` : 'User not found')
 
         if (user) {
-          // Initialize subscriptions array if needed
-          if (!db.subscriptions) {
-            db.subscriptions = []
-          }
-
-          // Remove old subscription if exists
-          db.subscriptions = db.subscriptions.filter((s: any) => s.user_id !== user.id)
-
           // Determine plan based on price ID
           let planKey = 'starter' // default
           const priceId = subscription.items?.data?.[0]?.price?.id
@@ -93,9 +60,8 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // Add new subscription
-          db.subscriptions.push({
-            id: (db.subscriptions.length || 0) + 1,
+          // Save subscription to Supabase
+          const subscriptionData = {
             user_id: user.id,
             stripe_customer_id: stripeCustomerId,
             stripe_subscription_id: subscription.id,
@@ -107,23 +73,23 @@ export async function POST(request: NextRequest) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
-          })
+          }
 
-          console.log(`[WEBHOOK] Saved subscription for user ${user.id}: ${planKey} (${subscription.status})`)
+          const saved = await saveSubscriptionToSupabase(subscriptionData)
+          if (saved) {
+            console.log(`[WEBHOOK] Successfully saved subscription for user ${user.id}: ${planKey} (${subscription.status})`)
+          } else {
+            console.error(`[WEBHOOK] Failed to save subscription for user ${user.id}`)
+          }
         } else {
           console.warn(`[WEBHOOK] Could not find user with stripe_customer_id: ${stripeCustomerId}`)
         }
       } catch (error) {
-        console.error('[WEBHOOK] Error saving subscription:', error)
+        console.error('[WEBHOOK] Error processing subscription:', error)
       }
     }
 
-    // Log webhook event
-    console.log('Webhook event received:', handled.type, handled.data)
-
-    // Save database and clear cache
-    saveDb(db)
-    clearDbCache()
+    console.log('Webhook event processed successfully:', handled.type)
 
     return NextResponse.json({ received: true })
   } catch (error) {

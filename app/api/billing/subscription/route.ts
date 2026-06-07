@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getSubscription } from '@/lib/db'
+import { getSubscriptionFromSupabase } from '@/lib/supabase-db'
 import { getPlan, getSubscriptionStatus } from '@/lib/billing-utils'
 
 export async function GET(request: NextRequest) {
@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's current subscription
-    const subscription = getSubscription(userId)
+    // Get user's current subscription from Supabase
+    const subscription = await getSubscriptionFromSupabase(userId)
 
     if (!subscription) {
       // Return free plan as default

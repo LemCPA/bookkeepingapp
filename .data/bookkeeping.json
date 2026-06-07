@@ -26,6 +26,17 @@
       "postal_code": "M2N 6S3",
       "phone": "6473251833",
       "business_email": "Ted_Lem@outlook.com"
+    },
+    {
+      "id": 3,
+      "email": "Ted_Lem@outlook.com",
+      "password_hash": "$2a$10$LdIo.7JZdLA66bdNZKmquONRoy09PnHfMgwiDokbxW5DLgmpK3/Sm",
+      "name": "Tod Lin",
+      "email_verified": true,
+      "gst_registered": false,
+      "default_gst_hst_rate": 13,
+      "created_at": "2026-06-06T15:39:18.165Z",
+      "stripe_customer_id": "cus_UefeVPMY5B0nt2"
     }
   ],
   "clients": [
@@ -677,6 +688,286 @@
       "type": "EXPENSE",
       "user_id": 2,
       "parent_account_id": 64
+    },
+    {
+      "id": 81,
+      "code": "8000",
+      "name": "Gross Business Income",
+      "type": "INCOME",
+      "user_id": 3
+    },
+    {
+      "id": 82,
+      "code": "8230",
+      "name": "Other Income",
+      "type": "INCOME",
+      "user_id": 3
+    },
+    {
+      "id": 83,
+      "code": "8521",
+      "name": "Advertising",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 84,
+      "code": "8523",
+      "name": "Meals and Entertainment",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 85,
+      "code": "8590",
+      "name": "Bad Debts",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 86,
+      "code": "8690",
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 87,
+      "code": "8710",
+      "name": "Interest and Bank Charges",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 88,
+      "code": "8760",
+      "name": "Business Taxes, Fees, Licenses, and Memberships",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 89,
+      "code": "8810",
+      "name": "Office Expenses",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 90,
+      "code": "8811",
+      "name": "Office Stationery and Supplies",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 91,
+      "code": "8860",
+      "name": "Professional Fees (Accounting, Legal)",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 92,
+      "code": "8871",
+      "name": "Management and Administration Fees",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 93,
+      "code": "8910",
+      "name": "Rent",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 94,
+      "code": "8960",
+      "name": "Repairs and Maintenance",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 95,
+      "code": "9060",
+      "name": "Salaries, Wages, and Benefits",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 96,
+      "code": "9180",
+      "name": "Property Taxes",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 97,
+      "code": "9200",
+      "name": "Travel Expenses",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 98,
+      "code": "9220",
+      "name": "Utilities",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 99,
+      "code": "9224",
+      "name": "Fuel Costs (Excluding Motor Vehicles)",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 100,
+      "code": "9270",
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 101,
+      "code": "9275",
+      "name": "Delivery, Freight, and Express",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 102,
+      "code": "9936",
+      "name": "Capital Cost Allowance (CCA)",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 103,
+      "code": "9945",
+      "name": "Business-Use-of-Home Expenses",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 104,
+      "code": "9281",
+      "name": "Motor Vehicle Expenses",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 105,
+      "code": "9945-01",
+      "name": "Heat",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 106,
+      "code": "9945-02",
+      "name": "Electricity",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 107,
+      "code": "9945-03",
+      "name": "Insurance (Home)",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 108,
+      "code": "9945-04",
+      "name": "Property Tax",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 109,
+      "code": "9945-05",
+      "name": "Mortgage Interest",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 110,
+      "code": "9945-06",
+      "name": "Repairs and Maintenance (Home)",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 111,
+      "code": "9945-07",
+      "name": "Supplies (Home)",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 112,
+      "code": "9945-08",
+      "name": "Telephone",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 113,
+      "code": "9945-09",
+      "name": "Rent (Home)",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 114,
+      "code": "9281-01",
+      "name": "Fuel & Oil",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 115,
+      "code": "9281-02",
+      "name": "Interest",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 116,
+      "code": "9281-03",
+      "name": "Insurance (Vehicle)",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 117,
+      "code": "9281-04",
+      "name": "License & Registration",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 118,
+      "code": "9281-05",
+      "name": "Maintenance & Repairs",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 119,
+      "code": "9281-06",
+      "name": "Lease/Rental",
+      "type": "EXPENSE",
+      "user_id": 3
+    },
+    {
+      "id": 120,
+      "code": "9281-07",
+      "name": "Parking",
+      "type": "EXPENSE",
+      "user_id": 3
     }
   ],
   "transactions": [
@@ -1033,6 +1324,23 @@
       "type": "INVOICE",
       "created_at": "2026-06-05T05:15:45.676Z",
       "updated_at": "2026-06-05T05:15:45.676Z",
+      "is_vehicle_expense": false,
+      "business_use_percentage": 100,
+      "category": "BUSINESS"
+    },
+    {
+      "id": 62,
+      "user_id": 2,
+      "account_id": 45,
+      "transaction_date": "2026-02-25",
+      "amount": 58.19,
+      "gst_hst_rate": 13,
+      "gst_hst_amount": 7.56,
+      "gst_hst_included": true,
+      "description": "myTaxExpress License Payment",
+      "type": "RECEIPT",
+      "created_at": "2026-06-05T12:32:17.757Z",
+      "updated_at": "2026-06-05T12:32:17.757Z",
       "is_vehicle_expense": false,
       "business_use_percentage": 100,
       "category": "BUSINESS"
@@ -1518,6 +1826,14 @@
       "file_path": "receipts/2/60/1780629627317-2025 09 30 Bell.pdf",
       "file_size": 153133,
       "uploaded_at": "2026-06-05T03:20:27.786Z"
+    },
+    {
+      "id": 61,
+      "transaction_id": 62,
+      "file_name": "2023 Arcadia Solution Corp_ (2026-02-25).pdf",
+      "file_path": "receipts/2/62/1780662738212-2023 Arcadia Solution Corp_ (2026-02-25).pdf",
+      "file_size": 87663,
+      "uploaded_at": "2026-06-05T12:32:18.636Z"
     }
   ],
   "bank_reconciliations": [],
@@ -1649,11 +1965,11 @@
     }
   ],
   "odometer_readings": [],
-  "nextUserId": 3,
+  "nextUserId": 4,
   "nextClientId": 3,
-  "nextAccountId": 81,
-  "nextTransactionId": 62,
-  "nextDocumentId": 61,
+  "nextAccountId": 121,
+  "nextTransactionId": 63,
+  "nextDocumentId": 62,
   "nextBankReconciliationId": 1,
   "nextReconciliationItemId": 1,
   "nextRecurringTransactionId": 4,
