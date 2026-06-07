@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { getUser, getDb, saveDb } from '@/lib/db'
 import { createCheckoutSession, PRICING_PLANS } from '@/lib/stripe-utils'
-import { updateUserStripeCustomerId } from '@/lib/supabase-db'
+import { updateUserStripeCustomerId, syncUserToSupabase } from '@/lib/supabase-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +25,12 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid plan' },
         { status: 400 }
       )
+    }
+
+    // CRITICAL: Sync user to Supabase first (so they exist for subscription)
+    const syncSuccess = await syncUserToSupabase(user.id, user.email, user.name)
+    if (!syncSuccess) {
+      console.warn(`[CHECKOUT] Failed to sync user ${user.id} to Supabase, continuing anyway`)
     }
 
     // Auto-create Stripe customer if needed

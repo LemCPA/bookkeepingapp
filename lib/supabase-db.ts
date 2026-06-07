@@ -137,6 +137,39 @@ export async function updateUserStripeCustomerId(userId: number, stripeCustomerI
 }
 
 /**
+ * Sync user from local database to Supabase
+ * Creates or updates user with UUID-based ID
+ */
+export async function syncUserToSupabase(userId: number, email: string, name: string) {
+  try {
+    const userUuid = numericIdToUuid(userId)
+
+    // Upsert user (insert or update if exists)
+    const { data, error } = await supabase
+      .from('users')
+      .upsert([{
+        id: userUuid,
+        email,
+        name,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }], { onConflict: 'id' })
+      .select()
+
+    if (error) {
+      console.error('[SUPABASE] Error syncing user:', error)
+      return false
+    }
+
+    console.log('[SUPABASE] User synced to Supabase:', userId, '→', userUuid)
+    return true
+  } catch (err) {
+    console.error('[SUPABASE] Exception syncing user:', err)
+    return false
+  }
+}
+
+/**
  * Find user by stripe_customer_id in Supabase
  */
 export async function findUserByStripeCustomerId(stripeCustomerId: string) {
