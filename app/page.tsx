@@ -346,6 +346,48 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Security & Trust Section */}
+      <section className="bg-white rounded-lg shadow p-8 mt-12 border-t-4 border-blue-600">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+            🔒 Your Data is Safe & Secure
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="flex items-start">
+              <div className="text-3xl mr-4">🔐</div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-2">HTTPS Encrypted</h3>
+                <p className="text-gray-600 text-sm">All your data is encrypted in transit. Industry-standard security protects every transaction.</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="text-3xl mr-4">💳</div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-2">No Credit Card Storage</h3>
+                <p className="text-gray-600 text-sm">We never store your payment information. Payments processed securely by industry leaders.</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="text-3xl mr-4">🇨🇦</div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-2">PIPEDA Compliant</h3>
+                <p className="text-gray-600 text-sm">We comply with Canadian privacy laws (PIPEDA). Your privacy is protected by law.</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="text-3xl mr-4">🛡️</div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-2">Your Data is Yours</h3>
+                <p className="text-gray-600 text-sm">We never sell, share, or access your financial information. Built for Canadian sole proprietors who value privacy.</p>
+              </div>
+            </div>
+          </div>
+          <p className="text-center text-gray-600 text-sm mt-8">
+            Read our full <a href="/privacy" className="text-blue-600 font-semibold hover:underline">Privacy Policy</a> and <a href="/terms" className="text-blue-600 font-semibold hover:underline">Terms of Service</a> for complete details.
+          </p>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg py-16 px-8 text-center mt-12">
         <h2 className="text-4xl font-bold mb-4">Stop Leaving Deductions on the Table</h2>
