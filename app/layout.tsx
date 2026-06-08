@@ -27,7 +27,7 @@ export default function RootLayout({
             </main>
           </div>
           <footer className="bg-white border-t border-gray-200 py-6 text-center text-base text-gray-600 font-medium">
-            Made in Canada by a Canadian firm 🍁
+            Designed by a Canadian CPA • Made in Canada by a Canadian firm 🍁
           </footer>
           {/* Chat Widget - Floating (Fixed Position) */}
           <ChatAssistant />
