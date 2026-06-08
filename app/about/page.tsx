@@ -24,7 +24,7 @@ export default function AboutPage() {
               className="w-full h-full"
               poster="/video-poster.jpg"
             >
-              <source src="/videos/BKA-Intro.mp4" type="video/mp4" />
+              <source src="https://res.cloudinary.com/dgnxufaol/video/upload/v1780887696/BKA_Intro_ckoedz.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
