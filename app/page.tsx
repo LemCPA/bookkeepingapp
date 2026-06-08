@@ -94,7 +94,7 @@ function LandingPage() {
               Sign In
             </Link>
           </div>
-          <p className="text-sm mt-4 opacity-80">✅ 7-day free trial. Then $9-29/month based on what you need.</p>
+          <p className="text-sm mt-4 opacity-80">✅ 7-day free trial. Then $12-24/month based on what you need.</p>
         </div>
       </section>
 
@@ -239,33 +239,34 @@ function LandingPage() {
       {/* Pricing Section */}
       <section id="pricing" className="py-12 scroll-mt-20">
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">
-          Fair Pricing for Sole Proprietors
+          Simple, Transparent Pricing
         </h2>
         <p className="text-center text-gray-600 mb-12">
-          ✅ 7-day free trial. Choose your plan after you see the value.
+          Choose the perfect plan for your business
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {/* Trial Plan */}
+          {/* Free Plan */}
           <div className="bg-white rounded-lg shadow p-8 border border-gray-200">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">7-Day Trial</h3>
-            <p className="text-gray-600 mb-6">Then choose Starter or Professional</p>
-            <div className="text-4xl font-bold text-gray-900 mb-8">$0<span className="text-lg text-gray-600">/7 days</span></div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
+            <p className="text-gray-600 mb-6">Perfect for getting started</p>
+            <div className="text-4xl font-bold text-gray-900 mb-8">$0<span className="text-lg text-gray-600">/month</span></div>
+            <p className="text-sm text-gray-600 mb-8">7-day free trial with 20 transaction limit</p>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 text-xl">✓</span>
-                <span className="text-gray-700">Receipt scanning (up to 20)</span>
+                <span className="text-gray-700">Receipt scanning</span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 text-xl">✓</span>
-                <span className="text-gray-700">Basic transaction tracking</span>
+                <span className="text-gray-700">Transaction tracking</span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 text-xl">✓</span>
-                <span className="text-gray-700">Profit snapshot</span>
+                <span className="text-gray-700">Monthly profit view</span>
               </li>
               <li className="flex items-start">
-                <span className="text-red-600 mr-3 text-xl">✗</span>
-                <span className="text-gray-500">No invoicing, reports, or GST tracking</span>
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Basic reports</span>
               </li>
             </ul>
             <Link
@@ -279,15 +280,16 @@ function LandingPage() {
           {/* Starter Plan */}
           <div className="bg-blue-600 text-white rounded-lg shadow p-8 relative transform scale-105">
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-amber-400 text-gray-900 px-4 py-1 rounded-full text-sm font-bold">
-              MOST POPULAR
+              POPULAR
             </div>
             <h3 className="text-2xl font-bold mb-2">Starter</h3>
-            <p className="mb-6 opacity-90">Most popular for sole proprietors</p>
-            <div className="text-4xl font-bold mb-8">$9<span className="text-lg opacity-90">/month</span></div>
+            <p className="mb-6 opacity-90">Perfect for growing businesses</p>
+            <div className="text-4xl font-bold mb-8">$12<span className="text-lg opacity-90">/month</span></div>
+            <p className="text-sm opacity-90 mb-8">30 uploads per month, resets monthly</p>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
                 <span className="text-amber-400 mr-3 text-xl">✓</span>
-                <span>Receipt scanning (100/month)</span>
+                <span>Receipt scanning & OCR</span>
               </li>
               <li className="flex items-start">
                 <span className="text-amber-400 mr-3 text-xl">✓</span>
@@ -295,11 +297,11 @@ function LandingPage() {
               </li>
               <li className="flex items-start">
                 <span className="text-amber-400 mr-3 text-xl">✓</span>
-                <span>GST/HST tracking</span>
+                <span>GST/HST reports</span>
               </li>
               <li className="flex items-start">
                 <span className="text-amber-400 mr-3 text-xl">✓</span>
-                <span>Income reports</span>
+                <span>Income & expense reports</span>
               </li>
             </ul>
             <Link
@@ -310,11 +312,12 @@ function LandingPage() {
             </Link>
           </div>
 
-          {/* Professional Plan */}
+          {/* Growth Plan */}
           <div className="bg-white rounded-lg shadow p-8 border border-gray-200">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
-            <p className="text-gray-600 mb-6">For bigger operations</p>
-            <div className="text-4xl font-bold text-gray-900 mb-8">$29<span className="text-lg text-gray-600">/month</span></div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Growth</h3>
+            <p className="text-gray-600 mb-6">For active businesses</p>
+            <div className="text-4xl font-bold text-gray-900 mb-8">$24<span className="text-lg text-gray-600">/month</span></div>
+            <p className="text-sm text-gray-600 mb-8">200 uploads per month, resets monthly</p>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 text-xl">✓</span>
@@ -326,7 +329,11 @@ function LandingPage() {
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 text-xl">✓</span>
-                <span className="text-gray-700">Home & vehicle expense tracking</span>
+                <span className="text-gray-700">4x higher upload limit</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-600 mr-3 text-xl">✓</span>
+                <span className="text-gray-700">Priority support</span>
               </li>
             </ul>
             <Link
@@ -343,7 +350,7 @@ function LandingPage() {
       <section className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg py-16 px-8 text-center mt-12">
         <h2 className="text-4xl font-bold mb-4">Stop Leaving Deductions on the Table</h2>
         <p className="text-xl mb-8 opacity-95">
-          Snap your receipts today. Track GST. Prepare your T2125 months early. Try it free for 7 days, then $9-29/month.
+          Snap your receipts today. Track GST. Prepare your T2125 months early. Try it free for 7 days, then $12-24/month.
         </p>
         <Link
           href="/signup"

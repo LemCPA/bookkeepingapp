@@ -1,11 +1,11 @@
 /**
  * Pricing tiers and transaction limits for the bookkeeping app
  * Free: 7-day trial, 20 transaction limit
- * Starter: $9/month, 50 transactions/month
- * Professional: $20/month, 150 transactions/month, team members allowed
+ * Starter: $12/month, 30 uploads/month
+ * Growth: $24/month, 200 uploads/month
  */
 
-export type PlanType = 'free' | 'starter' | 'professional'
+export type PlanType = 'free' | 'starter' | 'growth'
 
 export interface PricingTier {
   name: string
@@ -25,12 +25,12 @@ export const PRICING_TIERS: Record<PlanType, PricingTier> = {
     label: 'Free',
     price: 0,
     interval: 'trial',
-    transactionLimit: null, // unlimited for testing/development
+    transactionLimit: 20,
     monthlyLimit: false, // Trial limit is cumulative
     trialDays: 7,
     monthlyPrice: 0,
     features: [
-      'Receipt scanning (unlimited)',
+      'Receipt scanning',
       'Transaction tracking',
       'Monthly profit view',
       'Basic reports',
@@ -40,31 +40,30 @@ export const PRICING_TIERS: Record<PlanType, PricingTier> = {
   starter: {
     name: 'Starter',
     label: 'Starter',
-    price: 9,
+    price: 12,
     interval: 'month',
-    transactionLimit: 50,
-    monthlyLimit: true, // Resets every month
-    monthlyPrice: 9,
+    transactionLimit: null, // unlimited uploads tracked separately
+    monthlyLimit: true,
+    monthlyPrice: 12,
     features: [
-      'Everything in Free, plus:',
-      'Advanced financial reports',
-      'Bank reconciliation',
-      'Tax summary (GST/HST ready)',
-      'Invoice management',
+      'Receipt scanning & OCR',
+      'Transaction tracking',
+      'GST/HST reports',
+      'Income & expense reports',
     ],
   },
-  professional: {
-    name: 'Professional',
-    label: 'Professional',
-    price: 20,
+  growth: {
+    name: 'Growth',
+    label: 'Growth',
+    price: 24,
     interval: 'month',
-    transactionLimit: 150,
-    monthlyLimit: true, // Resets every month
-    monthlyPrice: 20,
+    transactionLimit: null, // unlimited uploads tracked separately
+    monthlyLimit: true,
+    monthlyPrice: 24,
     features: [
       'Everything in Starter, plus:',
-      'Team members access',
-      'Advanced analytics',
+      'Mileage tracking (CRA-compliant)',
+      '4x higher upload limit',
       'Priority support',
     ],
   },

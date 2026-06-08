@@ -37,6 +37,7 @@ type SimpleNavItem = { href: string; label: string; icon?: string }
 
 const unauthenticatedNavItems: SimpleNavItem[] = [
   { href: '/', label: 'Home' },
+  { href: '/about', label: 'About' },
   { href: '/#features', label: 'Features' },
   { href: '/#pricing', label: 'Pricing' },
 ]
