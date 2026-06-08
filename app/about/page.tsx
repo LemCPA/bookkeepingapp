@@ -22,7 +22,7 @@ export default function AboutPage() {
             <video
               controls
               className="w-full h-full"
-              poster="https://res.cloudinary.com/dgnxufaol/video/upload/so_0/v1780887696/BKA_Intro_ckoedz.jpg"
+              poster="https://res.cloudinary.com/dgnxufaol/image/upload/v1780892837/TITLE_a1nvog.png"
             >
               <source src="https://res.cloudinary.com/dgnxufaol/video/upload/v1780887696/BKA_Intro_ckoedz.mp4" type="video/mp4" />
               Your browser does not support the video tag.
