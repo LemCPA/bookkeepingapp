@@ -123,29 +123,44 @@ export async function POST(request: NextRequest) {
 
         if (user) {
           // Determine plan from metadata first, then fall back to price ID mapping
-          let planKey: string = subscription.metadata?.plan || 'starter'
+          let planKey: string = subscription.metadata?.plan || ''
           const priceId = subscription.items?.data?.[0]?.price?.id
 
-          // If not in metadata, map from Stripe price ID directly (hardcoded for reliability)
+          // If not in metadata, map from Stripe price ID directly (from environment)
           if (!subscription.metadata?.plan && priceId) {
-            // Known price IDs from Stripe dashboard
-            const STARTER_PRICE = 'price_1TfK0iIQrnQfSGBfHDioggge'
-            const GROWTH_PRICE = 'price_1TfK1pIQrnQfSGBf3bbvoIce'
+            // Load price IDs from environment variables
+            const STARTER_PRICE = process.env.STRIPE_STARTER_PRICE_ID
+            const GROWTH_PRICE = process.env.STRIPE_GROWTH_PRICE_ID
+            const STARTER_ANNUAL_PRICE = process.env.STRIPE_STARTER_ANNUAL_PRICE_ID
+            const GROWTH_ANNUAL_PRICE = process.env.STRIPE_GROWTH_ANNUAL_PRICE_ID
 
             console.log(`[WEBHOOK] Matching priceId: ${priceId}`)
             console.log(`[WEBHOOK]   against STARTER: ${STARTER_PRICE}`)
             console.log(`[WEBHOOK]   against GROWTH: ${GROWTH_PRICE}`)
+            console.log(`[WEBHOOK]   against STARTER_ANNUAL: ${STARTER_ANNUAL_PRICE}`)
+            console.log(`[WEBHOOK]   against GROWTH_ANNUAL: ${GROWTH_ANNUAL_PRICE}`)
 
-            if (priceId === GROWTH_PRICE) {
+            if (priceId === GROWTH_ANNUAL_PRICE) {
+              planKey = 'growth_annual'
+              console.log(`[WEBHOOK] ✅ Matched to GROWTH_ANNUAL`)
+            } else if (priceId === GROWTH_PRICE) {
               planKey = 'growth'
               console.log(`[WEBHOOK] ✅ Matched to GROWTH`)
+            } else if (priceId === STARTER_ANNUAL_PRICE) {
+              planKey = 'starter_annual'
+              console.log(`[WEBHOOK] ✅ Matched to STARTER_ANNUAL`)
             } else if (priceId === STARTER_PRICE) {
               planKey = 'starter'
               console.log(`[WEBHOOK] ✅ Matched to STARTER`)
             } else {
-              console.log(`[WEBHOOK] ⚠️  No match found, defaulting to STARTER`)
-              planKey = 'starter'
+              console.log(`[WEBHOOK] ⚠️  No match found, plan will be stored from metadata or missing`)
             }
+          }
+
+          // If still no plan determined, don't default - let it fail or use metadata
+          if (!planKey) {
+            console.warn(`[WEBHOOK] ⚠️  Could not determine plan from metadata or price ID`)
+            planKey = 'starter' // Last resort fallback only
           }
 
           console.log(`[WEBHOOK] Final plan: ${planKey} (metadata: ${subscription.metadata?.plan}, priceId: ${priceId})`)
