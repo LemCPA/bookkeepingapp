@@ -105,10 +105,11 @@ export async function saveSubscriptionToSupabase(subscription: {
  */
 export async function getUserFromSupabase(userId: number) {
   try {
+    const userUuid = numericIdToUuid(userId)
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', userId)
+      .eq('id', userUuid)
       .single()
 
     if (error && error.code !== 'PGRST116') {
