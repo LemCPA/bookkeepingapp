@@ -4,6 +4,7 @@ import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
 import { getDb, saveDb, getUserByEmail, createAccount } from '@/lib/db'
 import { createStripeCustomer } from '@/lib/stripe-utils'
 import { DEFAULT_ACCOUNTS } from '@/lib/default-accounts'
+import { syncUserToSupabase, updateUserStripeCustomerId } from '@/lib/supabase-db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,6 +59,11 @@ export async function POST(request: NextRequest) {
       saveDb(db)
     }
 
+    // CRITICAL: Sync user to Supabase immediately after creation
+    // This ensures webhook can find the user later
+    await syncUserToSupabase(newUser.id, email, name)
+    console.log(`[SIGNUP] Synced user ${newUser.id} (${email}) to Supabase`)
+
     // Create Stripe customer for new user
     let stripeCustomerId: string | null = null
     try {
@@ -72,13 +78,17 @@ export async function POST(request: NextRequest) {
     if (stripeCustomerId) {
       (newUser as any).stripe_customer_id = stripeCustomerId
 
-      // Save the updated user with stripe_customer_id to database
+      // Save the updated user with stripe_customer_id to BOTH local and Supabase
       const db = getDb()
       const userIndex = db.users.findIndex(u => u.id === newUser.id)
       if (userIndex !== -1) {
         db.users[userIndex].stripe_customer_id = stripeCustomerId
         saveDb(db)
       }
+
+      // Also save to Supabase so webhook can find the user
+      await updateUserStripeCustomerId(newUser.id, stripeCustomerId)
+      console.log(`[SIGNUP] Updated stripe_customer_id in Supabase for user ${newUser.id}`)
     }
 
     // Automatically create default accounts for new user (only accounts with codes)
