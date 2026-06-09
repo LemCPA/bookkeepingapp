@@ -372,6 +372,9 @@ function LandingPage() {
               <div>
                 <h3 className="font-bold text-gray-900 mb-2">PIPEDA Compliant</h3>
                 <p className="text-gray-600 text-sm">We comply with Canadian privacy laws (PIPEDA). Your privacy is protected by law.</p>
+                <Link href="/privacy" className="inline-block mt-3 px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-semibold text-sm transition">
+                  📋 View PIPEDA Compliance
+                </Link>
               </div>
             </div>
             <div className="flex items-start">
@@ -628,6 +631,17 @@ export default function Home() {
         {/* Footer */}
         <footer className="bg-gray-50 border-t border-gray-200 py-8">
           <div className="max-w-7xl mx-auto px-4">
+            {/* PIPEDA Badge */}
+            <div className="flex justify-center mb-8">
+              <Link href="/privacy" className="group">
+                <div className="border-2 border-blue-600 rounded-lg p-4 hover:bg-blue-50 transition inline-block">
+                  <p className="text-xs font-bold text-blue-600 mb-1">✓ CERTIFIED</p>
+                  <p className="font-bold text-gray-900 text-sm">PIPEDA Compliant</p>
+                  <p className="text-xs text-gray-600 mt-1">Privacy & Consent</p>
+                </div>
+              </Link>
+            </div>
+
             <div className="flex justify-center gap-8 mb-6 text-sm text-gray-700">
               <Link href="/faq" className="hover:text-blue-600 font-medium">FAQ</Link>
               <Link href="/terms" className="hover:text-blue-600 font-medium">Terms of Use</Link>

@@ -11,3 +11,5 @@ build/
 *.log
 .DS_Store
 public/uploads/
+Videos/
+public/videos/
