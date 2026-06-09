@@ -156,6 +156,32 @@ const userUuid = numericIdToUuid(5)  // Convert to UUID
 const user = await supabase.from('users').select().eq('id', userUuid)  // Now it works
 ```
 
+### ❌ Mistake 5: Using local database email for Stripe operations
+```typescript
+// WRONG - Local database email can be outdated/stale
+let user = getUser(userId)  // Gets user from LOCAL database
+createStripeCustomer(user.email, user.name)  // Uses stale email!
+// Result: Stripe customer created with OLD email, subscription saves to WRONG account
+```
+
+**Fix:** Always use Supabase email for Stripe:
+```typescript
+// 1. Get user from local database (for id, name)
+let localUser = getUser(userId)
+
+// 2. Sync to Supabase to ensure latest data
+await syncUserToSupabase(localUser.id, localUser.email, localUser.name)
+
+// 3. FETCH USER FROM SUPABASE - this is source of truth
+let supabaseUser = await getUserFromSupabase(localUser.id)
+
+// 4. Use Supabase email for Stripe (NEVER local database email)
+const userEmail = supabaseUser.email  // ✅ Use Supabase email
+createStripeCustomer(userEmail, localUser.name)
+```
+
+**Why:** Local database can have stale data. Supabase is the single source of truth for subscription-related data.
+
 ---
 
 ## Environment Variables Required
