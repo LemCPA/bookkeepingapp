@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       periodStart: formatDate(periodStart.toISOString()),
       periodEnd: formatDate(periodEnd.toISOString()),
       plan: user?.plan || 'free',
-      userCreatedAt: user?.created_at || new Date().toISOString(),
+      userCreatedAt: user?.created_at || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       metrics: {
         totalTransactions: transactionsForPeriod.length,
         totalRevenue,
