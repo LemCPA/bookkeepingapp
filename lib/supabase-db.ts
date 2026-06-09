@@ -27,6 +27,7 @@ export function numericIdToUuid(userId: number): string {
 
 /**
  * Get subscription for a user from Supabase
+ * Returns the most recent subscription that is NOT canceled (includes active, past_due, trialing, etc.)
  */
 export async function getSubscriptionFromSupabase(userId: number) {
   try {
@@ -46,14 +47,23 @@ export async function getSubscriptionFromSupabase(userId: number) {
       return null
     }
 
-    // Return ONLY the most recent ACTIVE subscription
-    const activeSubscription = data.find(sub => sub.status === 'active')
-    if (activeSubscription) {
-      console.log(`[SUPABASE] Found active subscription for user ${userId}: ${activeSubscription.id}`)
-      return activeSubscription
+    // Return the most recent subscription that is NOT canceled
+    // Includes: active, past_due, trialing, incomplete (but not canceled/incomplete_expired)
+    const validStatuses = ['active', 'past_due', 'trialing', 'incomplete']
+    const validSubscription = data.find(sub => validStatuses.includes(sub.status))
+
+    if (validSubscription) {
+      console.log(`[SUPABASE] Found subscription for user ${userId}: ${validSubscription.id} (status: ${validSubscription.status})`)
+      return validSubscription
     }
 
-    console.log(`[SUPABASE] No active subscription found for user ${userId}`)
+    // If no valid subscription, check if there are any canceled ones (for logging)
+    const canceledSubscription = data.find(sub => sub.status === 'canceled' || sub.status === 'incomplete_expired')
+    if (canceledSubscription) {
+      console.log(`[SUPABASE] Only canceled subscription found for user ${userId}`)
+    }
+
+    console.log(`[SUPABASE] No valid subscription found for user ${userId}`)
     return null
   } catch (err) {
     console.error('[SUPABASE] Exception fetching subscription:', err)
@@ -63,6 +73,7 @@ export async function getSubscriptionFromSupabase(userId: number) {
 
 /**
  * Save subscription to Supabase
+ * UPSERT: Updates if exists, inserts if new (atomic operation)
  */
 export async function saveSubscriptionToSupabase(subscription: {
   user_id: string // UUID (converted from numeric ID)
@@ -78,13 +89,13 @@ export async function saveSubscriptionToSupabase(subscription: {
   canceled_at?: string | null
 }) {
   try {
-    // First, delete any existing subscription for this user
-    await supabase.from('subscriptions').delete().eq('user_id', subscription.user_id)
-
-    // Then insert the new one
+    // Use UPSERT to update-if-exists or insert-if-new (atomic operation)
+    // This prevents race conditions and data loss from delete-then-insert
     const { data, error } = await supabase
       .from('subscriptions')
-      .insert([subscription])
+      .upsert([subscription], {
+        onConflict: 'stripe_subscription_id' // Use subscription ID as unique key
+      })
       .select()
 
     if (error) {
@@ -92,7 +103,7 @@ export async function saveSubscriptionToSupabase(subscription: {
       return false
     }
 
-    console.log('[SUPABASE] Subscription saved:', data)
+    console.log('[SUPABASE] Subscription saved/updated:', data)
     return true
   } catch (err) {
     console.error('[SUPABASE] Exception saving subscription:', err)
