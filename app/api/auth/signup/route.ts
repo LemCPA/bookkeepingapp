@@ -56,7 +56,15 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
       }
       db.users.push(newUser)
-      saveDb(db)
+
+      // CRITICAL: Only save locally in development, not on Vercel (read-only filesystem)
+      // Vercel deployments MUST use Supabase for persistent data
+      if (!process.env.VERCEL) {
+        saveDb(db)
+        console.log(`[SIGNUP] Saved user to local DB: ${userId}`)
+      } else {
+        console.log(`[SIGNUP] On Vercel - skipping local saveDb (use Supabase instead). User ID: ${userId}`)
+      }
     }
 
     // CRITICAL: Sync user to Supabase immediately after creation
@@ -83,7 +91,12 @@ export async function POST(request: NextRequest) {
       const userIndex = db.users.findIndex(u => u.id === newUser.id)
       if (userIndex !== -1) {
         db.users[userIndex].stripe_customer_id = stripeCustomerId
-        saveDb(db)
+
+        // CRITICAL: Only save locally in development, not on Vercel (read-only filesystem)
+        if (!process.env.VERCEL) {
+          saveDb(db)
+          console.log(`[SIGNUP] Updated local DB with stripe_customer_id for user ${newUser.id}`)
+        }
       }
 
       // Also save to Supabase so webhook can find the user
