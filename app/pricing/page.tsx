@@ -10,7 +10,7 @@ export default function PricingPage() {
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null)
   const [daysRemaining, setDaysRemaining] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('annual')
 
   useEffect(() => {
     // Check if user is logged in by fetching dashboard data
@@ -112,24 +112,24 @@ export default function PricingPage() {
         <div className="flex justify-center mb-12">
           <div className="inline-flex rounded-lg border border-slate-300 bg-white p-1">
             <button
+              onClick={() => setBillingPeriod('annual')}
+              className={`px-8 py-2 rounded-md font-semibold transition-all ${
+                billingPeriod === 'annual'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-slate-700 hover:text-slate-900'
+              }`}
+            >
+              Annual <span className="text-sm ml-2 font-bold">💰 Save 20%</span>
+            </button>
+            <button
               onClick={() => setBillingPeriod('monthly')}
-              className={`px-6 py-2 rounded-md font-semibold transition-all ${
+              className={`px-8 py-2 rounded-md font-semibold transition-all ${
                 billingPeriod === 'monthly'
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-700 hover:text-slate-900'
               }`}
             >
               Monthly
-            </button>
-            <button
-              onClick={() => setBillingPeriod('annual')}
-              className={`px-6 py-2 rounded-md font-semibold transition-all ${
-                billingPeriod === 'annual'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-700 hover:text-slate-900'
-              }`}
-            >
-              Annual <span className="text-sm ml-1">(Save up to $48)</span>
             </button>
           </div>
         </div>
@@ -227,18 +227,26 @@ export default function PricingPage() {
 
               {/* Price */}
               <div className="mb-6">
-                <p className="text-4xl font-bold text-slate-900">
-                  {billingPeriod === 'monthly' ? '$12' : '$120'}
-                  <span className="text-lg text-slate-600">
-                    {billingPeriod === 'monthly' ? '/month' : '/year'}
-                  </span>
-                </p>
-                {billingPeriod === 'annual' && (
-                  <p className="text-green-600 font-semibold text-sm mt-2">
-                    💰 Save $24/year ($2/month)
-                  </p>
+                {billingPeriod === 'annual' ? (
+                  <>
+                    <p className="text-4xl font-bold text-slate-900">
+                      $10<span className="text-lg text-slate-600">/month</span>
+                    </p>
+                    <p className="text-slate-600 text-sm mt-1">
+                      Billed $120 annually
+                    </p>
+                    <p className="text-green-600 font-semibold text-sm mt-2 bg-green-50 px-2 py-1 rounded">
+                      ✓ Save $24/year compared to monthly
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-4xl font-bold text-slate-900">
+                      $12<span className="text-lg text-slate-600">/month</span>
+                    </p>
+                  </>
                 )}
-                <p className="text-slate-600 text-sm mt-2">
+                <p className="text-slate-600 text-sm mt-3">
                   30 uploads per month, resets monthly
                 </p>
               </div>
@@ -305,18 +313,26 @@ export default function PricingPage() {
 
               {/* Price */}
               <div className="mb-6">
-                <p className="text-4xl font-bold text-slate-900">
-                  {billingPeriod === 'monthly' ? '$24' : '$240'}
-                  <span className="text-lg text-slate-600">
-                    {billingPeriod === 'monthly' ? '/month' : '/year'}
-                  </span>
-                </p>
-                {billingPeriod === 'annual' && (
-                  <p className="text-green-600 font-semibold text-sm mt-2">
-                    💰 Save $48/year ($4/month)
-                  </p>
+                {billingPeriod === 'annual' ? (
+                  <>
+                    <p className="text-4xl font-bold text-slate-900">
+                      $20<span className="text-lg text-slate-600">/month</span>
+                    </p>
+                    <p className="text-slate-600 text-sm mt-1">
+                      Billed $240 annually
+                    </p>
+                    <p className="text-green-600 font-semibold text-sm mt-2 bg-green-50 px-2 py-1 rounded">
+                      ✓ Save $48/year compared to monthly
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-4xl font-bold text-slate-900">
+                      $24<span className="text-lg text-slate-600">/month</span>
+                    </p>
+                  </>
                 )}
-                <p className="text-slate-600 text-sm mt-2">
+                <p className="text-slate-600 text-sm mt-3">
                   200 uploads per month, resets monthly
                 </p>
               </div>
