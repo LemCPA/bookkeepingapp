@@ -46,9 +46,15 @@ export async function getSubscriptionFromSupabase(userId: number) {
       return null
     }
 
-    // Return the most recent ACTIVE subscription, or the most recent one if none are active
+    // Return ONLY the most recent ACTIVE subscription
     const activeSubscription = data.find(sub => sub.status === 'active')
-    return activeSubscription || data[0]
+    if (activeSubscription) {
+      console.log(`[SUPABASE] Found active subscription for user ${userId}: ${activeSubscription.id}`)
+      return activeSubscription
+    }
+
+    console.log(`[SUPABASE] No active subscription found for user ${userId}`)
+    return null
   } catch (err) {
     console.error('[SUPABASE] Exception fetching subscription:', err)
     return null
