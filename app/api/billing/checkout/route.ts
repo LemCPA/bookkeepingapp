@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
 import { getUser } from '@/lib/db'
 import { createCheckoutSession, updateSubscriptionWithProration, PRICING_PLANS } from '@/lib/stripe-utils'
-import { updateUserStripeCustomerId, syncUserToSupabase, getSubscriptionFromSupabase } from '@/lib/supabase-db'
+import { updateUserStripeCustomerId, syncUserToSupabase, getSubscriptionFromSupabase, getUserFromSupabase } from '@/lib/supabase-db'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -14,7 +14,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const user = getUser(userId)
+    // Try Supabase first (primary), fall back to local database
+    let user = await getUserFromSupabase(userId)
+    if (!user) {
+      // Fallback to local database for backward compatibility
+      user = getUser(userId)
+    }
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
