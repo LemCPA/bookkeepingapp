@@ -129,10 +129,15 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // If still no plan determined, don't default - let it fail or use metadata
+          // If still no plan determined, this is an error condition
           if (!planKey) {
-            console.warn(`[WEBHOOK] ⚠️  Could not determine plan from metadata or price ID`)
-            planKey = 'starter' // Last resort fallback only
+            console.error(`[WEBHOOK] ❌ CRITICAL: Could not determine plan from metadata or price ID`)
+            console.error(`[WEBHOOK] Subscription metadata:`, subscription.metadata)
+            console.error(`[WEBHOOK] Price ID:`, priceId)
+            console.error(`[WEBHOOK] This should never happen - webhook will abort`)
+            return NextResponse.json({
+              error: 'Could not determine plan from webhook data. This is a critical error.'
+            }, { status: 400 })
           }
 
           console.log(`[WEBHOOK] Final plan: ${planKey} (metadata: ${subscription.metadata?.plan}, priceId: ${priceId})`)
