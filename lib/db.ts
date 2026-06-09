@@ -293,8 +293,10 @@ export function saveDb(db: DbData) {
   // CRITICAL: Skip file writes on Vercel (read-only filesystem)
   // Data is ephemeral in serverless environment - subscription info is stored in Supabase
   // Local database is only for request-scoped state and development
-  if (process.env.VERCEL) {
-    console.log('[DB] Skipping local database save on Vercel (read-only filesystem)')
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || process.env.NODE_ENV === 'production'
+
+  if (isVercel) {
+    console.log('[DB] Skipping local database save (Vercel/production environment)')
     return
   }
 
