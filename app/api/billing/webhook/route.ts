@@ -28,6 +28,47 @@ export async function POST(request: NextRequest) {
     const event = verifyWebhookSignature(body, signature)
     console.log('[WEBHOOK] Event verified! Type:', event.type)
 
+    // Handle checkout.session.completed - set metadata on subscription after checkout
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as any
+      console.log('[WEBHOOK] Processing checkout.session.completed for session:', session.id)
+
+      try {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+          apiVersion: '2024-04-10' as any,
+        })
+
+        // Get the subscription that was created from this checkout
+        const subscriptions = await stripe.subscriptions.list({
+          customer: session.customer,
+          limit: 1,
+          sort: 'created',
+        })
+
+        if (subscriptions.data.length > 0) {
+          const subscription = subscriptions.data[0]
+          const planKey = session.metadata?.plan
+
+          // Update the subscription with metadata.plan if checkout session has it
+          if (planKey && !subscription.metadata?.plan) {
+            console.log(`[WEBHOOK] Setting metadata.plan=${planKey} on subscription ${subscription.id}`)
+            await stripe.subscriptions.update(subscription.id, {
+              metadata: {
+                plan: planKey,
+                source: 'checkout',
+              },
+            })
+            console.log(`[WEBHOOK] ✅ Updated subscription metadata`)
+          }
+        }
+      } catch (err) {
+        console.warn('[WEBHOOK] Error handling checkout.session.completed:', err)
+        // Don't fail the webhook, just log the error
+      }
+
+      return NextResponse.json({ received: true })
+    }
+
     // Handle subscription events
     const handled = handleSubscriptionEvent(event)
     console.log('[WEBHOOK] handleSubscriptionEvent returned:', handled ? handled.type : 'null')
@@ -65,7 +106,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Save subscription to Supabase (only explicit checkouts after above filter)
+    // Save subscription to Supabase (ONLY for explicit checkouts after above filter)
     if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated' || event.type === 'charge.succeeded') {
       try {
         let subscription: any = null
@@ -126,6 +167,24 @@ export async function POST(request: NextRequest) {
           subscription = event.data.object as any
           stripeCustomerId = subscription.customer
           console.log('[WEBHOOK] Processing subscription event for customer:', stripeCustomerId)
+
+          // CRITICAL FIX: ONLY SAVE SUBSCRIPTIONS FROM EXPLICIT CHECKOUTS
+          // Auto-created subscriptions MUST have metadata.plan set (from checkout)
+          // If metadata.plan is not set, this is an auto-created subscription - DELETE IT
+          if (!subscription.metadata?.plan) {
+            console.log('[WEBHOOK] ⚠️ SUBSCRIPTION MISSING metadata.plan - NOT FROM CHECKOUT')
+            console.log('[WEBHOOK] This is likely an auto-created subscription, attempting to delete...')
+            try {
+              const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+                apiVersion: '2024-04-10' as any,
+              })
+              await stripe.subscriptions.del(subscription.id)
+              console.log('[WEBHOOK] ✅ Deleted subscription without metadata.plan:', subscription.id)
+            } catch (err) {
+              console.warn('[WEBHOOK] Could not delete subscription:', err)
+            }
+            return NextResponse.json({ received: true })
+          }
         }
 
         // Find user by stripe_customer_id from Supabase (primary lookup only)
@@ -148,53 +207,18 @@ export async function POST(request: NextRequest) {
         console.log('[WEBHOOK] User lookup result:', user ? `Found user ${user.id}` : 'User not found')
 
         if (user) {
-          // Determine plan from metadata first, then fall back to price ID mapping
-          let planKey: string = subscription.metadata?.plan || ''
-          const priceId = subscription.items?.data?.[0]?.price?.id
+          // Get plan from metadata (should ALWAYS be set for explicit checkouts)
+          const planKey = subscription.metadata?.plan
 
-          // If not in metadata, map from Stripe price ID directly (from environment)
-          if (!subscription.metadata?.plan && priceId) {
-            // Load price IDs from environment variables
-            const STARTER_PRICE = process.env.STRIPE_STARTER_PRICE_ID
-            const GROWTH_PRICE = process.env.STRIPE_GROWTH_PRICE_ID
-            const STARTER_ANNUAL_PRICE = process.env.STRIPE_STARTER_ANNUAL_PRICE_ID
-            const GROWTH_ANNUAL_PRICE = process.env.STRIPE_GROWTH_ANNUAL_PRICE_ID
-
-            console.log(`[WEBHOOK] Matching priceId: ${priceId}`)
-            console.log(`[WEBHOOK]   against STARTER: ${STARTER_PRICE}`)
-            console.log(`[WEBHOOK]   against GROWTH: ${GROWTH_PRICE}`)
-            console.log(`[WEBHOOK]   against STARTER_ANNUAL: ${STARTER_ANNUAL_PRICE}`)
-            console.log(`[WEBHOOK]   against GROWTH_ANNUAL: ${GROWTH_ANNUAL_PRICE}`)
-
-            if (priceId === GROWTH_ANNUAL_PRICE) {
-              planKey = 'growth_annual'
-              console.log(`[WEBHOOK] ✅ Matched to GROWTH_ANNUAL`)
-            } else if (priceId === GROWTH_PRICE) {
-              planKey = 'growth'
-              console.log(`[WEBHOOK] ✅ Matched to GROWTH`)
-            } else if (priceId === STARTER_ANNUAL_PRICE) {
-              planKey = 'starter_annual'
-              console.log(`[WEBHOOK] ✅ Matched to STARTER_ANNUAL`)
-            } else if (priceId === STARTER_PRICE) {
-              planKey = 'starter'
-              console.log(`[WEBHOOK] ✅ Matched to STARTER`)
-            } else {
-              console.log(`[WEBHOOK] ⚠️  No match found, plan will be stored from metadata or missing`)
-            }
-          }
-
-          // If still no plan determined, this is an error condition
           if (!planKey) {
-            console.error(`[WEBHOOK] ❌ CRITICAL: Could not determine plan from metadata or price ID`)
-            console.error(`[WEBHOOK] Subscription metadata:`, subscription.metadata)
-            console.error(`[WEBHOOK] Price ID:`, priceId)
-            console.error(`[WEBHOOK] This should never happen - webhook will abort`)
+            console.error(`[WEBHOOK] ❌ CRITICAL: No plan found in subscription metadata`)
+            console.error(`[WEBHOOK] Only subscriptions from explicit checkouts should reach here`)
             return NextResponse.json({
-              error: 'Could not determine plan from webhook data. This is a critical error.'
+              error: 'Plan not found in subscription metadata. This subscription was not from a checkout.'
             }, { status: 400 })
           }
 
-          console.log(`[WEBHOOK] Final plan: ${planKey} (metadata: ${subscription.metadata?.plan}, priceId: ${priceId})`)
+          console.log(`[WEBHOOK] Final plan: ${planKey} (from metadata)`)
 
           // Convert user_id to UUID (only if numeric - user from local DB)
           // If user came from Supabase, user.id is already a UUID
