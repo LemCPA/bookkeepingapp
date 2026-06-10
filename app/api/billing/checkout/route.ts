@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
     const stripeCustomerId = supabaseUser.stripe_customer_id
 
     // Auto-create Stripe customer if needed
+    let finalStripeCustomerId = stripeCustomerId
     if (!stripeCustomerId) {
       try {
         const { createStripeCustomer } = await import('@/lib/stripe-utils')
@@ -81,6 +82,9 @@ export async function POST(request: NextRequest) {
         } else {
           console.warn(`[CHECKOUT] Failed to save stripe_customer_id to Supabase`)
         }
+
+        // CRITICAL FIX: Use the newly created customer ID, not the stale supabaseUser value
+        finalStripeCustomerId = newStripeCustomerId
       } catch (error) {
         console.error('[CHECKOUT] Failed to auto-create Stripe customer:', error)
         return NextResponse.json(
@@ -92,7 +96,6 @@ export async function POST(request: NextRequest) {
 
     // Check if user already has an active subscription (upgrade scenario)
     const existingSubscription = await getSubscriptionFromSupabase(userEmail)
-    const finalStripeCustomerId = stripeCustomerId || supabaseUser.stripe_customer_id
 
     if (existingSubscription && existingSubscription.status === 'active') {
       // User is upgrading/downgrading - use subscription update with proration
