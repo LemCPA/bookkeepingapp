@@ -189,7 +189,14 @@ export async function createCheckoutSession(
       cancel_url: cancelUrl,
       metadata: {
         plan: planKey,
-        source: 'checkout', // CRITICAL: Mark as explicit checkout so webhook doesn't cancel it
+      },
+      // CRITICAL: Pass metadata to subscription at creation time (not after)
+      // This prevents the subscription.created webhook from canceling it
+      subscription_data: {
+        metadata: {
+          plan: planKey,
+          source: 'checkout', // Mark as explicit checkout so webhook doesn't cancel it
+        },
       },
     })
 
