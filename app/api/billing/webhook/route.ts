@@ -199,16 +199,18 @@ export async function POST(request: NextRequest) {
         }
 
         // Find user by stripe_customer_id from Supabase (primary lookup only)
+        console.log('[WEBHOOK] Looking up user by stripe_customer_id:', stripeCustomerId)
         let user = await findUserByStripeCustomerId(stripeCustomerId)
 
         if (user) {
-          console.log('[WEBHOOK] Found user in Supabase by stripe_customer_id:', user.id)
+          console.log('[WEBHOOK] ✅ Found user in Supabase by stripe_customer_id:', user.id)
+          console.log('[WEBHOOK] User details: email=', user.email, 'stripe_customer_id=', user.stripe_customer_id)
         } else {
           // CRITICAL: Do NOT fall back to email lookup - it finds the WRONG account!
           // Email fallback causes subscriptions to be saved to old accounts instead of new ones.
           // If stripe_customer_id isn't found, the checkout didn't save it properly.
-          console.error('[WEBHOOK] ❌ User not found by stripe_customer_id:', stripeCustomerId)
-          console.error('[WEBHOOK] This usually means stripe_customer_id was not saved in Supabase during checkout.')
+          console.error('[WEBHOOK] ❌❌❌ CRITICAL: User not found by stripe_customer_id:', stripeCustomerId)
+          console.error('[WEBHOOK] This usually means stripe_customer_id was NOT saved in Supabase during checkout.')
           console.error('[WEBHOOK] Webhook will abort to prevent saving subscription to wrong account.')
           return NextResponse.json({
             error: 'User not found by stripe_customer_id. Checkout may have failed to save customer ID.'
@@ -280,11 +282,17 @@ export async function POST(request: NextRequest) {
             canceled_at: toISOString(subscription.canceled_at),
           }
 
+          console.log('[WEBHOOK] Saving subscription to Supabase with data:', {
+            user_id: userId,
+            stripe_subscription_id: subscription.id,
+            plan: planKey,
+            status: subscription.status
+          })
           const saved = await saveSubscriptionToSupabase(subscriptionData)
           if (saved) {
-            console.log(`[WEBHOOK] Successfully saved subscription for user ${user.id}: ${planKey} (${subscription.status})`)
+            console.log(`[WEBHOOK] ✅ Successfully saved subscription for user ${user.id}: ${planKey} (${subscription.status})`)
           } else {
-            console.error(`[WEBHOOK] Failed to save subscription for user ${user.id}`)
+            console.error(`[WEBHOOK] ❌ Failed to save subscription for user ${user.id}`)
           }
         } else {
           console.warn(`[WEBHOOK] Could not find user with stripe_customer_id: ${stripeCustomerId}`)
