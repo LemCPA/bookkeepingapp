@@ -79,24 +79,25 @@ export async function POST(request: NextRequest) {
     }
 
     // CRITICAL: Ignore auto-created subscriptions from Stripe
-    // Stripe auto-creates subscriptions for new customers (Source: Automatic)
-    // We only want to save subscriptions created by explicit user checkout
+    // ONLY subscriptions with metadata.source = 'checkout' are from explicit user actions
+    // Everything else is auto-created by Stripe and must be canceled
     if (event.type === 'customer.subscription.created') {
       const subscription = event.data.object as any
 
-      // Check if this is an auto-created subscription (no plan metadata = auto-created)
-      // Explicit checkouts set metadata.plan, auto-created ones don't
-      if (!subscription.metadata?.plan && !subscription.metadata?.source) {
-        console.log('[WEBHOOK] ⚠️ Ignoring auto-created subscription:', subscription.id)
-        console.log('[WEBHOOK] Auto-created subscriptions are not saved to prevent new users from being charged')
+      // Check if this subscription came from an explicit checkout
+      const isFromCheckout = subscription.metadata?.source === 'checkout'
 
-        // Try to delete the auto-created subscription so it doesn't appear in Stripe
+      if (!isFromCheckout) {
+        console.log('[WEBHOOK] ⚠️ Canceling auto-created subscription:', subscription.id)
+        console.log('[WEBHOOK] metadata.source not set to "checkout" - this is not from user action')
+
+        // Delete the auto-created subscription so it doesn't appear in Stripe or get saved to DB
         try {
           const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
             apiVersion: '2024-04-10' as any,
           })
           await stripe.subscriptions.cancel(subscription.id)
-          console.log('[WEBHOOK] Canceled auto-created subscription:', subscription.id)
+          console.log('[WEBHOOK] ✅ Successfully canceled auto-created subscription:', subscription.id)
         } catch (err) {
           console.warn('[WEBHOOK] Could not cancel auto-created subscription:', err)
         }
@@ -168,19 +169,21 @@ export async function POST(request: NextRequest) {
           console.log('[WEBHOOK] Processing subscription event for customer:', stripeCustomerId)
 
           // CRITICAL FIX: ONLY SAVE SUBSCRIPTIONS FROM EXPLICIT CHECKOUTS
-          // Auto-created subscriptions MUST have metadata.plan set (from checkout)
-          // If metadata.plan is not set, this is an auto-created subscription - DELETE IT
-          if (!subscription.metadata?.plan) {
-            console.log('[WEBHOOK] ⚠️ SUBSCRIPTION MISSING metadata.plan - NOT FROM CHECKOUT')
-            console.log('[WEBHOOK] This is likely an auto-created subscription, attempting to delete...')
+          // Only subscriptions with metadata.source = 'checkout' are from user actions
+          // Everything else is auto-created by Stripe and must be canceled
+          const isFromCheckout = subscription.metadata?.source === 'checkout'
+
+          if (!isFromCheckout) {
+            console.log('[WEBHOOK] ⚠️ SUBSCRIPTION NOT FROM CHECKOUT - metadata.source:', subscription.metadata?.source)
+            console.log('[WEBHOOK] This is an auto-created subscription, canceling immediately...')
             try {
               const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
                 apiVersion: '2024-04-10' as any,
               })
               await stripe.subscriptions.cancel(subscription.id)
-              console.log('[WEBHOOK] ✅ Canceled subscription without metadata.plan:', subscription.id)
+              console.log('[WEBHOOK] ✅ Canceled auto-created subscription:', subscription.id)
             } catch (err) {
-              console.warn('[WEBHOOK] Could not cancel subscription:', err)
+              console.warn('[WEBHOOK] Could not cancel auto-created subscription:', err)
             }
             return NextResponse.json({ received: true })
           }
