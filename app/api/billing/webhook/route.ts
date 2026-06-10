@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Find user by stripe_customer_id from Supabase (primary lookup only)
+        // Find user by stripe_customer_id from Supabase (primary lookup)
         console.log('[WEBHOOK] Looking up user by stripe_customer_id:', stripeCustomerId)
         let user = await findUserByStripeCustomerId(stripeCustomerId)
 
@@ -206,15 +206,40 @@ export async function POST(request: NextRequest) {
           console.log('[WEBHOOK] ✅ Found user in Supabase by stripe_customer_id:', user.id)
           console.log('[WEBHOOK] User details: email=', user.email, 'stripe_customer_id=', user.stripe_customer_id)
         } else {
-          // CRITICAL: Do NOT fall back to email lookup - it finds the WRONG account!
-          // Email fallback causes subscriptions to be saved to old accounts instead of new ones.
-          // If stripe_customer_id isn't found, the checkout didn't save it properly.
-          console.error('[WEBHOOK] ❌❌❌ CRITICAL: User not found by stripe_customer_id:', stripeCustomerId)
-          console.error('[WEBHOOK] This usually means stripe_customer_id was NOT saved in Supabase during checkout.')
-          console.error('[WEBHOOK] Webhook will abort to prevent saving subscription to wrong account.')
-          return NextResponse.json({
-            error: 'User not found by stripe_customer_id. Checkout may have failed to save customer ID.'
-          }, { status: 400 })
+          // Fallback: if stripe_customer_id wasn't saved, try to find by customer email
+          // Fetch customer from Stripe to get the email
+          const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+            apiVersion: '2024-04-10' as any,
+          })
+
+          try {
+            const customer = await stripeInstance.customers.retrieve(stripeCustomerId)
+            if (customer && 'email' in customer && customer.email) {
+              console.warn('[WEBHOOK] ⚠️ stripe_customer_id not found in Supabase, using customer email as fallback:', customer.email)
+
+              const { data: userByEmail } = await supabase
+                .from('users')
+                .select('*')
+                .eq('email', customer.email)
+                .single()
+
+              if (userByEmail) {
+                user = userByEmail
+                console.log('[WEBHOOK] ✅ Found user by email fallback:', user.id)
+              }
+            }
+          } catch (err) {
+            console.error('[WEBHOOK] Error fetching customer from Stripe:', err)
+          }
+
+          if (!user) {
+            console.error('[WEBHOOK] ❌❌❌ CRITICAL: User not found by stripe_customer_id OR email')
+            console.error('[WEBHOOK] stripe_customer_id:', stripeCustomerId)
+            console.error('[WEBHOOK] This means stripe_customer_id was NOT saved in Supabase during checkout.')
+            return NextResponse.json({
+              error: 'User not found. Checkout may have failed to save customer ID.'
+            }, { status: 400 })
+          }
         }
 
         console.log('[WEBHOOK] User lookup result:', user ? `Found user ${user.id}` : 'User not found')
