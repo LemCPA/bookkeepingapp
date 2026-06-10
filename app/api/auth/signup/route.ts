@@ -93,9 +93,10 @@ export async function POST(request: NextRequest) {
       // Don't fail signup if Stripe creation fails
     }
 
-    // CRITICAL: Add 7-day trial to auto-created subscriptions
+    // CRITICAL: Delete auto-created subscriptions (cannot add trial to existing subscriptions)
     // Stripe auto-creates subscriptions for new customers
-    // Instead of deleting them, add a trial period so they don't charge for 7 days
+    // Trial periods can only be set when CREATING subscriptions, not updating
+    // So we delete auto-created ones and let users get trial when they upgrade
     if (stripeCustomerId) {
       try {
         const Stripe = (await import('stripe')).default
@@ -110,30 +111,23 @@ export async function POST(request: NextRequest) {
 
         console.log(`[SIGNUP] Found ${subscriptions.data.length} subscriptions for customer ${stripeCustomerId}`)
 
-        // Add 7-day trial to auto-created subscriptions (no charge for 7 days)
+        // Delete auto-created subscriptions
         for (const sub of subscriptions.data) {
-          console.log(`[SIGNUP] AUTO-SUB DETECTED: ${sub.id}, status=${sub.status}, trial_end=${sub.trial_end}`)
-
-          // Only add trial if it doesn't already have one
-          if (!sub.trial_end) {
-            console.log(`[SIGNUP] Adding 7-day trial to subscription ${sub.id}`)
-            await stripe.subscriptions.update(sub.id, {
-              trial_period_days: 7,
-            })
-            console.log(`[SIGNUP] ✅ Added 7-day trial to ${sub.id} - no charge for 7 days`)
-          } else {
-            console.log(`[SIGNUP] Subscription ${sub.id} already has trial until ${new Date(sub.trial_end * 1000).toISOString()}`)
-          }
+          console.log(`[SIGNUP] AUTO-SUB DETECTED: ${sub.id}, status=${sub.status}`)
+          console.log(`[SIGNUP] Canceling auto-created subscription ${sub.id}`)
+          await stripe.subscriptions.cancel(sub.id)
+          console.log(`[SIGNUP] ✅ Canceled ${sub.id}`)
         }
 
         if (subscriptions.data.length > 0) {
-          console.log(`[SIGNUP] ✅ Updated ${subscriptions.data.length} subscription(s) with 7-day trial`)
+          console.log(`[SIGNUP] ✅ Deleted ${subscriptions.data.length} auto-created subscription(s)`)
+          console.log(`[SIGNUP] User starts on free trial (tracked via created_at). Trial when upgrading gets 7-day period.`)
         } else {
           console.log(`[SIGNUP] ✅ No subscriptions found - user starting fresh`)
         }
       } catch (err) {
-        console.warn(`[SIGNUP] Error updating subscriptions with trial:`, err)
-        // Don't fail signup if subscription update fails
+        console.warn(`[SIGNUP] Error deleting auto-created subscriptions:`, err)
+        // Don't fail signup if subscription deletion fails
       }
     }
 
