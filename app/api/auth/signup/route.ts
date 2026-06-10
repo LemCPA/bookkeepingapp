@@ -80,8 +80,15 @@ export async function POST(request: NextRequest) {
 
     // CRITICAL: Sync user to Supabase immediately after creation
     // This ensures webhook can find the user later
-    await syncUserToSupabase(newUser.id, email, name)
-    console.log(`[SIGNUP] Synced user ${newUser.id} (${email}) to Supabase`)
+    const syncSuccess = await syncUserToSupabase(newUser.id, email, name)
+    if (!syncSuccess) {
+      console.error(`[SIGNUP] ❌ FAILED to sync user ${newUser.id} (${email}) to Supabase`)
+      return NextResponse.json(
+        { error: 'Failed to create account in database. Please try again.' },
+        { status: 500 }
+      )
+    }
+    console.log(`[SIGNUP] ✅ Synced user ${newUser.id} (${email}) to Supabase`)
 
     // Create Stripe customer for new user (must be done BEFORE checking for auto-created subscriptions)
     let stripeCustomerId: string | null = null
