@@ -39,9 +39,18 @@ export async function POST(request: NextRequest) {
       console.error(`[CHECKOUT] User lookup failed - returning 404`, {
         condition1: userError && userError.code !== 'PGRST116',
         condition2: !supabaseUser,
-        errorMessage: userError?.message
+        errorMessage: userError?.message,
+        errorCode: userError?.code
       })
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({
+        error: 'User not found',
+        debug: {
+          errorCode: userError?.code,
+          errorMessage: userError?.message,
+          userEmail,
+          userUuid
+        }
+      }, { status: 404 })
     }
 
     const { plan } = await request.json()
@@ -66,7 +75,8 @@ export async function POST(request: NextRequest) {
         console.log(`[CHECKOUT] Auto-created Stripe customer: ${newStripeCustomerId}`)
 
         // CRITICAL: Save stripe_customer_id to Supabase (single source of truth)
-        const supabaseSaved = await updateUserStripeCustomerId(userId, newStripeCustomerId)
+        // MUST pass userEmail to ensure UUID matches the email-based UUID from signup
+        const supabaseSaved = await updateUserStripeCustomerId(userId, newStripeCustomerId, userEmail)
         if (supabaseSaved) {
           console.log(`[CHECKOUT] Saved stripe_customer_id to Supabase for user ${userId}`)
         } else {
