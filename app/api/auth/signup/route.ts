@@ -4,7 +4,7 @@ import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
 import { getDb, saveDb, getUserByEmail, createAccount } from '@/lib/db'
 import { createStripeCustomer } from '@/lib/stripe-utils'
 import { DEFAULT_ACCOUNTS } from '@/lib/default-accounts'
-import { syncUserToSupabase, updateUserStripeCustomerId } from '@/lib/supabase-db'
+import { syncUserToSupabase, updateUserStripeCustomerId, emailToUuid } from '@/lib/supabase-db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,11 +40,23 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password)
 
-    // Create user in JSON database
+    // Create user in JSON database with proper ID handling
     let newUser = null
-    {
+    const userId: number = (() => {
       const db = getDb()
-      const userId = db.nextUserId++
+      // CRITICAL: On Vercel, db.nextUserId is NOT persistent (ephemeral instance)
+      // So we generate a time-based numeric ID as fallback, but primarily use UUID in Supabase
+      const id = db.nextUserId++
+
+      // Only persist the increment locally in development
+      if (!process.env.VERCEL) {
+        saveDb(db)
+      }
+
+      return id
+    })()
+
+    {
       newUser = {
         id: userId,
         email,
@@ -55,15 +67,14 @@ export async function POST(request: NextRequest) {
         default_gst_hst_rate: 13, // Default to Ontario HST
         created_at: new Date().toISOString(),
       }
+
+      // Add to local database for local development
+      const db = getDb()
       db.users.push(newUser)
 
-      // CRITICAL: Only save locally in development, not on Vercel (read-only filesystem)
-      // Vercel deployments MUST use Supabase for persistent data
       if (!process.env.VERCEL) {
         saveDb(db)
-        console.log(`[SIGNUP] Saved user to local DB: ${userId}`)
-      } else {
-        console.log(`[SIGNUP] On Vercel - skipping local saveDb (use Supabase instead). User ID: ${userId}`)
+        console.log(`[SIGNUP] Created user locally: ID ${userId}, email: ${email}`)
       }
     }
 

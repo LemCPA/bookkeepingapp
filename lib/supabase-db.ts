@@ -19,10 +19,21 @@ export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 /**
  * Convert numeric user ID to deterministic UUID for Supabase
  * Uses UUID v5 with a fixed namespace to ensure same ID always generates same UUID
+ * IMPORTANT: This has issues on Vercel where numeric IDs collide (all get ID 4)
+ * Prefer emailToUuid() for new user creation
  */
 const USER_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
 export function numericIdToUuid(userId: number): string {
   return uuidv5(userId.toString(), USER_NAMESPACE)
+}
+
+/**
+ * Convert email to deterministic UUID for Supabase
+ * Uses UUID v5 with a fixed namespace
+ * Email is unique per user, so this prevents UUID collisions
+ */
+export function emailToUuid(email: string): string {
+  return uuidv5(email.toLowerCase(), USER_NAMESPACE)
 }
 
 /**
@@ -173,8 +184,11 @@ export async function updateUserStripeCustomerId(userId: number, stripeCustomerI
  */
 export async function syncUserToSupabase(userId: number, email: string, name: string) {
   try {
-    const userUuid = numericIdToUuid(userId)
-    console.log(`[SUPABASE] Syncing user: ${userId} (${email}) → UUID: ${userUuid}`)
+    // CRITICAL FIX: Use email for UUID generation, not numeric ID
+    // Numeric ID is always 4 on Vercel (ephemeral database), causing UUID collisions
+    // Email is unique per user, so this prevents collisions
+    const userUuid = emailToUuid(email)
+    console.log(`[SUPABASE] Syncing user: ${userId} (${email}) → UUID: ${userUuid} (from email)`)
 
     // Upsert user (insert or update if exists)
     const { data, error } = await supabase
