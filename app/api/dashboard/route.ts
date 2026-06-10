@@ -17,7 +17,11 @@ export async function GET(request: NextRequest) {
     let currentPlan = 'free'
     if (userEmail) {
       const subscription = await getSubscriptionFromSupabase(userEmail)
-      if (subscription && subscription.status === 'active') {
+      // CRITICAL: Show plan for ANY valid subscription status, not just 'active'
+      // Subscription could be 'trialing', 'incomplete', 'past_due', or 'active'
+      // All of these mean the user has an active subscription that should be displayed
+      const validStatuses = ['active', 'past_due', 'trialing', 'incomplete']
+      if (subscription && validStatuses.includes(subscription.status)) {
         // Extract plan name: remove 'starter_annual' → 'Starter (Annual)', 'starter' → 'Starter', etc.
         const planName = subscription.plan
         const formatted = planName
