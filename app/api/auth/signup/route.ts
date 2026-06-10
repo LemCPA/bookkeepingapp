@@ -93,16 +93,16 @@ export async function POST(request: NextRequest) {
       // Don't fail signup if Stripe creation fails
     }
 
-    // CRITICAL: Delete any auto-created subscriptions
-    // Stripe sometimes auto-creates subscriptions for new customers - we need to prevent this
-    // New users should start on the Free plan, not a paid subscription
+    // CRITICAL: Add 7-day trial to auto-created subscriptions
+    // Stripe auto-creates subscriptions for new customers
+    // Instead of deleting them, add a trial period so they don't charge for 7 days
     if (stripeCustomerId) {
       try {
         const Stripe = (await import('stripe')).default
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
           apiVersion: '2024-04-10' as any,
         })
-        // List ALL subscription statuses - auto-created subscriptions might be trialing, incomplete, etc.
+        // List ALL subscriptions - auto-created subscriptions might be in any status
         const subscriptions = await stripe.subscriptions.list({
           customer: stripeCustomerId,
           limit: 100,
@@ -110,21 +110,30 @@ export async function POST(request: NextRequest) {
 
         console.log(`[SIGNUP] Found ${subscriptions.data.length} subscriptions for customer ${stripeCustomerId}`)
 
-        // Cancel any auto-created subscriptions
+        // Add 7-day trial to auto-created subscriptions (no charge for 7 days)
         for (const sub of subscriptions.data) {
-          console.log(`[SIGNUP] ⚠️ AUTO-SUB: ${sub.id}, status=${sub.status}, plan=${sub.metadata?.plan || 'NONE'}, source=${sub.metadata?.source || 'NONE'}`)
-          await stripe.subscriptions.cancel(sub.id)
-          console.log(`[SIGNUP] ✅ Canceled ${sub.id}`)
+          console.log(`[SIGNUP] AUTO-SUB DETECTED: ${sub.id}, status=${sub.status}, trial_end=${sub.trial_end}`)
+
+          // Only add trial if it doesn't already have one
+          if (!sub.trial_end) {
+            console.log(`[SIGNUP] Adding 7-day trial to subscription ${sub.id}`)
+            await stripe.subscriptions.update(sub.id, {
+              trial_period_days: 7,
+            })
+            console.log(`[SIGNUP] ✅ Added 7-day trial to ${sub.id} - no charge for 7 days`)
+          } else {
+            console.log(`[SIGNUP] Subscription ${sub.id} already has trial until ${new Date(sub.trial_end * 1000).toISOString()}`)
+          }
         }
 
         if (subscriptions.data.length > 0) {
-          console.log(`[SIGNUP] ✅ Deleted ${subscriptions.data.length} auto-created subscription(s)`)
+          console.log(`[SIGNUP] ✅ Updated ${subscriptions.data.length} subscription(s) with 7-day trial`)
         } else {
-          console.log(`[SIGNUP] ✅ No subscriptions found - clean start`)
+          console.log(`[SIGNUP] ✅ No subscriptions found - user starting fresh`)
         }
       } catch (err) {
-        console.warn(`[SIGNUP] Error deleting auto-created subscriptions:`, err)
-        // Don't fail signup if subscription deletion fails
+        console.warn(`[SIGNUP] Error updating subscriptions with trial:`, err)
+        // Don't fail signup if subscription update fails
       }
     }
 
