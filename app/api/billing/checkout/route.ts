@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         errorCode: userError?.code
       })
       return NextResponse.json({
-        error: 'User not found',
+        error: 'CHECKOUT_USER_LOOKUP_FAILED',
         debug: {
           errorCode: userError?.code,
           errorMessage: userError?.message,
