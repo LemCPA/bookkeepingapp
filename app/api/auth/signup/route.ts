@@ -108,14 +108,19 @@ export async function POST(request: NextRequest) {
           limit: 100,
         })
 
+        console.log(`[SIGNUP] Found ${subscriptions.data.length} subscriptions for customer ${stripeCustomerId}`)
+
         // Cancel any auto-created subscriptions
         for (const sub of subscriptions.data) {
-          console.log(`[SIGNUP] Canceling auto-created subscription ${sub.id} for new user`)
+          console.log(`[SIGNUP] ⚠️ AUTO-SUB: ${sub.id}, status=${sub.status}, plan=${sub.metadata?.plan || 'NONE'}, source=${sub.metadata?.source || 'NONE'}`)
           await stripe.subscriptions.cancel(sub.id)
+          console.log(`[SIGNUP] ✅ Canceled ${sub.id}`)
         }
 
         if (subscriptions.data.length > 0) {
-          console.log(`[SIGNUP] Deleted ${subscriptions.data.length} auto-created subscription(s)`)
+          console.log(`[SIGNUP] ✅ Deleted ${subscriptions.data.length} auto-created subscription(s)`)
+        } else {
+          console.log(`[SIGNUP] ✅ No subscriptions found - clean start`)
         }
       } catch (err) {
         console.warn(`[SIGNUP] Error deleting auto-created subscriptions:`, err)
