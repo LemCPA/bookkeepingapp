@@ -189,6 +189,7 @@ export async function createCheckoutSession(
       cancel_url: cancelUrl,
       metadata: {
         plan: planKey,
+        source: 'checkout', // CRITICAL: Mark as explicit checkout so webhook doesn't cancel it
       },
     })
 
