@@ -83,6 +83,33 @@ export async function POST(request: NextRequest) {
     await syncUserToSupabase(newUser.id, email, name)
     console.log(`[SIGNUP] Synced user ${newUser.id} (${email}) to Supabase`)
 
+    // CRITICAL: Delete any auto-created subscriptions
+    // Stripe sometimes auto-creates subscriptions for new customers - we need to prevent this
+    // New users should start on the Free plan, not a paid subscription
+    if (stripeCustomerId) {
+      try {
+        const stripe = await import('@/lib/stripe-utils').then(m => m.getStripe())
+        const subscriptions = await stripe.subscriptions.list({
+          customer: stripeCustomerId,
+          limit: 100,
+          status: 'active',
+        })
+
+        // Delete any auto-created subscriptions
+        for (const sub of subscriptions.data) {
+          console.log(`[SIGNUP] Deleting auto-created subscription ${sub.id} for new user`)
+          await stripe.subscriptions.del(sub.id)
+        }
+
+        if (subscriptions.data.length > 0) {
+          console.log(`[SIGNUP] Deleted ${subscriptions.data.length} auto-created subscription(s)`)
+        }
+      } catch (err) {
+        console.warn(`[SIGNUP] Error deleting auto-created subscriptions:`, err)
+        // Don't fail signup if subscription deletion fails
+      }
+    }
+
     // Create Stripe customer for new user
     let stripeCustomerId: string | null = null
     try {
