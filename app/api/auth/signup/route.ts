@@ -98,7 +98,10 @@ export async function POST(request: NextRequest) {
     // New users should start on the Free plan, not a paid subscription
     if (stripeCustomerId) {
       try {
-        const stripe = await import('@/lib/stripe-utils').then(m => m.getStripe())
+        const Stripe = (await import('stripe')).default
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+          apiVersion: '2024-04-10' as any,
+        })
         const subscriptions = await stripe.subscriptions.list({
           customer: stripeCustomerId,
           limit: 100,
