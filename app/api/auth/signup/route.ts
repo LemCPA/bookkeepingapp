@@ -83,6 +83,16 @@ export async function POST(request: NextRequest) {
     await syncUserToSupabase(newUser.id, email, name)
     console.log(`[SIGNUP] Synced user ${newUser.id} (${email}) to Supabase`)
 
+    // Create Stripe customer for new user (must be done BEFORE checking for auto-created subscriptions)
+    let stripeCustomerId: string | null = null
+    try {
+      stripeCustomerId = await createStripeCustomer(email, name)
+      console.log(`[SIGNUP] Created Stripe customer: ${stripeCustomerId} for user ${newUser.id}`)
+    } catch (error) {
+      console.warn(`[SIGNUP] Failed to create Stripe customer for ${email}:`, error)
+      // Don't fail signup if Stripe creation fails
+    }
+
     // CRITICAL: Delete any auto-created subscriptions
     // Stripe sometimes auto-creates subscriptions for new customers - we need to prevent this
     // New users should start on the Free plan, not a paid subscription
@@ -108,16 +118,6 @@ export async function POST(request: NextRequest) {
         console.warn(`[SIGNUP] Error deleting auto-created subscriptions:`, err)
         // Don't fail signup if subscription deletion fails
       }
-    }
-
-    // Create Stripe customer for new user
-    let stripeCustomerId: string | null = null
-    try {
-      stripeCustomerId = await createStripeCustomer(email, name)
-      console.log(`[SIGNUP] Created Stripe customer: ${stripeCustomerId} for user ${newUser.id}`)
-    } catch (error) {
-      console.warn(`[SIGNUP] Failed to create Stripe customer for ${email}:`, error)
-      // Don't fail signup if Stripe creation fails
     }
 
     // Add stripe_customer_id to user object
