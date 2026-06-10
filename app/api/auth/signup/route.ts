@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Automatically create default accounts for new user (only accounts with codes)
-    const userId = newUser.id
+    // Note: userId already declared at line 45 from local DB
     DEFAULT_ACCOUNTS.forEach(acc => {
       // Only create accounts that have a code (skip HOME/VEHICLE sub-accounts which have no code)
       if (acc.code) {
