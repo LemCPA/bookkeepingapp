@@ -209,6 +209,13 @@ export async function POST(request: NextRequest) {
         console.log('[WEBHOOK] User lookup result:', user ? `Found user ${user.id}` : 'User not found')
 
         if (user) {
+          // CRITICAL: Do NOT save canceled subscriptions
+          // Only save active, trialing, or pending subscriptions
+          if (subscription.status === 'canceled') {
+            console.log(`[WEBHOOK] Subscription is canceled, skipping save to Supabase: ${subscription.id}`)
+            return NextResponse.json({ received: true })
+          }
+
           // Get plan from metadata (should ALWAYS be set for explicit checkouts)
           const planKey = subscription.metadata?.plan
 
