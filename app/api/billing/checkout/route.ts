@@ -17,15 +17,30 @@ export async function POST(request: NextRequest) {
 
     // Fetch user from Supabase using email-based UUID (consistent with signup)
     const userUuid = emailToUuid(userEmail)
+    console.log(`[CHECKOUT] Looking up user with UUID: ${userUuid} from email: ${userEmail}`)
+
     const { data: supabaseUser, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('id', userUuid)
       .single()
 
+    console.log(`[CHECKOUT] Supabase query result:`, {
+      hasData: !!supabaseUser,
+      hasError: !!userError,
+      errorCode: userError?.code,
+      errorMessage: userError?.message,
+      userId: supabaseUser?.id,
+      userEmail: supabaseUser?.email
+    })
+
     // PGRST116 is "no rows found" - treat as user not found
     if ((userError && userError.code !== 'PGRST116') || !supabaseUser) {
-      console.error(`[CHECKOUT] User lookup failed: ${userError?.message}`)
+      console.error(`[CHECKOUT] User lookup failed - returning 404`, {
+        condition1: userError && userError.code !== 'PGRST116',
+        condition2: !supabaseUser,
+        errorMessage: userError?.message
+      })
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 

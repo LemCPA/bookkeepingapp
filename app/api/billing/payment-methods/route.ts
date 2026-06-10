@@ -15,15 +15,30 @@ export async function GET(request: NextRequest) {
 
     // Fetch user from Supabase using email-based UUID
     const userUuid = emailToUuid(userEmail)
+    console.log(`[PAYMENT-METHODS] Looking up user with UUID: ${userUuid} from email: ${userEmail}`)
+
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('id', userUuid)
       .single()
 
+    console.log(`[PAYMENT-METHODS] Supabase query result:`, {
+      hasData: !!user,
+      hasError: !!userError,
+      errorCode: userError?.code,
+      errorMessage: userError?.message,
+      userId: user?.id,
+      userEmail: user?.email
+    })
+
     // PGRST116 is "no rows found" - treat as user not found
     if ((userError && userError.code !== 'PGRST116') || !user) {
-      console.error(`[PAYMENT-METHODS] User lookup failed: ${userError?.message}`)
+      console.error(`[PAYMENT-METHODS] User lookup failed - returning 404`, {
+        condition1: userError && userError.code !== 'PGRST116',
+        condition2: !user,
+        errorMessage: userError?.message
+      })
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
