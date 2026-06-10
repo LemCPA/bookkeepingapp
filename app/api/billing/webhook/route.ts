@@ -38,7 +38,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    // Save subscription to Supabase
+    // CRITICAL: Ignore auto-created subscriptions from Stripe
+    // Stripe auto-creates subscriptions for new customers (Source: Automatic)
+    // We only want to save subscriptions created by explicit user checkout
+    if (event.type === 'customer.subscription.created') {
+      const subscription = event.data.object as any
+
+      // Check if this is an auto-created subscription (no plan metadata = auto-created)
+      // Explicit checkouts set metadata.plan, auto-created ones don't
+      if (!subscription.metadata?.plan && !subscription.metadata?.source) {
+        console.log('[WEBHOOK] ⚠️ Ignoring auto-created subscription:', subscription.id)
+        console.log('[WEBHOOK] Auto-created subscriptions are not saved to prevent new users from being charged')
+
+        // Try to delete the auto-created subscription so it doesn't appear in Stripe
+        try {
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+            apiVersion: '2024-04-10' as any,
+          })
+          await stripe.subscriptions.del(subscription.id)
+          console.log('[WEBHOOK] Deleted auto-created subscription:', subscription.id)
+        } catch (err) {
+          console.warn('[WEBHOOK] Could not delete auto-created subscription:', err)
+        }
+
+        return NextResponse.json({ received: true })
+      }
+    }
+
+    // Save subscription to Supabase (only explicit checkouts after above filter)
     if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated' || event.type === 'charge.succeeded') {
       try {
         let subscription: any = null
