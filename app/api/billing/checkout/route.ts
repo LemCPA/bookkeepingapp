@@ -63,7 +63,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user data from Supabase
-    const userEmail = supabaseUser.email
     const userName = supabaseUser.name
     const stripeCustomerId = supabaseUser.stripe_customer_id
 
