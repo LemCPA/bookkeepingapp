@@ -168,14 +168,18 @@ export async function POST(request: NextRequest) {
           stripeCustomerId = subscription.customer
           console.log('[WEBHOOK] Processing subscription event for customer:', stripeCustomerId)
 
-          // CRITICAL FIX: ONLY SAVE SUBSCRIPTIONS FROM EXPLICIT CHECKOUTS
-          // Only subscriptions with metadata.source = 'checkout' are from user actions
-          // Everything else is auto-created by Stripe and must be canceled
+          // CRITICAL FIX: Accept subscriptions that have a valid plan
+          // Check: metadata.source === 'checkout' OR metadata.plan exists
+          // This handles the race condition where customer.subscription.created fires before
+          // checkout.session.completed can update the subscription metadata
           const isFromCheckout = subscription.metadata?.source === 'checkout'
+          const hasValidPlan = subscription.metadata?.plan
 
-          if (!isFromCheckout) {
-            console.log('[WEBHOOK] ⚠️ SUBSCRIPTION NOT FROM CHECKOUT - metadata.source:', subscription.metadata?.source)
-            console.log('[WEBHOOK] This is an auto-created subscription, canceling immediately...')
+          if (!isFromCheckout && !hasValidPlan) {
+            console.log('[WEBHOOK] ⚠️ SUBSCRIPTION REJECTED - no source and no plan')
+            console.log('[WEBHOOK] metadata.source:', subscription.metadata?.source)
+            console.log('[WEBHOOK] metadata.plan:', subscription.metadata?.plan)
+            console.log('[WEBHOOK] This is an auto-created subscription, canceling...')
             try {
               const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
                 apiVersion: '2024-04-10' as any,
@@ -186,6 +190,11 @@ export async function POST(request: NextRequest) {
               console.warn('[WEBHOOK] Could not cancel auto-created subscription:', err)
             }
             return NextResponse.json({ received: true })
+          }
+
+          if (hasValidPlan && !isFromCheckout) {
+            console.log('[WEBHOOK] ⚠️ Subscription has plan but source not set - likely race condition')
+            console.log('[WEBHOOK] Will proceed to save subscription with plan:', subscription.metadata?.plan)
           }
         }
 
