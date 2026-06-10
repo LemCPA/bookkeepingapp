@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest, getUserEmailFromRequest } from '@/lib/auth-server'
 import { createCheckoutSession, updateSubscriptionWithProration, PRICING_PLANS } from '@/lib/stripe-utils'
-import { updateUserStripeCustomerId, getSubscriptionFromSupabase, emailToUuid, supabase } from '@/lib/supabase-db'
+import { updateUserStripeCustomerId, getSubscriptionFromSupabase, emailToUuid, supabase, syncUserToSupabase } from '@/lib/supabase-db'
+import { getDb } from '@/lib/db'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -14,6 +15,16 @@ export async function POST(request: NextRequest) {
     if (!userId || !userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Get user from local database to get name
+    const db = getDb()
+    const localUser = db.users.find(u => u.id === userId)
+    const userName = localUser?.name || userEmail
+
+    // CRITICAL: Sync user to Supabase FIRST before lookup
+    // This ensures user exists with email-based UUID
+    const synced = await syncUserToSupabase(userId, userEmail, userName)
+    console.log(`[CHECKOUT] User synced to Supabase: ${synced}`)
 
     // Fetch user from Supabase using email-based UUID (consistent with signup)
     const userUuid = emailToUuid(userEmail)
