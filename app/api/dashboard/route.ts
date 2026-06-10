@@ -32,14 +32,38 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // FALLBACK: If no subscription found but user has paid invoices, they're NOT free
+    // FALLBACK: If no subscription found, check Stripe directly for paid invoices
     // This handles the case where subscription record hasn't been created yet but payment went through
-    if (currentPlan === 'free') {
-      const allUserTransactions = db.transactions.filter(t => t.user_id === userId)
-      const paidInvoices = allUserTransactions.filter(t => t.type === 'INVOICE' && t.amount >= 1200)
+    // (Can't use local db - it doesn't persist on Vercel)
+    if (currentPlan === 'free' && userEmail) {
+      try {
+        const Stripe = (await import('stripe')).default
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+          apiVersion: '2024-04-10' as any,
+        })
 
-      if (paidInvoices.length > 0) {
-        currentPlan = 'Starter'
+        // Find customer by email
+        const customers = await stripe.customers.list({
+          email: userEmail,
+          limit: 1,
+        })
+
+        if (customers.data.length > 0) {
+          const customer = customers.data[0]
+          // Check for paid invoices for this customer
+          const invoices = await stripe.invoices.list({
+            customer: customer.id,
+            status: 'paid',
+            limit: 1,
+          })
+
+          if (invoices.data.length > 0 && invoices.data[0].amount_paid >= 1200) {
+            currentPlan = 'Starter'
+          }
+        }
+      } catch (error) {
+        console.warn('Error checking Stripe for paid invoices:', error)
+        // Fail silently - subscription check is primary
       }
     }
     const { searchParams } = new URL(request.url)
