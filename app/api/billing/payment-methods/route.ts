@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
       .eq('id', userUuid)
       .single()
 
-    if (userError || !user) {
+    // PGRST116 is "no rows found" - treat as user not found
+    if ((userError && userError.code !== 'PGRST116') || !user) {
+      console.error(`[PAYMENT-METHODS] User lookup failed: ${userError?.message}`)
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 

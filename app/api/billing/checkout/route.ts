@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
       .eq('id', userUuid)
       .single()
 
-    if (userError || !supabaseUser) {
+    // PGRST116 is "no rows found" - treat as user not found
+    if ((userError && userError.code !== 'PGRST116') || !supabaseUser) {
+      console.error(`[CHECKOUT] User lookup failed: ${userError?.message}`)
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
