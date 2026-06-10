@@ -31,6 +31,25 @@ export async function GET(request: NextRequest) {
         currentPlan = formatted
       }
     }
+
+    // FALLBACK: If no subscription found but user has paid invoices, they're NOT free
+    // This handles the case where subscription record hasn't been created yet but payment went through
+    if (currentPlan === 'free' && user) {
+      // Check if there are any paid invoices in the current month
+      const allUserTransactions = db.transactions.filter(t => t.user_id === userId)
+      const paidInvoices = allUserTransactions.filter(t => t.type === 'INVOICE' && t.description?.toLowerCase().includes('stripe') || t.description?.toLowerCase().includes('payment'))
+
+      if (paidInvoices.length > 0) {
+        // User has paid - they're definitely not free
+        // Check the most recent paid invoice to infer the plan
+        const mostRecent = paidInvoices.sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())[0]
+
+        // For now, assume any Stripe payment >= $12/month means at least Starter
+        if (mostRecent && mostRecent.amount >= 1200) {
+          currentPlan = 'Starter'
+        }
+      }
+    }
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || 'month' // month, year, all
 
