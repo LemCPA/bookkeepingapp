@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { hashPassword, isValidPassword } from '@/lib/bcrypt-utils'
 import { createJWTToken, createRefreshToken } from '@/lib/jwt-utils'
-import { getDb, saveDb, getUserByEmail, createAccount } from '@/lib/db'
+import { getUserByEmail, createAccount } from '@/lib/db'
 import { createStripeCustomer } from '@/lib/stripe-utils'
 import { DEFAULT_ACCOUNTS } from '@/lib/default-accounts'
-import { syncUserToSupabase, updateUserStripeCustomerId, emailToUuid } from '@/lib/supabase-db'
+import { syncUserToSupabase, updateUserStripeCustomerId } from '@/lib/supabase-db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,42 +40,19 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password)
 
-    // Create user in JSON database with proper ID handling
-    let newUser = null
-    const userId: number = (() => {
-      const db = getDb()
-      // CRITICAL: On Vercel, db.nextUserId is NOT persistent (ephemeral instance)
-      // So we generate a time-based numeric ID as fallback, but primarily use UUID in Supabase
-      const id = db.nextUserId++
+    // Generate numeric ID for JWT token (ephemeral, not persisted)
+    const userId: number = Math.floor(Date.now() / 1000) % 1000000
 
-      // Only persist the increment locally in development
-      if (!process.env.VERCEL) {
-        saveDb(db)
-      }
-
-      return id
-    })()
-
-    {
-      newUser = {
-        id: userId,
-        email,
-        password_hash: passwordHash,
-        name,
-        email_verified: true, // In production, set to false and send verification email
-        gst_registered: false,
-        default_gst_hst_rate: 13, // Default to Ontario HST
-        created_at: new Date().toISOString(),
-      }
-
-      // Add to local database for local development
-      const db = getDb()
-      db.users.push(newUser)
-
-      if (!process.env.VERCEL) {
-        saveDb(db)
-        console.log(`[SIGNUP] Created user locally: ID ${userId}, email: ${email}`)
-      }
+    // Create user object (will be synced to Supabase only)
+    const newUser = {
+      id: userId,
+      email,
+      password_hash: passwordHash,
+      name,
+      email_verified: true, // In production, set to false and send verification email
+      gst_registered: false,
+      default_gst_hst_rate: 13, // Default to Ontario HST
+      created_at: new Date().toISOString(),
     }
 
     // CRITICAL: Sync user to Supabase immediately after creation
@@ -138,24 +115,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Add stripe_customer_id to user object
+    // Save stripe_customer_id to Supabase only (no local storage)
     if (stripeCustomerId) {
       (newUser as any).stripe_customer_id = stripeCustomerId
 
-      // Save the updated user with stripe_customer_id to BOTH local and Supabase
-      const db = getDb()
-      const userIndex = db.users.findIndex(u => u.id === newUser.id)
-      if (userIndex !== -1) {
-        db.users[userIndex].stripe_customer_id = stripeCustomerId
-
-        // CRITICAL: Only save locally in development, not on Vercel (read-only filesystem)
-        if (!process.env.VERCEL) {
-          saveDb(db)
-          console.log(`[SIGNUP] Updated local DB with stripe_customer_id for user ${newUser.id}`)
-        }
-      }
-
-      // Also save to Supabase so webhook can find the user
+      // Save to Supabase so webhook can find the user
       // CRITICAL: Pass email to use email-based UUID (not numeric ID UUID)
       await updateUserStripeCustomerId(newUser.id, stripeCustomerId, email)
       console.log(`[SIGNUP] Updated stripe_customer_id in Supabase for user ${newUser.id}`)
