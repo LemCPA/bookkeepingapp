@@ -24,7 +24,14 @@ export async function POST(request: NextRequest) {
     // CRITICAL: Sync user to Supabase FIRST before lookup
     // This ensures user exists with email-based UUID
     const synced = await syncUserToSupabase(userId, userEmail, userName)
-    console.log(`[CHECKOUT] User synced to Supabase: ${synced}`)
+    if (!synced) {
+      console.error(`[CHECKOUT] ❌ CRITICAL: Failed to sync user ${userId} (${userEmail}) to Supabase`)
+      return NextResponse.json(
+        { error: 'Failed to initialize account. Please try again.' },
+        { status: 500 }
+      )
+    }
+    console.log(`[CHECKOUT] ✅ User synced to Supabase: ${userEmail}`)
 
     // Fetch user from Supabase using email-based UUID (consistent with signup)
     const userUuid = emailToUuid(userEmail)
