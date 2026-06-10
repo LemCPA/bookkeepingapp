@@ -42,7 +42,6 @@ export async function POST(request: NextRequest) {
         const subscriptions = await stripe.subscriptions.list({
           customer: session.customer,
           limit: 1,
-          sort: 'created',
         })
 
         if (subscriptions.data.length > 0) {
