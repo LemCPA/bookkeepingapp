@@ -1,15 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { formatDate } from '@/lib/utils'
-import { getUserIdFromRequest } from '@/lib/auth-server'
+import { getUserIdFromRequest, getUserEmailFromRequest } from '@/lib/auth-server'
+import { getSubscriptionFromSupabase, emailToUuid } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
   try {
-    // Extract user ID from Authorization header, default to 1 for single-user setup
+    // Extract user ID and email from Authorization header
     const userId = getUserIdFromRequest(request) || 1
+    const userEmail = getUserEmailFromRequest(request)
 
     const db = getDb()
     const user = db.users.find(u => u.id === userId)
+
+    // Get current subscription from Supabase (source of truth for billing)
+    let currentPlan = 'free'
+    if (userId) {
+      const subscription = await getSubscriptionFromSupabase(userId)
+      if (subscription && subscription.status === 'active') {
+        // Extract plan name: remove 'starter_annual' → 'Starter (Annual)', 'starter' → 'Starter', etc.
+        const planName = subscription.plan
+        const formatted = planName
+          .split('_')
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+        currentPlan = formatted
+      }
+    }
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || 'month' // month, year, all
 
@@ -82,7 +99,7 @@ export async function GET(request: NextRequest) {
       period,
       periodStart: formatDate(periodStart.toISOString()),
       periodEnd: formatDate(periodEnd.toISOString()),
-      plan: user?.plan || 'free',
+      plan: currentPlan,
       userCreatedAt: user?.created_at || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       metrics: {
         totalTransactions: transactionsForPeriod.length,
