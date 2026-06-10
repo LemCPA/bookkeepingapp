@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user data from Supabase
-    const userName = supabaseUser.name
     const stripeCustomerId = supabaseUser.stripe_customer_id
 
     // Auto-create Stripe customer if needed
