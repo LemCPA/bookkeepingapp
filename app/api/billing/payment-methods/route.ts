@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getPaymentMethods, createPaymentMethod, deletePaymentMethod, getUser } from '@/lib/db'
+import { getUserFromSupabase } from '@/lib/supabase-db'
+import Stripe from 'stripe'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,18 +11,31 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get payment methods from database
-    const paymentMethods = getPaymentMethods(userId)
+    // Get user from Supabase to get Stripe customer ID
+    const user = await getUserFromSupabase(userId)
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    if (!user.stripe_customer_id) {
+      // No Stripe customer yet, return empty list
+      return NextResponse.json({ payment_methods: [] })
+    }
+
+    // Fetch payment methods from Stripe
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+      apiVersion: '2024-04-10' as any,
+    })
+
+    const paymentMethods = await stripe.customers.listPaymentMethods(user.stripe_customer_id, { limit: 10 })
 
     return NextResponse.json({
-      paymentMethods: paymentMethods.map(pm => ({
+      payment_methods: paymentMethods.data.map(pm => ({
         id: pm.id,
-        last4: pm.last4,
-        brand: pm.brand.toUpperCase(),
-        expMonth: pm.exp_month,
-        expYear: pm.exp_year,
-        isDefault: pm.is_default,
-        createdAt: pm.created_at,
+        last4: (pm.card?.last4 || ''),
+        brand: pm.card?.brand.toUpperCase() || 'UNKNOWN',
+        exp_month: pm.card?.exp_month || 0,
+        exp_year: pm.card?.exp_year || 0,
       })),
     })
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getSubscription, updateSubscription } from '@/lib/db'
+import { getSubscriptionFromSupabase } from '@/lib/supabase-db'
+import Stripe from 'stripe'
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,8 +11,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's current subscription
-    const subscription = getSubscription(userId)
+    // Get user's current subscription from Supabase
+    const subscription = await getSubscriptionFromSupabase(userId)
 
     if (!subscription) {
       return NextResponse.json(
@@ -27,12 +28,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update subscription status in database
-    const now = new Date().toISOString()
-    updateSubscription(userId, {
-      status: 'canceled',
-      canceled_at: now,
+    // Cancel subscription in Stripe
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+      apiVersion: '2024-04-10' as any,
     })
+
+    try {
+      await stripe.subscriptions.cancel(subscription.stripe_subscription_id)
+    } catch (error) {
+      console.error('[CANCEL] Error canceling Stripe subscription:', error)
+      return NextResponse.json(
+        { error: 'Failed to cancel subscription in Stripe' },
+        { status: 500 }
+      )
+    }
+
+    // Note: Webhook will update Supabase when Stripe sends customer.subscription.deleted event
+    const now = new Date().toISOString()
 
     return NextResponse.json({
       message: 'Subscription canceled successfully',

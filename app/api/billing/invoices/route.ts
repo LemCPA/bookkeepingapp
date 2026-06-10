@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getUser } from '@/lib/db'
+import { getUserFromSupabase, numericIdToUuid } from '@/lib/supabase-db'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const user = getUser(userId)
+    // Get user from Supabase (single source of truth for persistent data)
+    const user = await getUserFromSupabase(userId)
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
