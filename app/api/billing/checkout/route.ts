@@ -95,9 +95,10 @@ export async function POST(request: NextRequest) {
         // MUST pass userEmail to ensure UUID matches the email-based UUID from signup
         const supabaseSaved = await updateUserStripeCustomerId(userId, newStripeCustomerId, userEmail)
         if (supabaseSaved) {
-          console.log(`[CHECKOUT] Saved stripe_customer_id to Supabase for user ${userId}`)
+          console.log(`[CHECKOUT] ✅ Saved stripe_customer_id to Supabase for user ${userId}`)
         } else {
-          console.warn(`[CHECKOUT] Failed to save stripe_customer_id to Supabase`)
+          console.error(`[CHECKOUT] ❌ FAILED to save stripe_customer_id to Supabase for user ${userId}`)
+          console.error(`[CHECKOUT] Details: userId=${userId}, customerID=${newStripeCustomerId}, email=${userEmail}`)
         }
 
         // CRITICAL FIX: Use the newly created customer ID, not the stale supabaseUser value
@@ -109,6 +110,8 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
+    } else {
+      console.log(`[CHECKOUT] Using existing stripe_customer_id: ${stripeCustomerId}`)
     }
 
     // Check if user already has an active subscription (upgrade scenario)
