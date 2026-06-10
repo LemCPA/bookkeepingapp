@@ -4,7 +4,7 @@ import {
   verifyWebhookSignature,
   handleSubscriptionEvent,
 } from '@/lib/stripe-utils'
-import { saveSubscriptionToSupabase, findUserByStripeCustomerId, numericIdToUuid, supabase } from '@/lib/supabase-db'
+import { saveSubscriptionToSupabase, findUserByStripeCustomerId, numericIdToUuid, emailToUuid, supabase } from '@/lib/supabase-db'
 import { sendPaymentFailedEmail, sendSubscriptionCancelledEmail } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
@@ -229,17 +229,20 @@ export async function POST(request: NextRequest) {
 
           console.log(`[WEBHOOK] Final plan: ${planKey} (from metadata)`)
 
-          // Convert user_id to UUID (only if numeric - user from local DB)
-          // If user came from Supabase, user.id is already a UUID
+          // CRITICAL: Use email-based UUID for subscription saving
+          // Subscriptions are saved with user_id = emailToUuid(email), not numericIdToUuid
           let userId: string
-          if (typeof user.id === 'string' && user.id.includes('-')) {
-            // Already a UUID (from Supabase)
+          if (user.email) {
+            userId = emailToUuid(user.email)
+            console.log(`[WEBHOOK] Using email-based UUID for subscription: ${userId} (from ${user.email})`)
+          } else if (typeof user.id === 'string' && user.id.includes('-')) {
+            // Fallback: user already has UUID
             userId = user.id
-            console.log('[WEBHOOK] User from Supabase, using UUID directly')
+            console.log('[WEBHOOK] User ID is already UUID, using directly')
           } else {
-            // Numeric ID (from local DB), convert to UUID
+            // Last resort: convert numeric ID
             userId = numericIdToUuid(user.id as number)
-            console.log(`[WEBHOOK] User from local DB, converted ID ${user.id} to UUID`)
+            console.log(`[WEBHOOK] Fallback: converted numeric ID ${user.id} to UUID`)
           }
 
           // Save subscription to Supabase
