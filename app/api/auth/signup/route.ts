@@ -138,7 +138,8 @@ export async function POST(request: NextRequest) {
       }
 
       // Also save to Supabase so webhook can find the user
-      await updateUserStripeCustomerId(newUser.id, stripeCustomerId)
+      // CRITICAL: Pass email to use email-based UUID (not numeric ID UUID)
+      await updateUserStripeCustomerId(newUser.id, stripeCustomerId, email)
       console.log(`[SIGNUP] Updated stripe_customer_id in Supabase for user ${newUser.id}`)
     }
 

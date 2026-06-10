@@ -149,10 +149,12 @@ export async function getUserFromSupabase(userId: number) {
 /**
  * Update user stripe_customer_id in Supabase
  */
-export async function updateUserStripeCustomerId(userId: number, stripeCustomerId: string) {
+export async function updateUserStripeCustomerId(userId: number, stripeCustomerId: string, email?: string) {
   try {
-    const userUuid = numericIdToUuid(userId)
-    console.log(`[SUPABASE] Updating stripe_customer_id for user ${userId} (UUID: ${userUuid})`)
+    // CRITICAL FIX: Use email-based UUID if provided, otherwise fall back to numeric ID
+    // Email-based UUID must match what was used in syncUserToSupabase
+    const userUuid = email ? emailToUuid(email) : numericIdToUuid(userId)
+    console.log(`[SUPABASE] Updating stripe_customer_id for user ${userId} (UUID: ${userUuid}, email: ${email})`)
 
     const { data, error } = await supabase
       .from('users')
