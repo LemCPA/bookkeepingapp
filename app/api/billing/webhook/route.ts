@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
                 // Refund the charge
                 await stripe.refunds.create({
                   charge: charge.id,
-                  reason: 'auto_created_subscription'
+                  reason: 'requested_by_customer'
                 })
                 console.log('[WEBHOOK] ✅ Refunded charge:', charge.id)
 
