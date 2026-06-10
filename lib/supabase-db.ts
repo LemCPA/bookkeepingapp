@@ -39,10 +39,11 @@ export function emailToUuid(email: string): string {
 /**
  * Get subscription for a user from Supabase
  * Returns the most recent subscription that is NOT canceled (includes active, past_due, trialing, etc.)
+ * CRITICAL: Must use emailToUuid to match how subscriptions are saved in the webhook
  */
-export async function getSubscriptionFromSupabase(userId: number) {
+export async function getSubscriptionFromSupabase(userEmail: string) {
   try {
-    const userUuid = numericIdToUuid(userId)
+    const userUuid = emailToUuid(userEmail)
     const { data, error } = await supabase
       .from('subscriptions')
       .select('*')
@@ -64,17 +65,17 @@ export async function getSubscriptionFromSupabase(userId: number) {
     const validSubscription = data.find(sub => validStatuses.includes(sub.status))
 
     if (validSubscription) {
-      console.log(`[SUPABASE] Found subscription for user ${userId}: ${validSubscription.id} (status: ${validSubscription.status})`)
+      console.log(`[SUPABASE] Found subscription for ${userEmail}: ${validSubscription.id} (status: ${validSubscription.status})`)
       return validSubscription
     }
 
     // If no valid subscription, check if there are any canceled ones (for logging)
     const canceledSubscription = data.find(sub => sub.status === 'canceled' || sub.status === 'incomplete_expired')
     if (canceledSubscription) {
-      console.log(`[SUPABASE] Only canceled subscription found for user ${userId}`)
+      console.log(`[SUPABASE] Only canceled subscription found for ${userEmail}`)
     }
 
-    console.log(`[SUPABASE] No valid subscription found for user ${userId}`)
+    console.log(`[SUPABASE] No valid subscription found for ${userEmail}`)
     return null
   } catch (err) {
     console.error('[SUPABASE] Exception fetching subscription:', err)

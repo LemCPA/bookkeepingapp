@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
 
     // Get current subscription from Supabase (source of truth for billing)
     let currentPlan = 'free'
-    if (userId) {
-      const subscription = await getSubscriptionFromSupabase(userId)
+    if (userEmail) {
+      const subscription = await getSubscriptionFromSupabase(userEmail)
       if (subscription && subscription.status === 'active') {
         // Extract plan name: remove 'starter_annual' → 'Starter (Annual)', 'starter' → 'Starter', etc.
         const planName = subscription.plan

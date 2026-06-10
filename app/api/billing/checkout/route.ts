@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already has an active subscription (upgrade scenario)
-    const existingSubscription = await getSubscriptionFromSupabase(userId)
+    const existingSubscription = await getSubscriptionFromSupabase(userEmail)
     const finalStripeCustomerId = stripeCustomerId || supabaseUser.stripe_customer_id
 
     if (existingSubscription && existingSubscription.status === 'active') {
