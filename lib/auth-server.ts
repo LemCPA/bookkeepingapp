@@ -55,6 +55,26 @@ export function getUserIdFromRequest(request: NextRequest): number | null {
 }
 
 /**
+ * Get user email from Authorization header (server-side only)
+ * Use this in API routes to get the email for Supabase lookup
+ */
+export function getUserEmailFromRequest(request: NextRequest): string | null {
+  try {
+    const authHeader = request.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null
+    }
+
+    const token = authHeader.substring('Bearer '.length)
+    const payload = verifyJWTToken(token)
+    return payload?.email || null
+  } catch (error) {
+    console.error('[AUTH-SERVER] Error getting email from request:', error)
+    return null
+  }
+}
+
+/**
  * Validate that a user exists in the database
  * Server-side only
  */

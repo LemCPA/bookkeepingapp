@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getUserFromSupabase, numericIdToUuid } from '@/lib/supabase-db'
+import { getUserIdFromRequest, getUserEmailFromRequest } from '@/lib/auth-server'
+import { getUserFromSupabase, emailToUuid } from '@/lib/supabase-db'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from JWT token
+    // Get user ID and email from JWT token
     const userId = getUserIdFromRequest(request)
-    if (!userId) {
+    const userEmail = getUserEmailFromRequest(request)
+
+    if (!userId || !userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user from Supabase (single source of truth for persistent data)
-    const user = await getUserFromSupabase(userId)
-    if (!user) {
+    // Fetch user from Supabase using email-based UUID (consistent with signup)
+    const userUuid = emailToUuid(userEmail)
+    const { data: user, error: userError } = await (await import('@/lib/supabase-db')).supabase
+      .from('users')
+      .select('*')
+      .eq('id', userUuid)
+      .single()
+
+    if (userError || !user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 

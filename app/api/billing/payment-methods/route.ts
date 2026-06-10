@@ -1,19 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getUserFromSupabase } from '@/lib/supabase-db'
+import { getUserIdFromRequest, getUserEmailFromRequest } from '@/lib/auth-server'
+import { emailToUuid, supabase } from '@/lib/supabase-db'
 import Stripe from 'stripe'
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from JWT token
+    // Get user ID and email from JWT token
     const userId = getUserIdFromRequest(request)
-    if (!userId) {
+    const userEmail = getUserEmailFromRequest(request)
+
+    if (!userId || !userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user from Supabase to get Stripe customer ID
-    const user = await getUserFromSupabase(userId)
-    if (!user) {
+    // Fetch user from Supabase using email-based UUID
+    const userUuid = emailToUuid(userEmail)
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userUuid)
+      .single()
+
+    if (userError || !user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 

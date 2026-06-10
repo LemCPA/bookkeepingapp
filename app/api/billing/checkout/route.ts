@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserIdFromRequest } from '@/lib/auth-server'
+import { getUserIdFromRequest, getUserEmailFromRequest } from '@/lib/auth-server'
 import { createCheckoutSession, updateSubscriptionWithProration, PRICING_PLANS } from '@/lib/stripe-utils'
-import { updateUserStripeCustomerId, getSubscriptionFromSupabase, getUserFromSupabase } from '@/lib/supabase-db'
+import { updateUserStripeCustomerId, getSubscriptionFromSupabase, emailToUuid, supabase } from '@/lib/supabase-db'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -9,13 +9,21 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: NextRequest) {
   try {
     const userId = getUserIdFromRequest(request)
-    if (!userId) {
+    const userEmail = getUserEmailFromRequest(request)
+
+    if (!userId || !userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user from Supabase (single source of truth)
-    let supabaseUser = await getUserFromSupabase(userId)
-    if (!supabaseUser) {
+    // Fetch user from Supabase using email-based UUID (consistent with signup)
+    const userUuid = emailToUuid(userEmail)
+    const { data: supabaseUser, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userUuid)
+      .single()
+
+    if (userError || !supabaseUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
