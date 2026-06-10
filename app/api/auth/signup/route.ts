@@ -102,10 +102,10 @@ export async function POST(request: NextRequest) {
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
           apiVersion: '2024-04-10' as any,
         })
+        // List ALL subscription statuses - auto-created subscriptions might be trialing, incomplete, etc.
         const subscriptions = await stripe.subscriptions.list({
           customer: stripeCustomerId,
           limit: 100,
-          status: 'active',
         })
 
         // Cancel any auto-created subscriptions
