@@ -96,10 +96,10 @@ export async function POST(request: NextRequest) {
           const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
             apiVersion: '2024-04-10' as any,
           })
-          await stripe.subscriptions.del(subscription.id)
-          console.log('[WEBHOOK] Deleted auto-created subscription:', subscription.id)
+          await stripe.subscriptions.cancel(subscription.id)
+          console.log('[WEBHOOK] Canceled auto-created subscription:', subscription.id)
         } catch (err) {
-          console.warn('[WEBHOOK] Could not delete auto-created subscription:', err)
+          console.warn('[WEBHOOK] Could not cancel auto-created subscription:', err)
         }
 
         return NextResponse.json({ received: true })
@@ -149,9 +149,9 @@ export async function POST(request: NextRequest) {
                 })
                 console.log('[WEBHOOK] ✅ Refunded charge:', charge.id)
 
-                // Delete the subscription
-                await stripe.subscriptions.del(subscription.id)
-                console.log('[WEBHOOK] ✅ Deleted auto-created subscription:', subscription.id)
+                // Cancel the subscription
+                await stripe.subscriptions.cancel(subscription.id)
+                console.log('[WEBHOOK] ✅ Canceled auto-created subscription:', subscription.id)
               } catch (refundErr) {
                 console.error('[WEBHOOK] Error refunding auto-created subscription:', refundErr)
               }
@@ -178,10 +178,10 @@ export async function POST(request: NextRequest) {
               const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
                 apiVersion: '2024-04-10' as any,
               })
-              await stripe.subscriptions.del(subscription.id)
-              console.log('[WEBHOOK] ✅ Deleted subscription without metadata.plan:', subscription.id)
+              await stripe.subscriptions.cancel(subscription.id)
+              console.log('[WEBHOOK] ✅ Canceled subscription without metadata.plan:', subscription.id)
             } catch (err) {
-              console.warn('[WEBHOOK] Could not delete subscription:', err)
+              console.warn('[WEBHOOK] Could not cancel subscription:', err)
             }
             return NextResponse.json({ received: true })
           }

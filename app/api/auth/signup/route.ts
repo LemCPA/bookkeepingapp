@@ -108,10 +108,10 @@ export async function POST(request: NextRequest) {
           status: 'active',
         })
 
-        // Delete any auto-created subscriptions
+        // Cancel any auto-created subscriptions
         for (const sub of subscriptions.data) {
-          console.log(`[SIGNUP] Deleting auto-created subscription ${sub.id} for new user`)
-          await stripe.subscriptions.del(sub.id)
+          console.log(`[SIGNUP] Canceling auto-created subscription ${sub.id} for new user`)
+          await stripe.subscriptions.cancel(sub.id)
         }
 
         if (subscriptions.data.length > 0) {
