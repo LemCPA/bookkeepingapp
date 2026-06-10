@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
 
         // Handle different event types
         if (event.type === 'charge.succeeded') {
-          // For charge events, we need to get the subscription ID and fetch the subscription
+          // CRITICAL: Check if this charge is from an auto-created subscription
+          // If so, IMMEDIATELY REFUND it to prevent charging users for auto-subscriptions
           const charge = event.data.object as any
           stripeCustomerId = charge.customer
           console.log('[WEBHOOK] Processing charge event for customer:', stripeCustomerId)
@@ -86,10 +87,36 @@ export async function POST(request: NextRequest) {
           try {
             const subscriptions = await stripe.subscriptions.list({
               customer: stripeCustomerId,
-              limit: 1,
+              limit: 10,
             })
             subscription = subscriptions.data[0]
             console.log('[WEBHOOK] Fetched subscription from Stripe:', subscription?.id)
+
+            // CRITICAL: Check if this subscription is auto-created
+            // If it is, REFUND the charge immediately
+            if (subscription && !subscription.metadata?.plan && !subscription.metadata?.source) {
+              console.log('[WEBHOOK] ⚠️ AUTO-CREATED SUBSCRIPTION DETECTED - REFUNDING CHARGE')
+              const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+                apiVersion: '2024-04-10' as any,
+              })
+
+              try {
+                // Refund the charge
+                await stripe.refunds.create({
+                  charge: charge.id,
+                  reason: 'auto_created_subscription'
+                })
+                console.log('[WEBHOOK] ✅ Refunded charge:', charge.id)
+
+                // Delete the subscription
+                await stripe.subscriptions.del(subscription.id)
+                console.log('[WEBHOOK] ✅ Deleted auto-created subscription:', subscription.id)
+              } catch (refundErr) {
+                console.error('[WEBHOOK] Error refunding auto-created subscription:', refundErr)
+              }
+
+              return NextResponse.json({ received: true })
+            }
           } catch (err) {
             console.error('[WEBHOOK] Error fetching subscription from Stripe:', err)
             return NextResponse.json({ received: true })
