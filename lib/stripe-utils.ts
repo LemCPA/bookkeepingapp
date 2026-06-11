@@ -368,7 +368,6 @@ export async function updateSubscriptionWithProration(
       const creditMemo = await stripe.creditNotes.create({
         invoice: latestInvoice.id,
         amount: refundAmount,
-        reason: 'upgrade',
       })
 
       console.log(`[STRIPE] Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
