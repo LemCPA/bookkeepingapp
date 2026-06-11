@@ -245,8 +245,9 @@ export async function upgradeSubscriptionViaCancel(
 
     // Step 2: Calculate prorated refund
     const now = Math.floor(Date.now() / 1000)
-    const periodEnd = oldSubscription.current_period_end
-    const periodStart = oldSubscription.current_period_start
+    const sub = oldSubscription as any
+    const periodEnd = sub.current_period_end
+    const periodStart = sub.current_period_start
     const totalDaysInPeriod = (periodEnd - periodStart) / (24 * 60 * 60)
     const daysRemaining = (periodEnd - now) / (24 * 60 * 60)
     const refundAmount = Math.round(oldPriceAmount * (daysRemaining / totalDaysInPeriod))
