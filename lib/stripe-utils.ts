@@ -342,7 +342,7 @@ export async function updateSubscriptionWithProration(
       throw new Error('No active subscription found')
     }
 
-    const subscription = subscriptions.data[0]
+    const subscription = subscriptions.data[0] as any
     const currentItem = subscription.items.data[0]
 
     // Get old plan to calculate refund
