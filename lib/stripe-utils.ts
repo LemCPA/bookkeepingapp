@@ -240,7 +240,8 @@ export async function upgradeSubscriptionViaCancel(
     }
 
     const oldSubscription = subscriptions.data[0]
-    const oldPriceAmount = (oldSubscription.items.data[0].price as any).unit_amount // in cents
+    const oldItem = oldSubscription.items.data[0]
+    const oldPriceAmount = typeof oldItem.price === 'object' ? (oldItem.price as any).unit_amount : 0 // in cents
 
     // Step 2: Calculate prorated refund
     const now = Math.floor(Date.now() / 1000)
