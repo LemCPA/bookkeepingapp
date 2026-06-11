@@ -264,7 +264,6 @@ export async function upgradeSubscriptionViaCancel(
       const creditMemo = await stripe.creditNotes.create({
         invoice: latestInvoice.id,
         amount: refundAmount,
-        reason: 'requested_by_customer',
       })
       console.log(`[STRIPE-UPGRADE] ✅ Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
     }
