@@ -258,44 +258,47 @@ export async function upgradeSubscriptionViaCancel(
     const canceledSub = await stripe.subscriptions.cancel(oldSubscription.id)
     console.log(`[STRIPE-UPGRADE] ✅ Canceled subscription ${oldSubscription.id}`)
 
-    // Step 4: Issue refund for unused time (actual refund to card, not just credit)
+    // Step 4: Refund prorated amount for unused time
     if (refundAmount > 0) {
-      const latestInvoice = await stripe.invoices.retrieve(oldSubscription.latest_invoice as string)
-
-      // Find the payment to refund
+      const latestInvoice = (await stripe.invoices.retrieve(oldSubscription.latest_invoice as string)) as any
       if (latestInvoice.payment_intent) {
         const refund = await stripe.refunds.create({
           payment_intent: latestInvoice.payment_intent as string,
           amount: refundAmount,
-          reason: 'subscription_upgrade',
           metadata: {
             upgrade_to_plan: newPlanKey,
             old_subscription_id: oldSubscription.id,
           },
         })
-        console.log(`[STRIPE-UPGRADE] ✅ Issued refund ${refund.id} of ${refundAmount} cents for unused time`)
-      } else {
-        console.warn('[STRIPE-UPGRADE] ⚠️ No payment_intent found, creating credit memo instead')
-        const creditMemo = await stripe.creditNotes.create({
-          invoice: latestInvoice.id,
-          amount: refundAmount,
-        })
-        console.log(`[STRIPE-UPGRADE] ✅ Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
+        console.log(`[STRIPE-UPGRADE] ✅ Refunded ${refundAmount} cents for unused time`)
       }
     }
 
-    // Step 5: Create new subscription (full price)
+    // Step 5: Create new subscription at full price
+    // Accounting breakdown:
+    // - Customer was charged: ${oldPriceAmount} cents (Starter)
+    // - Refunded for unused time: -${refundAmount} cents
+    // - Charged for new plan: +${newPlan.price * 100} cents (Growth)
+    // - Net customer pays: ${newPlan.price * 100 - refundAmount} cents
+    const newPriceAmountCents = newPlan.price * 100
+    const netCharge = newPriceAmountCents - refundAmount
+
     const newSubscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: newPlan.stripe_price_id }],
       metadata: {
         plan: newPlanKey,
         source: 'upgrade',
+        old_plan_refund: refundAmount.toString(),
       },
     })
 
     console.log(`[STRIPE-UPGRADE] ✅ Created new subscription ${newSubscription.id} for plan ${newPlanKey}`)
-    console.log(`[STRIPE-UPGRADE] User sees: -${refundAmount} cents (refund) + ${newPlan.price * 100} cents (new plan) = ${newPlan.price * 100 - refundAmount} cents net`)
+    console.log(`[STRIPE-UPGRADE] Accounting:`)
+    console.log(`  Old charge: $${(oldPriceAmount / 100).toFixed(2)} (Starter Annual)`)
+    console.log(`  Refund for unused time: -$${(refundAmount / 100).toFixed(2)}`)
+    console.log(`  New charge: +$${(newPriceAmountCents / 100).toFixed(2)} (Growth Annual)`)
+    console.log(`  Net customer owes: $${(netCharge / 100).toFixed(2)}`)
 
     // Step 6: Update Supabase with new subscription
     try {
@@ -379,14 +382,13 @@ export async function updateSubscriptionWithProration(
 
     // Issue refund for unused time (actual refund to card, not just credit)
     if (refundAmount > 0) {
-      const latestInvoice = await stripe.invoices.retrieve(subscription.latest_invoice as string)
+      const latestInvoice = (await stripe.invoices.retrieve(subscription.latest_invoice as string)) as any
 
       // Find the payment to refund
       if (latestInvoice.payment_intent) {
         const refund = await stripe.refunds.create({
           payment_intent: latestInvoice.payment_intent as string,
           amount: refundAmount,
-          reason: 'subscription_upgrade',
           metadata: {
             upgrade_to_plan: planKey,
             old_subscription_id: subscription.id,
