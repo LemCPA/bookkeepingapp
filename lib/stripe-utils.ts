@@ -374,7 +374,7 @@ export async function updateSubscriptionWithProration(
     }
 
     // Update subscription with new price
-    const updated = await stripe.subscriptions.update(
+    const updated = (await stripe.subscriptions.update(
       subscription.id,
       {
         items: [
@@ -389,7 +389,7 @@ export async function updateSubscriptionWithProration(
           plan: planKey,
         },
       } as any
-    )
+    )) as any
 
     console.log(`[STRIPE] Upgraded subscription ${subscription.id} to plan ${planKey}`)
     console.log(`[STRIPE] Refund: ${refundAmount} cents, New plan: ${newPlan.price * 100} cents`)
