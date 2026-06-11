@@ -258,14 +258,30 @@ export async function upgradeSubscriptionViaCancel(
     const canceledSub = await stripe.subscriptions.cancel(oldSubscription.id)
     console.log(`[STRIPE-UPGRADE] ✅ Canceled subscription ${oldSubscription.id}`)
 
-    // Step 4: Issue credit memo (refund)
+    // Step 4: Issue refund for unused time (actual refund to card, not just credit)
     if (refundAmount > 0) {
       const latestInvoice = await stripe.invoices.retrieve(oldSubscription.latest_invoice as string)
-      const creditMemo = await stripe.creditNotes.create({
-        invoice: latestInvoice.id,
-        amount: refundAmount,
-      })
-      console.log(`[STRIPE-UPGRADE] ✅ Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
+
+      // Find the payment to refund
+      if (latestInvoice.payment_intent) {
+        const refund = await stripe.refunds.create({
+          payment_intent: latestInvoice.payment_intent as string,
+          amount: refundAmount,
+          reason: 'subscription_upgrade',
+          metadata: {
+            upgrade_to_plan: newPlanKey,
+            old_subscription_id: oldSubscription.id,
+          },
+        })
+        console.log(`[STRIPE-UPGRADE] ✅ Issued refund ${refund.id} of ${refundAmount} cents for unused time`)
+      } else {
+        console.warn('[STRIPE-UPGRADE] ⚠️ No payment_intent found, creating credit memo instead')
+        const creditMemo = await stripe.creditNotes.create({
+          invoice: latestInvoice.id,
+          amount: refundAmount,
+        })
+        console.log(`[STRIPE-UPGRADE] ✅ Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
+      }
     }
 
     // Step 5: Create new subscription (full price)
@@ -361,16 +377,30 @@ export async function updateSubscriptionWithProration(
 
     console.log(`[STRIPE] Calculating upgrade refund: ${oldPlanPrice} × ${daysRemaining.toFixed(1)}/${totalDaysInPeriod.toFixed(1)} days = ${refundAmount} cents`)
 
-    // Issue credit memo for the refund
+    // Issue refund for unused time (actual refund to card, not just credit)
     if (refundAmount > 0) {
       const latestInvoice = await stripe.invoices.retrieve(subscription.latest_invoice as string)
 
-      const creditMemo = await stripe.creditNotes.create({
-        invoice: latestInvoice.id,
-        amount: refundAmount,
-      })
-
-      console.log(`[STRIPE] Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
+      // Find the payment to refund
+      if (latestInvoice.payment_intent) {
+        const refund = await stripe.refunds.create({
+          payment_intent: latestInvoice.payment_intent as string,
+          amount: refundAmount,
+          reason: 'subscription_upgrade',
+          metadata: {
+            upgrade_to_plan: planKey,
+            old_subscription_id: subscription.id,
+          },
+        })
+        console.log(`[STRIPE] Issued refund ${refund.id} of ${refundAmount} cents for unused time`)
+      } else {
+        console.warn('[STRIPE] ⚠️ No payment_intent found, creating credit memo instead')
+        const creditMemo = await stripe.creditNotes.create({
+          invoice: latestInvoice.id,
+          amount: refundAmount,
+        })
+        console.log(`[STRIPE] Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
+      }
     }
 
     // Update subscription with new price
