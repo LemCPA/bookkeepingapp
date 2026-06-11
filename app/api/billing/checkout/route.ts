@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest, getUserEmailFromRequest } from '@/lib/auth-server'
-import { createCheckoutSession, updateSubscriptionWithProration, PRICING_PLANS } from '@/lib/stripe-utils'
+import { createCheckoutSession, upgradeSubscriptionViaCancel, PRICING_PLANS } from '@/lib/stripe-utils'
 import { updateUserStripeCustomerId, getSubscriptionFromSupabase, emailToUuid, supabase, syncUserToSupabase } from '@/lib/supabase-db'
 import { getDb } from '@/lib/db'
 import Stripe from 'stripe'
@@ -115,26 +115,38 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already has an active subscription (upgrade scenario)
-    const existingSubscription = await getSubscriptionFromSupabase(userEmail)
+    // CRITICAL: Check Stripe directly, not Supabase (Supabase might not be updated yet)
+    // Stripe is the source of truth for subscriptions
+    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+      apiVersion: '2024-04-10' as any,
+    })
 
-    if (existingSubscription && existingSubscription.status === 'active') {
-      // User is upgrading/downgrading - use subscription update with proration
-      console.log(`[CHECKOUT] User ${userId} upgrading from ${existingSubscription.plan} to ${plan}`)
+    const stripeSubscriptions = await stripeInstance.subscriptions.list({
+      customer: finalStripeCustomerId,
+      status: 'active',
+      limit: 1,
+    })
+
+    const existingStripeSubscription = stripeSubscriptions.data.length > 0 ? stripeSubscriptions.data[0] : null
+
+    if (existingStripeSubscription) {
+      // User is upgrading - cancel old, create new with refund
+      console.log(`[CHECKOUT] User ${userId} upgrading from Stripe subscription ${existingStripeSubscription.id} to ${plan}`)
       try {
-        const updatedSubscription = await updateSubscriptionWithProration(
+        const newSubscription = await upgradeSubscriptionViaCancel(
           finalStripeCustomerId,
           plan as keyof typeof PRICING_PLANS
         )
 
-        console.log(`[CHECKOUT] Subscription updated with proration. New subscription: ${updatedSubscription.id}`)
+        console.log(`[CHECKOUT] ✅ Upgrade complete. Old subscription canceled, new subscription created: ${newSubscription.id}`)
 
-        // Return redirect to billing page (subscription is already updated in Stripe)
+        // Return redirect to billing page (upgrade is complete)
         const baseUrl = request.headers.get('origin') || 'http://localhost:3000'
         return NextResponse.json({
           url: `${baseUrl}/billing?success=true&upgraded=true`
         })
       } catch (error) {
-        console.error('[CHECKOUT] Error updating subscription with proration:', error)
+        console.error('[CHECKOUT] Error upgrading subscription:', error)
         return NextResponse.json(
           { error: 'Failed to upgrade plan. Please try again.' },
           { status: 500 }

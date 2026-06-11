@@ -208,22 +208,130 @@ export async function createCheckoutSession(
 }
 
 /**
+ * Upgrade subscription via cancel + create (atomic transaction)
+ * ATOMIC FLOW:
+ * 1. Cancel old subscription
+ * 2. Issue credit memo (refund for unused time)
+ * 3. Create new subscription
+ * 4. Charge full new plan price
+ * Result: User sees refund + new charge as one upgrade action
+ */
+export async function upgradeSubscriptionViaCancel(
+  customerId: string,
+  newPlanKey: keyof typeof PRICING_PLANS
+) {
+  try {
+    const stripe = getStripe()
+    const newPlan = PRICING_PLANS[newPlanKey]
+
+    if (!newPlan.stripe_price_id) {
+      throw new Error(`Stripe price ID not configured for plan: ${newPlanKey}`)
+    }
+
+    // Step 1: Get existing active subscription
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: 'active',
+      limit: 1,
+    })
+
+    if (subscriptions.data.length === 0) {
+      throw new Error('No active subscription found to upgrade')
+    }
+
+    const oldSubscription = subscriptions.data[0]
+    const oldPriceAmount = (oldSubscription.items.data[0].price as any).unit_amount // in cents
+
+    // Step 2: Calculate prorated refund
+    const now = Math.floor(Date.now() / 1000)
+    const periodEnd = oldSubscription.current_period_end
+    const periodStart = oldSubscription.current_period_start
+    const totalDaysInPeriod = (periodEnd - periodStart) / (24 * 60 * 60)
+    const daysRemaining = (periodEnd - now) / (24 * 60 * 60)
+    const refundAmount = Math.round(oldPriceAmount * (daysRemaining / totalDaysInPeriod))
+
+    console.log(`[STRIPE-UPGRADE] Plan: ${oldSubscription.metadata?.plan} → ${newPlanKey}`)
+    console.log(`[STRIPE-UPGRADE] Refund: ${refundAmount} cents (${daysRemaining.toFixed(1)}/${totalDaysInPeriod.toFixed(1)} days)`)
+
+    // Step 3: Cancel old subscription
+    const canceledSub = await stripe.subscriptions.cancel(oldSubscription.id)
+    console.log(`[STRIPE-UPGRADE] ✅ Canceled subscription ${oldSubscription.id}`)
+
+    // Step 4: Issue credit memo (refund)
+    if (refundAmount > 0) {
+      const latestInvoice = await stripe.invoices.retrieve(oldSubscription.latest_invoice as string)
+      const creditMemo = await stripe.creditNotes.create({
+        invoice: latestInvoice.id,
+        amount: refundAmount,
+        reason: 'upgrade',
+      })
+      console.log(`[STRIPE-UPGRADE] ✅ Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
+    }
+
+    // Step 5: Create new subscription (full price)
+    const newSubscription = await stripe.subscriptions.create({
+      customer: customerId,
+      items: [{ price: newPlan.stripe_price_id }],
+      metadata: {
+        plan: newPlanKey,
+        source: 'upgrade',
+      },
+    })
+
+    console.log(`[STRIPE-UPGRADE] ✅ Created new subscription ${newSubscription.id} for plan ${newPlanKey}`)
+    console.log(`[STRIPE-UPGRADE] User sees: -${refundAmount} cents (refund) + ${newPlan.price * 100} cents (new plan) = ${newPlan.price * 100 - refundAmount} cents net`)
+
+    // Step 6: Update Supabase with new subscription
+    try {
+      const { saveSubscriptionToSupabase } = await import('@/lib/supabase-db')
+      const supabaseData = {
+        user_id: oldSubscription.metadata?.user_id || '',
+        stripe_customer_id: customerId,
+        stripe_subscription_id: newSubscription.id,
+        plan: newPlanKey,
+        status: newSubscription.status,
+        trial_end_date: newSubscription.trial_end ? new Date(newSubscription.trial_end * 1000).toISOString() : null,
+        current_period_start: new Date(newSubscription.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(newSubscription.current_period_end * 1000).toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        canceled_at: null,
+      }
+
+      const saved = await saveSubscriptionToSupabase(supabaseData as any)
+      if (saved) {
+        console.log(`[STRIPE-UPGRADE] ✅ Updated Supabase with new subscription`)
+      }
+    } catch (err) {
+      console.error(`[STRIPE-UPGRADE] Warning: Failed to update Supabase (non-blocking):`, err)
+    }
+
+    return newSubscription
+  } catch (error) {
+    console.error('[STRIPE-UPGRADE] Error during upgrade:', error)
+    throw error
+  }
+}
+
+/**
  * Update subscription with proration
- * When user upgrades/downgrades, Stripe automatically prorates the charges
+ * Calculates refund for unused time on old plan, charges full new plan
+ * User only pays the difference
  */
 export async function updateSubscriptionWithProration(
   customerId: string,
   planKey: keyof typeof PRICING_PLANS
 ) {
   try {
-    const plan = PRICING_PLANS[planKey]
+    const stripe = getStripe()
+    const newPlan = PRICING_PLANS[planKey]
 
-    if (!plan.stripe_price_id) {
+    if (!newPlan.stripe_price_id) {
       throw new Error(`Stripe price ID not configured for plan: ${planKey}`)
     }
 
     // Get customer's active subscription
-    const subscriptions = await getStripe().subscriptions.list({
+    const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: 'active',
       limit: 1,
@@ -236,24 +344,85 @@ export async function updateSubscriptionWithProration(
     const subscription = subscriptions.data[0]
     const currentItem = subscription.items.data[0]
 
-    // Update subscription with new price and enable proration
-    const updated = await getStripe().subscriptions.update(
+    // Get old plan to calculate refund
+    const oldPrice = currentItem.price as any
+    const oldPlanPrice = oldPrice.unit_amount // in cents
+
+    // Calculate days/months remaining in billing cycle
+    const now = Math.floor(Date.now() / 1000)
+    const periodEnd = subscription.current_period_end
+    const periodStart = subscription.current_period_start
+    const totalDaysInPeriod = (periodEnd - periodStart) / (24 * 60 * 60)
+    const daysRemaining = (periodEnd - now) / (24 * 60 * 60)
+
+    // Calculate refund for unused time: old plan price × (days remaining / total days)
+    const refundAmount = Math.round(oldPlanPrice * (daysRemaining / totalDaysInPeriod))
+
+    console.log(`[STRIPE] Calculating upgrade refund: ${oldPlanPrice} × ${daysRemaining.toFixed(1)}/${totalDaysInPeriod.toFixed(1)} days = ${refundAmount} cents`)
+
+    // Issue credit memo for the refund
+    if (refundAmount > 0) {
+      const latestInvoice = await stripe.invoices.retrieve(subscription.latest_invoice as string)
+
+      const creditMemo = await stripe.creditNotes.create({
+        invoice: latestInvoice.id,
+        amount: refundAmount,
+        reason: 'upgrade',
+      })
+
+      console.log(`[STRIPE] Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
+    }
+
+    // Update subscription with new price
+    const updated = await stripe.subscriptions.update(
       subscription.id,
       {
         items: [
           {
             id: currentItem.id,
-            price: plan.stripe_price_id,
+            price: newPlan.stripe_price_id,
           },
         ],
-        proration_behavior: 'create_prorations', // Create invoice for prorated amount
+        billing_cycle_anchor: now, // Reset billing cycle to today
+        proration_behavior: 'none', // Don't prorate again (we handle it manually)
         metadata: {
           plan: planKey,
         },
       }
     )
 
-    console.log(`[STRIPE] Updated subscription ${subscription.id} to plan ${planKey} with proration`)
+    console.log(`[STRIPE] Upgraded subscription ${subscription.id} to plan ${planKey}`)
+    console.log(`[STRIPE] Refund: ${refundAmount} cents, New plan: ${newPlan.price * 100} cents`)
+
+    // CRITICAL: Also update the subscription in Supabase so dashboard reflects the change
+    // Otherwise dashboard reads old plan from Supabase even though Stripe is updated
+    try {
+      const { saveSubscriptionToSupabase } = await import('@/lib/supabase-db')
+      const supabaseData = {
+        user_id: subscription.metadata?.user_id || '',
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscription.id,
+        plan: planKey,
+        status: updated.status,
+        trial_end_date: updated.trial_end ? new Date(updated.trial_end * 1000).toISOString() : null,
+        current_period_start: new Date(updated.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(updated.current_period_end * 1000).toISOString(),
+        created_at: new Date(subscription.created * 1000).toISOString(),
+        updated_at: new Date().toISOString(),
+        canceled_at: updated.canceled_at ? new Date(updated.canceled_at * 1000).toISOString() : null,
+      }
+
+      const saved = await saveSubscriptionToSupabase(supabaseData as any)
+      if (saved) {
+        console.log(`[STRIPE] ✅ Updated subscription in Supabase to plan ${planKey}`)
+      } else {
+        console.error(`[STRIPE] ❌ Failed to update subscription in Supabase after upgrade`)
+      }
+    } catch (err) {
+      console.error(`[STRIPE] Error updating Supabase after upgrade (non-blocking):`, err)
+      // Don't throw - Stripe update succeeded, Supabase update is just for dashboard sync
+    }
+
     return updated
   } catch (error) {
     console.error('Error updating subscription with proration:', error)
