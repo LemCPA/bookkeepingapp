@@ -284,15 +284,16 @@ export async function upgradeSubscriptionViaCancel(
     // Step 6: Update Supabase with new subscription
     try {
       const { saveSubscriptionToSupabase } = await import('@/lib/supabase-db')
+      const newSub = newSubscription as any
       const supabaseData = {
         user_id: oldSubscription.metadata?.user_id || '',
         stripe_customer_id: customerId,
-        stripe_subscription_id: newSubscription.id,
+        stripe_subscription_id: newSub.id,
         plan: newPlanKey,
-        status: newSubscription.status,
-        trial_end_date: newSubscription.trial_end ? new Date(newSubscription.trial_end * 1000).toISOString() : null,
-        current_period_start: new Date(newSubscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(newSubscription.current_period_end * 1000).toISOString(),
+        status: newSub.status,
+        trial_end_date: newSub.trial_end ? new Date(newSub.trial_end * 1000).toISOString() : null,
+        current_period_start: new Date(newSub.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(newSub.current_period_end * 1000).toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         canceled_at: null,
