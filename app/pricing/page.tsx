@@ -79,6 +79,11 @@ export default function PricingPage() {
     }
   }
 
+  // Normalize userPlan to lowercase base name (e.g., "Starter Annual" → "starter")
+  const normalizedPlan = userPlan
+    ? userPlan.toLowerCase().split(' ')[0]
+    : null
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Main Content */}
@@ -91,7 +96,7 @@ export default function PricingPage() {
           <p className="text-xl text-slate-600 mb-2">
             Choose the perfect plan for your business
           </p>
-          {isLoggedIn && userPlan === 'free' && !isTrialExpired(userCreatedAt || '') && (
+          {isLoggedIn && normalizedPlan === 'free' && !isTrialExpired(userCreatedAt || '') && (
             <p className="text-base text-amber-600 font-medium">
               ⏰ You have {daysRemaining} days remaining in your free trial
             </p>
@@ -99,7 +104,7 @@ export default function PricingPage() {
         </div>
 
         {/* Trial Expiration Warning */}
-        {isLoggedIn && userPlan === 'free' && isTrialExpired(userCreatedAt || '') && (
+        {isLoggedIn && normalizedPlan === 'free' && isTrialExpired(userCreatedAt || '') && (
           <div className="bg-red-50 border border-red-300 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
             <p className="text-red-800 font-semibold">🚨 Trial Period Ended</p>
             <p className="text-red-700 text-sm mt-1">
@@ -138,14 +143,14 @@ export default function PricingPage() {
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {/* Free Plan */}
           <div className={`rounded-lg border-2 transition-all ${
-            userPlan === 'free'
+            normalizedPlan === 'free'
               ? 'border-blue-500 bg-blue-50 shadow-lg'
               : 'border-slate-200 bg-white shadow'
           }`}>
             <div className="p-8">
               <div className="flex items-baseline justify-between mb-4">
                 <h2 className="text-2xl font-bold text-slate-900">Free</h2>
-                {userPlan === 'free' && (
+                {normalizedPlan === 'free' && (
                   <span className="text-xs font-semibold bg-blue-500 text-white px-3 py-1 rounded-full">
                     Current Plan
                   </span>
@@ -201,12 +206,12 @@ export default function PricingPage() {
 
           {/* Starter Plan */}
           <div className={`rounded-lg border-2 transition-all ${
-            userPlan === 'starter'
+            normalizedPlan === 'starter'
               ? 'border-blue-500 bg-blue-50 shadow-lg'
               : 'border-slate-200 bg-white shadow'
           }`}>
             <div className="p-8 relative">
-              {userPlan !== 'starter' && (
+              {normalizedPlan !== 'starter' && (
                 <div className="absolute top-4 right-4 bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                   Popular
                 </div>
@@ -214,7 +219,7 @@ export default function PricingPage() {
 
               <div className="flex items-baseline justify-between mb-4">
                 <h2 className="text-2xl font-bold text-slate-900">Starter</h2>
-                {userPlan === 'starter' && (
+                {normalizedPlan === 'starter' && (
                   <span className="text-xs font-semibold bg-blue-500 text-white px-3 py-1 rounded-full">
                     Current Plan
                   </span>
@@ -254,16 +259,16 @@ export default function PricingPage() {
               {/* CTA */}
               <button
                 onClick={() => handleSubscribe('starter')}
-                disabled={userPlan === 'starter' || loading || !isLoggedIn}
+                disabled={normalizedPlan === 'starter' || loading || !isLoggedIn}
                 className={`w-full py-3 rounded-lg font-semibold mb-6 transition-all ${
-                  userPlan === 'starter'
+                  normalizedPlan === 'starter'
                     ? 'bg-slate-100 text-slate-600 cursor-default'
                     : !isLoggedIn
                     ? 'bg-slate-300 text-slate-600 cursor-default'
                     : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                 }`}
               >
-                {!isLoggedIn ? 'Log in to Subscribe' : loading ? 'Loading...' : userPlan === 'starter' ? 'Your Current Plan' : 'Subscribe to Starter'}
+                {!isLoggedIn ? 'Log in to Subscribe' : loading ? 'Loading...' : normalizedPlan === 'starter' ? 'Your Current Plan' : 'Subscribe to Starter'}
               </button>
 
               {/* Features */}
@@ -293,14 +298,14 @@ export default function PricingPage() {
 
           {/* Growth Plan */}
           <div className={`rounded-lg border-2 transition-all ${
-            userPlan === 'growth'
+            normalizedPlan === 'growth'
               ? 'border-blue-500 bg-blue-50 shadow-lg'
               : 'border-slate-200 bg-white shadow'
           }`}>
             <div className="p-8">
               <div className="flex items-baseline justify-between mb-4">
                 <h2 className="text-2xl font-bold text-slate-900">Growth</h2>
-                {userPlan === 'growth' && (
+                {normalizedPlan === 'growth' && (
                   <span className="text-xs font-semibold bg-blue-500 text-white px-3 py-1 rounded-full">
                     Current Plan
                   </span>
@@ -340,16 +345,16 @@ export default function PricingPage() {
               {/* CTA */}
               <button
                 onClick={() => handleSubscribe('growth')}
-                disabled={userPlan === 'growth' || loading || !isLoggedIn}
+                disabled={normalizedPlan === 'growth' || loading || !isLoggedIn}
                 className={`w-full py-3 rounded-lg font-semibold mb-6 transition-all ${
-                  userPlan === 'growth'
+                  normalizedPlan === 'growth'
                     ? 'bg-slate-100 text-slate-600 cursor-default'
                     : !isLoggedIn
                     ? 'bg-slate-300 text-slate-600 cursor-default'
                     : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                 }`}
               >
-                {!isLoggedIn ? 'Log in to Subscribe' : loading ? 'Loading...' : userPlan === 'growth' ? 'Your Current Plan' : `Subscribe to Growth`}
+                {!isLoggedIn ? 'Log in to Subscribe' : loading ? 'Loading...' : normalizedPlan === 'growth' ? 'Your Current Plan' : `Subscribe to Growth`}
               </button>
 
               {/* Features */}
