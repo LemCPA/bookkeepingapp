@@ -383,12 +383,12 @@ export async function updateSubscriptionWithProration(
             price: newPlan.stripe_price_id,
           },
         ],
-        billing_cycle_anchor: now, // Reset billing cycle to today
+        billing_cycle_anchor: now as any, // Reset billing cycle to today
         proration_behavior: 'none', // Don't prorate again (we handle it manually)
         metadata: {
           plan: planKey,
         },
-      }
+      } as any
     )
 
     console.log(`[STRIPE] Upgraded subscription ${subscription.id} to plan ${planKey}`)
