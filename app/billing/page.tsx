@@ -28,6 +28,8 @@ interface Invoice {
   period_end: string
   paid_at?: string
   created_at: string
+  refund_amount?: number | null
+  refund_reason?: string | null
 }
 
 interface PaymentMethod {
@@ -49,7 +51,15 @@ export default function BillingPage() {
   const [cancelStep, setCancelStep] = useState<'initial' | 'confirm'>('initial')
 
   useEffect(() => {
+    // Fetch billing data on page load
+    // If returning from upgrade (success=true), it will fetch the updated subscription from Supabase
     fetchBillingData()
+
+    // Clear success parameters from URL
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('success') === 'true' || params.get('upgraded') === 'true') {
+      window.history.replaceState({}, '', '/billing')
+    }
   }, [])
 
   async function fetchBillingData() {
@@ -63,13 +73,25 @@ export default function BillingPage() {
 
       // Fetch subscription
       const subRes = await fetch('/api/billing/subscription', { headers })
+      if (subRes.status === 401) {
+        setError('Session expired. Please log in again.')
+        window.location.href = '/login'
+        return
+      }
       if (subRes.ok) {
         const subData = await subRes.json()
         setSubscription(subData)
+      } else if (!subRes.ok) {
+        console.error('Subscription fetch error:', subRes.status)
       }
 
       // Fetch invoices
       const invRes = await fetch('/api/billing/invoices', { headers })
+      if (invRes.status === 401) {
+        setError('Session expired. Please log in again.')
+        window.location.href = '/login'
+        return
+      }
       if (invRes.ok) {
         const invData = await invRes.json()
         setInvoices(invData.invoices || [])
@@ -77,6 +99,11 @@ export default function BillingPage() {
 
       // Fetch payment methods
       const pmRes = await fetch('/api/billing/payment-methods', { headers })
+      if (pmRes.status === 401) {
+        setError('Session expired. Please log in again.')
+        window.location.href = '/login'
+        return
+      }
       if (pmRes.ok) {
         const pmData = await pmRes.json()
         if (pmData.payment_methods && pmData.payment_methods.length > 0) {
@@ -355,6 +382,7 @@ export default function BillingPage() {
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Period</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Amount</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -373,15 +401,35 @@ export default function BillingPage() {
                     <td className="py-3 px-4">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          invoice.status === 'paid'
+                          invoice.status === 'refunded'
+                            ? 'bg-blue-100 text-blue-800'
+                            : invoice.status === 'paid'
                             ? 'bg-green-100 text-green-800'
                             : invoice.status === 'failed'
                             ? 'bg-red-100 text-red-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                        {invoice.status === 'refunded'
+                          ? '💰 Refunded'
+                          : invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                       </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-600">
+                      {invoice.refund_amount ? (
+                        <div className="space-y-1">
+                          <p className="font-medium text-gray-900">
+                            Refunded: ${(invoice.refund_amount || 0).toFixed(2)}
+                          </p>
+                          {invoice.refund_reason && (
+                            <p className="text-gray-600">
+                              Reason: {invoice.refund_reason}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}
