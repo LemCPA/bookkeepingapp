@@ -91,9 +91,22 @@ export default function TransactionDetailPage() {
     try {
       const authenticatedFetch = createAuthenticatedFetch(getAccessToken(), getRefreshToken())
       const response = await authenticatedFetch(`/api/transactions?id=${transactionId}`)
-      if (!response.ok) throw new Error('Failed to fetch transaction')
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to fetch transaction (HTTP ${response.status})`)
+      }
+
       const data = await response.json()
-      setTransaction(data[0] || data)
+
+      // Handle both array and single object responses
+      const transaction = Array.isArray(data) ? data[0] : data
+
+      if (!transaction || !transaction.id) {
+        throw new Error('Transaction not found or data is empty')
+      }
+
+      setTransaction(transaction)
 
       // Fetch documents for this transaction
       const docsResponse = await authenticatedFetch(`/api/documents?id=${transactionId}`)
