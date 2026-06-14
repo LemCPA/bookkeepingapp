@@ -499,3 +499,72 @@ export async function updateInvoiceStatusInSupabase(invoiceId: number, reconcili
     return null
   }
 }
+
+/**
+ * Create a transaction in Supabase
+ * Used for storing transactions from both the local database and new entries
+ */
+export async function createTransactionInSupabase(
+  userId: number,
+  accountId: number,
+  transactionDate: string,
+  amount: number,
+  description: string,
+  type: string,
+  gstHstRate: number = 0,
+  gstHstAmount: number = 0,
+  referenceNumber?: string,
+  isVehicleExpense: boolean = false,
+  businessUsePercentage: number = 100,
+  sentDate?: string,
+  reconciliationStatus?: string,
+  gstHstIncluded?: boolean,
+  category?: string
+) {
+  if (!supabase) {
+    console.error('[SUPABASE] Client not initialized, cannot create transaction')
+    return null
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert([{
+        user_id: userId,
+        account_id: accountId,
+        transaction_date: transactionDate,
+        amount,
+        description,
+        type,
+        gst_hst_rate: gstHstRate,
+        gst_hst_amount: gstHstAmount,
+        reference_number: referenceNumber,
+        is_vehicle_expense: isVehicleExpense,
+        business_use_percentage: businessUsePercentage,
+        sent_date: sentDate,
+        reconciliation_status: reconciliationStatus,
+        gst_hst_included: gstHstIncluded,
+        category,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('[SUPABASE] Error creating transaction:', error)
+      return null
+    }
+
+    if (!data) {
+      console.error('[SUPABASE] Transaction insert returned no data')
+      return null
+    }
+
+    console.log('[SUPABASE] Transaction created successfully:', data.id)
+    return data
+  } catch (error) {
+    console.error('[SUPABASE] Exception creating transaction:', error)
+    return null
+  }
+}
