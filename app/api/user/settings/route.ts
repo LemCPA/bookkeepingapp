@@ -9,7 +9,10 @@ export async function GET(request: NextRequest) {
     const userId = getUserIdFromRequest(request)
     const userEmail = getUserEmailFromRequest(request)
 
+    console.log('[SETTINGS-GET] userId:', userId, 'userEmail:', userEmail)
+
     if (!userId || !userEmail) {
+      console.error('[SETTINGS-GET] Missing userId or userEmail:', { userId, userEmail })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -19,15 +22,26 @@ export async function GET(request: NextRequest) {
 
     // Fetch user from Supabase using email-based UUID (how they were stored during signup)
     const userUuid = emailToUuid(userEmail)
+    console.log('[SETTINGS-GET] Generated UUID:', userUuid, 'from email:', userEmail)
+
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', userUuid)
       .single()
 
+    console.log('[SETTINGS-GET] Supabase query result:', { userFound: !!user, error: error?.message })
+
     if (error) {
-      console.error('Supabase user lookup error:', error)
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      console.error('[SETTINGS-GET] Supabase user lookup error:', error)
+      return NextResponse.json({
+        error: 'User not found',
+        debug: {
+          userEmail,
+          userUuid,
+          supabaseError: error.message
+        }
+      }, { status: 404 })
     }
 
     if (!user) {
