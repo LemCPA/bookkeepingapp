@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
           plan: upgradePlan,
           status: updatedSubscription.status,
           trial_end_date: null,
-          current_period_start: new Date(updatedSubscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
+          current_period_start: new Date((updatedSubscription as any).current_period_start * 1000).toISOString(),
+          current_period_end: new Date((updatedSubscription as any).current_period_end * 1000).toISOString(),
           created_at: new Date().toISOString(),
           updated_at: now,
         })
