@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = request.nextUrl
     const status = searchParams.get('status') || 'all'
-    const fromDate = searchParams.get('fromDate')
-    const toDate = searchParams.get('toDate')
+    const fromDate = searchParams.get('fromDate') || undefined
+    const toDate = searchParams.get('toDate') || undefined
 
     // Get all INVOICE type transactions from Supabase (cloud storage)
     const invoices = await getInvoicesFromSupabase(userId, status, fromDate, toDate)
