@@ -87,11 +87,16 @@ export default function ProfileSettingsPage() {
         setMessage('✓ Business profile saved successfully!')
         setTimeout(() => setMessage(''), 3000)
       } else {
-        setMessage('Failed to save profile')
+        try {
+          const errorData = await res.json()
+          setMessage(`Failed to save profile: ${errorData.error || 'Unknown error'}`)
+        } catch {
+          setMessage(`Failed to save profile (HTTP ${res.status})`)
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving profile:', error)
-      setMessage('Error saving profile')
+      setMessage(`Error saving profile: ${error.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }

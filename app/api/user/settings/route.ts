@@ -180,9 +180,12 @@ export async function POST(request: NextRequest) {
     if (home_business_use_percentage !== undefined) updateData.home_business_use_percentage = home_business_use_percentage
     if (vehicle_business_use_percentage !== undefined) updateData.vehicle_business_use_percentage = vehicle_business_use_percentage
 
-    // Always update JSON database (reliable, works offline)
+    // Update JSON database (only on local dev, Vercel filesystem is read-only)
     Object.assign(user, updateData)
-    saveDb(db)
+    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || process.env.NODE_ENV === 'production'
+    if (!isVercel) {
+      saveDb(db)
+    }
 
     // Also try to update Supabase (production)
     if (supabase && Object.keys(updateData).length > 0) {
@@ -229,6 +232,13 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Error updating user settings:', error)
-    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 })
+    const errorMessage = error?.message || 'Failed to update settings'
+    return NextResponse.json(
+      {
+        error: `Failed to save profile: ${errorMessage}`,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
+      { status: 500 }
+    )
   }
 }
