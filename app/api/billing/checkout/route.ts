@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       }, { status: 404 })
     }
 
-    const { plan } = await request.json()
+    const { plan, coupon } = await request.json()
 
     if (!plan || !PRICING_PLANS[plan as keyof typeof PRICING_PLANS]) {
       return NextResponse.json(
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     if (!stripeCustomerId) {
       try {
         const { createStripeCustomer } = await import('@/lib/stripe-utils')
-        const newStripeCustomerId = await createStripeCustomer(userEmail, userName)
+        const newStripeCustomerId = await createStripeCustomer(userEmail, userName, userId.toString())
         console.log(`[CHECKOUT] Auto-created Stripe customer: ${newStripeCustomerId}`)
 
         // CRITICAL: Save stripe_customer_id to Supabase (single source of truth)
@@ -121,6 +121,11 @@ export async function POST(request: NextRequest) {
       apiVersion: '2024-04-10' as any,
     })
 
+    // Coupon will be validated by Stripe at checkout/payment time
+    if (coupon) {
+      console.log(`[CHECKOUT] ✅ Coupon code provided: ${coupon}`)
+    }
+
     const stripeSubscriptions = await stripeInstance.subscriptions.list({
       customer: finalStripeCustomerId,
       status: 'active',
@@ -137,6 +142,39 @@ export async function POST(request: NextRequest) {
       if (subscription.plan === plan) {
         return NextResponse.json(
           { error: `You're already on the ${plan} plan. Choose a different plan to upgrade or downgrade.` },
+          { status: 400 }
+        )
+      }
+
+      // Prevent switching from annual to monthly before billing cycle ends
+      const currentIsAnnual = subscription.plan.includes('annual')
+      const newIsAnnual = plan.includes('annual')
+      if (currentIsAnnual && !newIsAnnual) {
+        return NextResponse.json(
+          { error: 'Annual subscriptions cannot be downgraded to monthly before the billing cycle ends. You can switch to monthly at the end of your annual period.' },
+          { status: 400 }
+        )
+      }
+
+      // Tier ordering for upgrade/downgrade checks
+      const tierOrder = { starter: 1, growth: 2 }
+
+      // Extract base plan name (remove _annual suffix)
+      const currentBasePlan = subscription.plan.replace('_annual', '')
+      const newBasePlan = plan.replace('_annual', '')
+
+      const currentTierLevel = tierOrder[currentBasePlan as keyof typeof tierOrder] || 0
+      const newTierLevel = tierOrder[newBasePlan as keyof typeof tierOrder] || 0
+
+      // Allow transitions to annual from monthly (any tier)
+      const movingToAnnual = !currentIsAnnual && newIsAnnual
+
+      if (!movingToAnnual && newTierLevel < currentTierLevel) {
+        // Block downgrades (within same billing period or annual→monthly) until billing cycle ends
+        const periodEndDate = new Date(existingStripeSubscription.current_period_end * 1000)
+        const formattedDate = periodEndDate.toLocaleDateString()
+        return NextResponse.json(
+          { error: `Downgrades can only be made after your billing cycle ends on ${formattedDate}. You can upgrade or move to annual anytime.` },
           { status: 400 }
         )
       }
@@ -184,7 +222,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Get pricing
+        // Calculate the prorated adjustment
         const newPrice = PRICING_PLANS[plan as keyof typeof PRICING_PLANS]?.price || 0
         const subscription = await getSubscriptionFromSupabase(userEmail)
         const currentPrice = PRICING_PLANS[subscription.plan as keyof typeof PRICING_PLANS]?.price || 0
@@ -192,65 +230,68 @@ export async function POST(request: NextRequest) {
 
         // Calculate days remaining
         const now = Math.floor(Date.now() / 1000)
+        const periodStart = existingStripeSubscription.current_period_start
         const periodEnd = existingStripeSubscription.current_period_end
         const daysRemaining = Math.ceil((periodEnd - now) / (24 * 60 * 60))
-        const totalDays = 365
+        const totalDays = Math.ceil((periodEnd - periodStart) / (24 * 60 * 60)) // Use actual billing period length (30 for monthly, 365 for annual)
 
-        // Calculate prorated charge
+        // Calculate prorated charge (adjustment for the difference)
         const chargeAmount = Math.round((priceDiff / totalDays) * daysRemaining * 100) // in cents
 
         if (chargeAmount <= 0) {
-          // Downgrade: Update subscription and apply prorated credit
-          const oldItemId = existingStripeSubscription.items.data[0].id
-          const creditAmount = Math.abs(chargeAmount) // Convert negative to positive
+          // Downgrade: Create invoice for credit instead of auto-charging
+          const creditAmount = Math.abs(chargeAmount)
 
-          // Update subscription with new plan
-          const updatedSub = await stripeInstance.subscriptions.update(existingStripeSubscription.id, {
-            items: [
-              { id: oldItemId, deleted: true },
-              { price: PRICING_PLANS[plan as keyof typeof PRICING_PLANS]?.stripe_price_id }
-            ],
-            proration_behavior: 'create_prorations'
-          })
-
-          // If there's a credit, create a credit note
-          let creditMessage = ''
-          if (creditAmount > 0) {
-            try {
-              // Get the most recent invoice to create a credit note for
-              const invoices = await stripeInstance.invoices.list({
-                customer: finalStripeCustomerId,
-                limit: 1,
-              })
-
-              if (invoices.data.length > 0) {
-                const invoice = invoices.data[0]
-                await stripeInstance.creditNotes.create({
-                  invoice: invoice.id,
-                  amount: creditAmount,
-                  reason: 'subscription_change',
-                  metadata: {
-                    downgrade_from: existingStripeSubscription.items.data[0].price?.lookup_key,
-                    downgrade_to: plan,
-                  }
-                })
-
-                const creditFormatted = (creditAmount / 100).toFixed(2)
-                const nextBillingDate = new Date(updatedSub.current_period_end * 1000).toLocaleDateString()
-                creditMessage = `You've received a $${creditFormatted} credit applied to your next invoice on ${nextBillingDate}.`
-                console.log(`[CHECKOUT] Credit note created for $${creditFormatted}`)
+          try {
+            // Create credit invoice
+            const invoice = await stripeInstance.invoices.create({
+              customer: finalStripeCustomerId,
+              description: `Downgrade to ${plan} - credit of $${(creditAmount / 100).toFixed(2)}`,
+              collection_method: 'send_invoice',
+              days_until_due: 1,
+              auto_advance: false,
+              metadata: {
+                downgrade_plan: plan,
+                credit_amount: creditAmount
               }
-            } catch (creditError) {
-              console.error('[CHECKOUT] Error creating credit note:', creditError)
-              // Continue anyway - subscription was updated successfully
-            }
-          }
+            })
 
-          return NextResponse.json({
-            success: true,
-            message: creditMessage || `Subscription downgraded to ${plan} successfully. Changes take effect at the end of your billing cycle.`,
-            newPlan: plan
-          })
+            // Add credit line item (negative amount)
+            await stripeInstance.invoiceItems.create({
+              invoice: invoice.id,
+              customer: finalStripeCustomerId,
+              amount: -creditAmount, // Negative = credit
+              description: `Credit for downgrade to ${plan}`,
+              metadata: {
+                old_plan: subscription.plan,
+                new_plan: plan
+              }
+            })
+
+            // Finalize invoice
+            const finalInvoice = await stripeInstance.invoices.finalizeInvoice(invoice.id)
+
+            // Store pending downgrade in subscription metadata
+            await stripeInstance.subscriptions.update(existingStripeSubscription.id, {
+              metadata: {
+                pending_upgrade_plan: plan,
+                pending_upgrade_invoice_id: finalInvoice.id
+              }
+            })
+
+            console.log(`[CHECKOUT] ✅ Credit invoice created for downgrade: ${finalInvoice.id}`)
+
+            return NextResponse.json({
+              url: finalInvoice.hosted_invoice_url,
+              message: `You have a $${(creditAmount / 100).toFixed(2)} credit. View your invoice to confirm the downgrade to ${plan}.`
+            })
+          } catch (creditError) {
+            console.error('[CHECKOUT] Error creating credit invoice:', creditError)
+            return NextResponse.json(
+              { error: 'Failed to process downgrade' },
+              { status: 500 }
+            )
+          }
         }
 
         // Create invoice for upgrade charge
@@ -326,7 +367,8 @@ export async function POST(request: NextRequest) {
         finalStripeCustomerId,
         plan as keyof typeof PRICING_PLANS,
         `${baseUrl}/billing?success=true`,
-        `${baseUrl}/pricing`
+        `${baseUrl}/pricing`,
+        coupon
       )
 
       return NextResponse.json({ url: session.url })

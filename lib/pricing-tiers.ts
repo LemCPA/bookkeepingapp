@@ -122,7 +122,7 @@ export function isTrialExpired(createdAt: string): boolean {
 export function getDaysRemainingInTrial(createdAt: string): number {
   const trialEnd = getTrialEndDate(createdAt)
   const now = new Date()
-  const daysRemaining = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  const daysRemaining = Math.floor((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
   return Math.max(0, daysRemaining)
 }
 

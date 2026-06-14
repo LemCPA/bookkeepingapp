@@ -278,7 +278,7 @@ export default function BillingPage() {
               ${planDetails?.price || '0'}
               {currentPlan !== 'free' && (
                 <span className="text-sm text-gray-500 font-normal ml-1">
-                  {planDetails?.billingPeriod === 'monthly' ? 'per month' : 'per year'}
+                  {planDetails?.billingPeriod === 'annual' ? 'per year' : 'per month'}
                 </span>
               )}
             </p>

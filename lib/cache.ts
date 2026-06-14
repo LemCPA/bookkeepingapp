@@ -1,46 +1,39 @@
-// Simple in-memory cache for API responses
-interface CacheItem<T> {
-  value: T
-  expires: number
+// In-memory cache for API responses
+interface CacheEntry {
+  data: any
+  timestamp: number
+  ttl: number
 }
 
-const cache = new Map<string, CacheItem<any>>()
+const cache = new Map<string, CacheEntry>()
 
-export function getCached<T>(key: string): T | null {
-  const item = cache.get(key)
-  if (!item) return null
+export function getCached(key: string): any {
+  const entry = cache.get(key)
+  if (!entry) {
+    return null
+  }
 
-  if (Date.now() > item.expires) {
+  const now = Date.now()
+  if (now - entry.timestamp > entry.ttl) {
     cache.delete(key)
     return null
   }
 
-  return item.value as T
+  return entry.data
 }
 
-export function setCached<T>(key: string, value: T, ttlMs: number = 5 * 60 * 1000): void {
+export function setCached(key: string, data: any, ttl: number): void {
   cache.set(key, {
-    value,
-    expires: Date.now() + ttlMs
+    data,
+    timestamp: Date.now(),
+    ttl,
   })
 }
 
-export function invalidateCache(pattern?: string): void {
-  if (!pattern) {
-    cache.clear()
-    return
-  }
-
-  for (const key of Array.from(cache.keys())) {
-    if (key.includes(pattern)) {
-      cache.delete(key)
-    }
-  }
+export function invalidateCache(key: string): void {
+  cache.delete(key)
 }
 
-export function getCacheStats() {
-  return {
-    size: cache.size,
-    keys: Array.from(cache.keys())
-  }
+export function clearAllCache(): void {
+  cache.clear()
 }

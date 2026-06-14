@@ -29,6 +29,18 @@ export async function GET(request: NextRequest) {
 
     let accounts = getChartOfAccounts(userId)
 
+    console.log(`[CHART-OF-ACCOUNTS] API called for userId=${userId}`)
+    console.log(`[CHART-OF-ACCOUNTS] Total accounts returned: ${accounts.length}`)
+
+    const childAccounts = accounts.filter(a => a.code && (a.code.includes('9945-') || a.code.includes('9281-')))
+    console.log(`[CHART-OF-ACCOUNTS] Child accounts (9945-* and 9281-*): ${childAccounts.length}`)
+
+    if (childAccounts.length > 0) {
+      console.log(`[CHART-OF-ACCOUNTS] Sample child account:`, JSON.stringify(childAccounts[0]))
+      const parentIds = [...new Set(childAccounts.map(a => a.parent_account_id))]
+      console.log(`[CHART-OF-ACCOUNTS] Parent IDs referenced by children: ${parentIds.join(', ')}`)
+    }
+
     // Filter by type if provided (e.g., ?type=EXPENSE)
     if (typeFilter) {
       accounts = accounts.filter(a => a.type === typeFilter)

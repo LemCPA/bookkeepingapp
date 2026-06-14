@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { formatDate } from '@/lib/utils'
 import { getUserIdFromRequest, getUserEmailFromRequest } from '@/lib/auth-server'
-import { getSubscriptionFromSupabase, emailToUuid } from '@/lib/supabase-db'
+import { getSubscriptionFromSupabase, emailToUuid, supabase } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,16 +13,69 @@ export async function GET(request: NextRequest) {
     const db = getDb()
     const user = db.users.find(u => u.id === userId)
 
-    // Get current subscription from Supabase (source of truth for billing)
+    // Get current subscription - check STRIPE FIRST (authoritative), then Supabase
     let currentPlan = 'free'
+
+    // STEP 1: Check Stripe (authoritative source of truth)
     if (userEmail) {
+      try {
+        const Stripe = (await import('stripe')).default
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+          apiVersion: '2024-04-10' as any,
+        })
+
+        const customers = await stripe.customers.list({
+          email: userEmail,
+          limit: 1,
+        })
+
+        if (customers.data.length > 0) {
+          const customer = customers.data[0]
+          const subscriptions = await stripe.subscriptions.list({
+            customer: customer.id,
+            status: 'active',
+            limit: 1,
+          })
+
+          if (subscriptions.data.length > 0) {
+            const stripeSub = subscriptions.data[0]
+            const lookupKey = stripeSub.items.data[0]?.price?.lookup_key
+
+            if (lookupKey) {
+              // Map lookup_key to display plan name
+              const planMap: { [key: string]: string } = {
+                'Starter': 'Starter',
+                'Starter Monthly': 'Starter',
+                'Starter_Monthly': 'Starter',
+                'Starter2': 'Starter',
+                'Starter_Monthly2': 'Starter',
+                'Growth': 'Growth',
+                'Growth Monthly': 'Growth',
+                'Growth_Monthly': 'Growth',
+                'Growth2': 'Growth',
+                'Growth_Monthly2': 'Growth',
+                'Starter Annual': 'Starter Annual',
+                'Starter_Annual': 'Starter Annual',
+                'Starter_Annual2': 'Starter Annual',
+                'Growth Annual': 'Growth Annual',
+                'Growth_Annual': 'Growth Annual',
+                'Growth_Annual2': 'Growth Annual',
+              }
+              currentPlan = planMap[lookupKey] || 'Starter'
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('[DASHBOARD] Error checking Stripe:', error)
+        // Fall through to Supabase check
+      }
+    }
+
+    // STEP 2: If Stripe didn't find anything, fall back to Supabase
+    if (currentPlan === 'free' && userEmail) {
       const subscription = await getSubscriptionFromSupabase(userEmail)
-      // CRITICAL: Show plan for ANY valid subscription status, not just 'active'
-      // Subscription could be 'trialing', 'incomplete', 'past_due', or 'active'
-      // All of these mean the user has an active subscription that should be displayed
       const validStatuses = ['active', 'past_due', 'trialing', 'incomplete']
       if (subscription && validStatuses.includes(subscription.status)) {
-        // Extract plan name: remove 'starter_annual' → 'Starter (Annual)', 'starter' → 'Starter', etc.
         const planName = subscription.plan
         const formatted = planName
           .split('_')
@@ -31,46 +84,11 @@ export async function GET(request: NextRequest) {
         currentPlan = formatted
       }
     }
-
-    // FALLBACK: If no subscription found, check Stripe directly for paid invoices
-    // This handles the case where subscription record hasn't been created yet but payment went through
-    // (Can't use local db - it doesn't persist on Vercel)
-    if (currentPlan === 'free' && userEmail) {
-      try {
-        const Stripe = (await import('stripe')).default
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-          apiVersion: '2024-04-10' as any,
-        })
-
-        // Find customer by email
-        const customers = await stripe.customers.list({
-          email: userEmail,
-          limit: 1,
-        })
-
-        if (customers.data.length > 0) {
-          const customer = customers.data[0]
-          // Check for paid invoices for this customer
-          const invoices = await stripe.invoices.list({
-            customer: customer.id,
-            status: 'paid',
-            limit: 1,
-          })
-
-          if (invoices.data.length > 0 && invoices.data[0].amount_paid >= 1200) {
-            currentPlan = 'Starter'
-          }
-        }
-      } catch (error) {
-        console.warn('Error checking Stripe for paid invoices:', error)
-        // Fail silently - subscription check is primary
-      }
-    }
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || 'month' // month, year, all
 
     // Calculate period dates
-    const today = new Date('2026-05-18')
+    const today = new Date()
     let periodStart: Date
     let periodEnd = today
 
@@ -134,12 +152,24 @@ export async function GET(request: NextRequest) {
         }
       })
 
+    // Get user created_at from Supabase (source of truth for account creation)
+    let userCreatedAt = user?.created_at
+    if (!userCreatedAt && userEmail) {
+      const userUuid = emailToUuid(userEmail)
+      const { data: supabaseUser } = await supabase
+        .from('users')
+        .select('created_at')
+        .eq('id', userUuid)
+        .single()
+      userCreatedAt = supabaseUser?.created_at
+    }
+
     return NextResponse.json({
       period,
       periodStart: formatDate(periodStart.toISOString()),
       periodEnd: formatDate(periodEnd.toISOString()),
       plan: currentPlan,
-      userCreatedAt: user?.created_at || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      userCreatedAt: userCreatedAt || new Date().toISOString(), // Fallback to now if still not found
       metrics: {
         totalTransactions: transactionsForPeriod.length,
         totalRevenue,

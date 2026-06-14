@@ -51,12 +51,27 @@ export async function POST(request: NextRequest) {
       const subscription = subscriptions.data[0]
       const oldItemId = subscription.items.data[0].id
 
+      // CRITICAL FIX: Prevent auto-charging by switching to send_invoice before update
+      // 1. Switch to send_invoice (stops auto-charges)
+      // 2. Update subscription to new plan
+      // 3. Switch back to charge_automatically
+
+      await stripe.subscriptions.update(subscription.id, {
+        collection_method: 'send_invoice',
+        days_until_due: 1,
+      })
+
       const updatedSubscription = await stripe.subscriptions.update(subscription.id, {
         items: [
           { id: oldItemId, deleted: true },
           { price: process.env[`STRIPE_${upgradePlan.toUpperCase().replace('-', '_')}_PRICE_ID`] || '' }
         ],
         proration_behavior: 'none',
+      })
+
+      // Switch back to charge_automatically
+      await stripe.subscriptions.update(subscription.id, {
+        collection_method: 'charge_automatically',
       })
 
       // RACE CONDITION PREVENTION: Use timestamp-based conflict detection

@@ -101,22 +101,49 @@ export async function saveSubscriptionToSupabase(subscription: {
   canceled_at?: string | null
 }) {
   try {
-    // Use UPSERT to update-if-exists or insert-if-new (atomic operation)
-    // This prevents race conditions and data loss from delete-then-insert
-    const { data, error } = await supabase
+    // First, try to find existing subscription by stripe_subscription_id
+    const { data: existing, error: fetchError } = await supabase
       .from('subscriptions')
-      .upsert([subscription], {
-        onConflict: 'stripe_subscription_id' // Use subscription ID as unique key
-      })
-      .select()
+      .select('id')
+      .eq('stripe_subscription_id', subscription.stripe_subscription_id)
+      .single()
 
-    if (error) {
-      console.error('[SUPABASE] Error saving subscription:', error)
-      return false
+    console.log('[SUPABASE] Looking for existing subscription with ID:', subscription.stripe_subscription_id)
+    console.log('[SUPABASE] Existing subscription:', existing)
+    console.log('[SUPABASE] Fetch error:', fetchError)
+
+    if (existing && existing.id) {
+      // Update existing record
+      console.log('[SUPABASE] Updating existing subscription record')
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .update(subscription)
+        .eq('id', existing.id)
+        .select()
+
+      if (error) {
+        console.error('[SUPABASE] Error updating subscription:', error)
+        return false
+      }
+
+      console.log('[SUPABASE] Subscription updated:', data)
+      return true
+    } else {
+      // Insert new record
+      console.log('[SUPABASE] No existing subscription found, inserting new record')
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .insert([subscription])
+        .select()
+
+      if (error) {
+        console.error('[SUPABASE] Error inserting subscription:', error)
+        return false
+      }
+
+      console.log('[SUPABASE] Subscription inserted:', data)
+      return true
     }
-
-    console.log('[SUPABASE] Subscription saved/updated:', data)
-    return true
   } catch (err) {
     console.error('[SUPABASE] Exception saving subscription:', err)
     return false
@@ -194,6 +221,8 @@ export async function syncUserToSupabase(userId: number, email: string, name: st
     console.log(`[SUPABASE] Syncing user: ${userId} (${email}) → UUID: ${userUuid} (from email)`)
 
     // Upsert user (insert or update if exists)
+    // CRITICAL: Use 'email' for conflict resolution since email is the unique constraint
+    // Not 'id' - even though id is primary key, email uniqueness is what causes conflicts
     const { data, error } = await supabase
       .from('users')
       .upsert([{
@@ -202,7 +231,7 @@ export async function syncUserToSupabase(userId: number, email: string, name: st
         name,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      }], { onConflict: 'id' })
+      }], { onConflict: 'email' })
       .select()
 
     if (error) {
@@ -285,5 +314,67 @@ export async function ensureUserInSupabase(userId: number, email: string, name: 
   } catch (err) {
     console.error('[SUPABASE] Exception ensuring user:', err)
     return null
+  }
+}
+
+/**
+ * Save subscription upgrade/downgrade with full transaction details
+ * Tracks: old plan, new plan, refund calculated, net amount charged
+ */
+export async function saveSubscriptionUpgrade(upgrade: {
+  user_id: string  // UUID
+  old_subscription_id: string
+  new_subscription_id: string
+  old_plan: string        // e.g., "starter_annual"
+  new_plan: string        // e.g., "growth_annual"
+  old_plan_price: number  // e.g., 120.00
+  new_plan_price: number  // e.g., 240.00
+  days_remaining: number  // e.g., 355
+  total_days: number      // e.g., 365
+  refund_calculated: number  // e.g., 116.44 (for audit only)
+  net_charge: number      // e.g., 123.56 (what was actually charged)
+  stripe_invoice_id?: string  // Invoice ID for the net charge
+  upgrade_type: 'upgrade' | 'downgrade'
+  upgraded_at: string     // ISO timestamp
+}) {
+  try {
+    const { data, error } = await supabase
+      .from('subscription_upgrades')
+      .insert([upgrade])
+      .select()
+
+    if (error) {
+      console.error('[SUPABASE] Error saving subscription upgrade:', error)
+      return false
+    }
+
+    console.log('[SUPABASE] Subscription upgrade saved:', upgrade)
+    return true
+  } catch (err) {
+    console.error('[SUPABASE] Exception saving subscription upgrade:', err)
+    return false
+  }
+}
+
+/**
+ * Get subscription upgrades for a user (for billing history)
+ */
+export async function getSubscriptionUpgradesForUser(userUuid: string) {
+  try {
+    const { data, error } = await supabase
+      .from('subscription_upgrades')
+      .select('*')
+      .eq('user_id', userUuid)
+      .order('upgraded_at', { ascending: false })
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('[SUPABASE] Error fetching subscription upgrades:', error)
+      return []
+    }
+
+    return data || []
+  } catch (err) {
+    console.error('[SUPABASE] Exception fetching subscription upgrades:', err)
+    return []
   }
 }

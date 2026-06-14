@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     // Create Stripe customer for new user (must be done BEFORE checking for auto-created subscriptions)
     let stripeCustomerId: string | null = null
     try {
-      stripeCustomerId = await createStripeCustomer(email, name)
+      stripeCustomerId = await createStripeCustomer(email, name, userId.toString())
       console.log(`[SIGNUP] Created Stripe customer: ${stripeCustomerId} for user ${newUser.id}`)
     } catch (error) {
       console.warn(`[SIGNUP] Failed to create Stripe customer for ${email}:`, error)

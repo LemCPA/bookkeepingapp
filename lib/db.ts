@@ -192,14 +192,29 @@ function initializeDb(): DbData {
     ],
     chart_of_accounts: (() => {
       let id = 1
-      return DEFAULT_ACCOUNTS.filter(acc => acc.code).map(acc => ({
+      const accounts = DEFAULT_ACCOUNTS.filter(acc => acc.code).map(acc => ({
         id: id++,
         code: acc.code,
         name: acc.name,
         type: acc.type,
         category: acc.category,
-        user_id: 1
+        user_id: 1,
+        parent_account_id: undefined as number | undefined,
       }))
+
+      // Link sub-accounts to parent accounts
+      // Sub-accounts have codes like "9945-01", parent is "9945"
+      accounts.forEach(acc => {
+        if (acc.code && acc.code.includes('-')) {
+          const parentCode = acc.code.split('-')[0]
+          const parentAccount = accounts.find(a => a.code === parentCode)
+          if (parentAccount) {
+            acc.parent_account_id = parentAccount.id
+          }
+        }
+      })
+
+      return accounts
     })(),
     transactions: [],
     documents: [],

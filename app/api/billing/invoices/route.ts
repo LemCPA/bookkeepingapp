@@ -61,20 +61,67 @@ export async function GET(request: NextRequest) {
       limit: 50,
     })
 
+    // Fetch recent refunds for this customer (not filtered by payment_intent)
+    // Refunds during upgrades are issued against old payments, not new invoices
+    const allRefunds = await stripe.refunds.list({
+      limit: 100,
+    })
+
+    // Build a map of refunds by matching them to invoices by amount and date proximity
+    // or by checking their metadata for upgrade_to_plan
+    const refundsByAmount = new Map<number, any[]>()
+    allRefunds.data.forEach((refund: any) => {
+      // Only consider refunds from the last 90 days
+      if (refund.created > Math.floor(Date.now() / 1000) - 90 * 24 * 60 * 60) {
+        const amount = refund.amount || 0
+        if (!refundsByAmount.has(amount)) {
+          refundsByAmount.set(amount, [])
+        }
+        refundsByAmount.get(amount)!.push(refund)
+      }
+    })
+
     // Format invoices to match expected interface
-    const formattedInvoices = invoices.data.map((invoice) => {
+    const formattedInvoices = invoices.data.map((invoice: any) => {
       const paidDate = invoice.status === 'paid' ? new Date(invoice.created * 1000).toISOString() : undefined
+
+      // Check if this invoice has an associated refund
+      // For upgrades, look for a refund with upgrade_to_plan metadata
+      let refund = null
+      const invoiceAmount = invoice.total || 0
+
+      // First, check if there's a refund matching the invoice amount created around the same time
+      const potentialRefunds = refundsByAmount.get(invoiceAmount)
+      if (potentialRefunds) {
+        // Find a refund created within 5 minutes of the invoice
+        refund = potentialRefunds.find((r: any) => {
+          const timeDiff = Math.abs((r.created || 0) - invoice.created)
+          return timeDiff < 300 // 5 minutes
+        })
+      }
+
+      // Alternative: Look for refunds with upgrade metadata (these are from old payments)
+      if (!refund) {
+        allRefunds.data.forEach((r: any) => {
+          if (r.metadata?.upgrade_to_plan && r.created > invoice.created - 60 && r.created < invoice.created + 300) {
+            refund = r
+          }
+        })
+      }
+
       return {
         id: invoice.id,
         stripe_invoice_id: invoice.id,
         amount: (invoice.total || 0) / 100, // Convert from cents to dollars
         amount_formatted: `$${((invoice.total || 0) / 100).toFixed(2)}`,
         currency: invoice.currency?.toUpperCase() || 'CAD',
-        status: invoice.status || 'draft',
+        status: refund ? 'refunded' : (invoice.status || 'draft'),
         period_start: new Date(invoice.period_start * 1000).toISOString(),
         period_end: new Date(invoice.period_end * 1000).toISOString(),
         paid_at: paidDate,
         created_at: new Date(invoice.created * 1000).toISOString(),
+        refund_amount: refund ? (refund.amount || 0) / 100 : null,
+        refund_reason: refund?.metadata?.reason || null,
       }
     })
 

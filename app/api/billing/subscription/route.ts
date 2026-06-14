@@ -41,11 +41,33 @@ export async function GET(request: NextRequest) {
 
       stripeCustomerId = user?.stripe_customer_id
       if (!stripeCustomerId) {
+        // User is on free plan - check if they're in 7-day trial
+        const { data: userData } = await supabase
+          .from('users')
+          .select('created_at')
+          .eq('id', userUuid)
+          .single()
+
+        const createdAt = userData?.created_at ? new Date(userData.created_at) : null
+        const now = new Date()
+        const daysSinceSignup = createdAt ? Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 8
+        const isInTrial = daysSinceSignup < 7
+
+        // Calculate trial end date (7 days from signup)
+        let trialEndDate = null
+        if (createdAt && isInTrial) {
+          const trialEnd = new Date(createdAt)
+          trialEnd.setDate(trialEnd.getDate() + 7)
+          trialEndDate = trialEnd.toISOString()
+        }
+
         return NextResponse.json({
           plan: 'free',
           status: 'free',
-          isTrialing: false,
+          isTrialing: isInTrial,
           isActive: false,
+          trial_end_date: trialEndDate,
+          daysRemaining: isInTrial ? 7 - daysSinceSignup : 0,
         })
       }
     }
@@ -73,9 +95,10 @@ export async function GET(request: NextRequest) {
         const invoice = await stripeInstance.invoices.retrieve(pendingUpgradeInvoiceId)
         if (invoice.status === 'paid' || invoice.paid) {
           console.log(`[BILLING] Pending upgrade found and invoice paid, completing upgrade to ${pendingUpgradePlan}`)
+          console.log(`[BILLING] ✅ Webhook should have already updated this, but proceeding with safety check`)
 
-          // Complete the upgrade by updating subscription items
-          const oldItemId = stripeSub.items.data[0].id
+          // Verify subscription is on correct plan
+          const currentLookupKey = stripeSub.items.data[0]?.price?.lookup_key
           const { STRIPE_STARTER_PRICE_ID, STRIPE_GROWTH_PRICE_ID, STRIPE_STARTER_ANNUAL_PRICE_ID, STRIPE_GROWTH_ANNUAL_PRICE_ID } = process.env
 
           const priceMap: { [key: string]: string } = {
@@ -86,20 +109,33 @@ export async function GET(request: NextRequest) {
           }
 
           const newPriceId = priceMap[pendingUpgradePlan]
-          if (newPriceId) {
+          const targetLookupKey = Object.keys(priceMap).find(k => priceMap[k] === newPriceId)
+
+          // Only update if not already on the correct plan
+          if (currentLookupKey !== targetLookupKey && newPriceId) {
+            console.log(`[BILLING] Subscription not yet on target plan, updating from ${currentLookupKey} to ${pendingUpgradePlan}`)
+            const oldItemId = stripeSub.items.data[0].id
+
+            // Update with send_invoice to prevent auto-charge
+            await stripeInstance.subscriptions.update(stripeSub.id, {
+              collection_method: 'send_invoice',
+              days_until_due: 1,
+            })
+
             const updatedSub = await stripeInstance.subscriptions.update(stripeSub.id, {
               items: [
                 { id: oldItemId, deleted: true },
                 { price: newPriceId }
               ],
               proration_behavior: 'none',
-              metadata: {
-                pending_upgrade_plan: null,
-                pending_upgrade_invoice_id: null,
-              }
             })
 
-            console.log(`[BILLING] Upgraded subscription from Stripe to ${pendingUpgradePlan}`)
+            // Switch back to charge_automatically
+            await stripeInstance.subscriptions.update(stripeSub.id, {
+              collection_method: 'charge_automatically',
+            })
+
+            console.log(`[BILLING] Upgraded subscription to ${pendingUpgradePlan}`)
             // Continue with updated subscription
             subscription = {
               id: updatedSub.id,
@@ -124,9 +160,25 @@ export async function GET(request: NextRequest) {
         // Map Stripe lookup_key to our plan names
         const planMapping: { [key: string]: string } = {
           'Starter': 'starter',
+          'Starter Monthly': 'starter',
+          'Starter_Monthly': 'starter',
+          'Starter2': 'starter',
+          'Starter_Monthly2': 'starter',
           'Growth': 'growth',
+          'Growth Monthly': 'growth',
+          'Growth_Monthly': 'growth',
+          'Growth2': 'growth',
+          'Growth_Monthly2': 'growth',
+          'Starter Annual': 'starter_annual',
           'Annual Starter': 'starter_annual',
+          'Starter_Annual': 'starter_annual',
+          'Starter_Annual2': 'starter_annual',
+          'Starter Annual2': 'starter_annual',
           'Growth Annual': 'growth_annual',
+          'Annual Growth': 'growth_annual',
+          'Growth_Annual': 'growth_annual',
+          'Growth_Annual2': 'growth_annual',
+          'Growth Annual2': 'growth_annual',
         }
 
         const mappedPlan = planMapping[lookupKey] || lookupKey
