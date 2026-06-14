@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     if (childAccounts.length > 0) {
       console.log(`[CHART-OF-ACCOUNTS] Sample child account:`, JSON.stringify(childAccounts[0]))
-      const parentIds = [...new Set(childAccounts.map(a => a.parent_account_id))]
+      const parentIds = Array.from(new Set(childAccounts.map(a => a.parent_account_id)))
       console.log(`[CHART-OF-ACCOUNTS] Parent IDs referenced by children: ${parentIds.join(', ')}`)
     }
 
