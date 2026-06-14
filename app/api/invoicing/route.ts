@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Format invoices for API response
-    const formatted = invoices.map(t => {
+    const formatted = invoices.map((t: any) => {
       return {
         id: t.id,
         invoice_number: t.reference_number || `INV-${String(t.id).padStart(4, '0')}`,
