@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getInvoicesFromSupabase } from '../../../supabase-db'
+import { getInvoicesFromSupabase } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
   try {

@@ -378,3 +378,66 @@ export async function getSubscriptionUpgradesForUser(userUuid: string) {
     return []
   }
 }
+
+/**
+ * Invoicing (transactions with type='INVOICE')
+ */
+export async function getInvoicesFromSupabase(userId: number, status?: string, fromDate?: string, toDate?: string) {
+  if (!supabase) return []
+
+  try {
+    let query = supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('type', 'INVOICE')
+      .order('transaction_date', { ascending: false })
+
+    if (fromDate) {
+      query = query.gte('transaction_date', fromDate)
+    }
+    if (toDate) {
+      query = query.lte('transaction_date', toDate)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error fetching invoices:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error fetching invoices:', error)
+    return []
+  }
+}
+
+export async function updateInvoiceStatusInSupabase(invoiceId: number, reconciliationStatus: string, sentDate?: string, sentToEmail?: string) {
+  if (!supabase) return null
+
+  try {
+    const updateData: any = { reconciliation_status: reconciliationStatus }
+    if (sentDate) updateData.sent_date = sentDate
+    if (sentToEmail) updateData.sent_to_email = sentToEmail
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(updateData)
+      .eq('id', invoiceId)
+      .eq('type', 'INVOICE')
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating invoice:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error updating invoice:', error)
+    return null
+  }
+}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTransaction, getTransactions, updateTransaction, deleteTransaction } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { supabase, createTransactionInSupabase } from '../../../supabase-db'
+import { supabase, createTransactionInSupabase } from '@/lib/supabase-db'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
 
