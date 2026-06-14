@@ -230,8 +230,9 @@ export async function POST(request: NextRequest) {
 
         // Calculate days remaining
         const now = Math.floor(Date.now() / 1000)
-        const periodStart = existingStripeSubscription.current_period_start
-        const periodEnd = existingStripeSubscription.current_period_end
+        const stripeSubAny = existingStripeSubscription as any
+        const periodStart = stripeSubAny.current_period_start
+        const periodEnd = stripeSubAny.current_period_end
         const daysRemaining = Math.ceil((periodEnd - now) / (24 * 60 * 60))
         const totalDays = Math.ceil((periodEnd - periodStart) / (24 * 60 * 60)) // Use actual billing period length (30 for monthly, 365 for annual)
 
