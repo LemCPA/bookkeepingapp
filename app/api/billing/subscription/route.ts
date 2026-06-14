@@ -152,12 +152,31 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      const priceId = stripeSub.items.data[0]?.price?.id
       const lookupKey = stripeSub.items.data[0]?.price?.lookup_key
 
-      console.log(`[BILLING] Stripe subscription price lookup_key: ${lookupKey}`)
+      console.log(`[BILLING] Stripe subscription price ID: ${priceId}, lookup_key: ${lookupKey}`)
 
-      if (lookupKey) {
-        // Map Stripe lookup_key to our plan names
+      // Determine plan from price ID or lookup_key
+      let mappedPlan = 'unknown'
+
+      if (priceId) {
+        // Map Stripe price IDs to plan names
+        const priceIdMapping: { [key: string]: string } = {
+          [process.env.STRIPE_STARTER_PRICE_ID || '']: 'starter',
+          [process.env.STRIPE_STARTER_ANNUAL_PRICE_ID || '']: 'starter_annual',
+          [process.env.STRIPE_GROWTH_PRICE_ID || '']: 'growth',
+          [process.env.STRIPE_GROWTH_ANNUAL_PRICE_ID || '']: 'growth_annual',
+        }
+
+        if (priceIdMapping[priceId]) {
+          mappedPlan = priceIdMapping[priceId]
+          console.log(`[BILLING] Mapped price ID "${priceId}" to plan: ${mappedPlan}`)
+        }
+      }
+
+      // Fallback to lookup_key mapping if price ID didn't work
+      if (mappedPlan === 'unknown' && lookupKey) {
         const planMapping: { [key: string]: string } = {
           'Starter': 'starter',
           'Starter Monthly': 'starter',
@@ -181,8 +200,11 @@ export async function GET(request: NextRequest) {
           'Growth Annual2': 'growth_annual',
         }
 
-        const mappedPlan = planMapping[lookupKey] || lookupKey
-        console.log(`[BILLING] Mapped "${lookupKey}" to plan: ${mappedPlan}`)
+        mappedPlan = planMapping[lookupKey] || lookupKey
+        console.log(`[BILLING] Mapped lookup_key "${lookupKey}" to plan: ${mappedPlan}`)
+      }
+
+      if (mappedPlan !== 'unknown') {
 
         // If subscription was not found in Supabase, create it now
         if (!subscription) {

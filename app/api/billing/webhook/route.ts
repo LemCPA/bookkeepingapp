@@ -31,7 +31,24 @@ export async function POST(request: NextRequest) {
     // Handle subscription events
     if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
       const subscription = event.data.object as Stripe.Subscription
-      const planKey = subscription.metadata?.plan || 'unknown'
+      let planKey = subscription.metadata?.plan
+
+      // Fallback: determine plan from price ID if metadata doesn't have it
+      if (!planKey) {
+        const priceId = subscription.items.data[0]?.price?.id
+        if (priceId) {
+          const priceIdMapping: { [key: string]: string } = {
+            [process.env.STRIPE_STARTER_PRICE_ID || '']: 'starter',
+            [process.env.STRIPE_STARTER_ANNUAL_PRICE_ID || '']: 'starter_annual',
+            [process.env.STRIPE_GROWTH_PRICE_ID || '']: 'growth',
+            [process.env.STRIPE_GROWTH_ANNUAL_PRICE_ID || '']: 'growth_annual',
+          }
+          planKey = priceIdMapping[priceId]
+          console.log(`[WEBHOOK] Determined plan from price ID: ${planKey}`)
+        }
+      }
+
+      planKey = planKey || 'unknown'
 
       // Fetch customer to get email for UUID generation
       let customerEmail: string | null = null
