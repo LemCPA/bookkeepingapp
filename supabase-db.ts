@@ -114,15 +114,20 @@ export async function getTransactionsFromSupabase(userId: number, limit: number 
 
 export async function createTransactionInSupabase(
   userId: number,
-  clientId: number,
   accountId: number,
   transactionDate: string,
   amount: number,
-  gstHstRate: number,
-  gstHstAmount: number,
   description: string,
   type: string,
-  referenceNumber?: string
+  gstHstRate: number = 0,
+  gstHstAmount: number = 0,
+  referenceNumber?: string,
+  isVehicleExpense: boolean = false,
+  businessUsePercentage: number = 100,
+  sentDate?: string,
+  reconciliationStatus?: string,
+  gstHstIncluded?: boolean,
+  category?: string
 ) {
   if (!supabase) return null
 
@@ -132,15 +137,20 @@ export async function createTransactionInSupabase(
       .insert([
         {
           user_id: userId,
-          client_id: clientId,
           account_id: accountId,
           transaction_date: transactionDate,
           amount,
-          gst_hst_rate: gstHstRate,
-          gst_hst_amount: gstHstAmount,
           description,
           type,
+          gst_hst_rate: gstHstRate,
+          gst_hst_amount: gstHstAmount,
           reference_number: referenceNumber,
+          is_vehicle_expense: isVehicleExpense,
+          business_use_percentage: businessUsePercentage,
+          sent_date: sentDate,
+          reconciliation_status: reconciliationStatus,
+          gst_hst_included: gstHstIncluded,
+          category: category,
         }
       ])
       .select()

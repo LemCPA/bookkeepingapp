@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTransaction, getTransactions, createTransaction, updateTransaction, deleteTransaction, getDb } from '@/lib/db'
+import { getTransaction, getTransactions, updateTransaction, deleteTransaction } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { supabase } from '@/lib/supabase'
+import { supabase, createTransactionInSupabase } from '../../../supabase-db'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
-import { canCreateTransaction } from '@/lib/transaction-limits'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,39 +15,40 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams
     const transactionId = searchParams.get('id')
-    const month = searchParams.get('month')
 
-    // Filter parameters
-    const dateFrom = searchParams.get('dateFrom')
-    const dateTo = searchParams.get('dateTo')
-    const search = searchParams.get('search')
-    const sortBy = (searchParams.get('sortBy') as 'date' | 'amount') || 'date'
-    const sortOrder = (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc'
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 })
+    }
 
-    // Parse array parameters (type=INVOICE&type=RECEIPT format)
-    const types = searchParams.getAll('type')
-
-    // If specific transaction ID is requested, return that transaction
+    // If specific transaction ID is requested, return that transaction from Supabase
     if (transactionId) {
-      const transaction = getTransaction(parseInt(transactionId))
-      if (!transaction || transaction.user_id !== userId) {
+      const { data: transaction, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('id', parseInt(transactionId))
+        .eq('user_id', userId)
+        .single()
+
+      if (error || !transaction) {
         return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
       }
+
       return NextResponse.json(transaction)
     }
 
-    // Otherwise, return list of transactions for this user with all filters applied
-    const transactions = getTransactions(
-      userId,
-      month || undefined,
-      dateFrom || undefined,
-      dateTo || undefined,
-      types.length > 0 ? types : undefined,
-      search || undefined,
-      sortBy,
-      sortOrder
-    )
-    return NextResponse.json(transactions)
+    // Fetch all transactions for this user from Supabase (cloud storage)
+    const { data: transactions, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('transaction_date', { ascending: false })
+
+    if (error) {
+      console.error('Supabase transaction fetch error:', error)
+      return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 })
+    }
+
+    return NextResponse.json(transactions || [])
   } catch (error) {
     console.error('Error fetching transactions:', error)
     return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 })
@@ -93,22 +93,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check transaction limits (skip on Vercel since local DB is ephemeral)
-    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || process.env.NODE_ENV === 'production'
-    if (!isVercel) {
-      const db = getDb()
-      const user = db.users.find(u => u.id === userId)
-      const limitCheck = canCreateTransaction(userId, user?.plan, user?.created_at)
-      if (!limitCheck.allowed) {
-        return NextResponse.json(
-          { error: limitCheck.reason },
-          { status: 403 }
-        )
-      }
+    const body = await request.json()
+
+    // Validate required fields
+    if (!body.account_id || !body.transaction_date || !body.amount || !body.description || !body.type) {
+      return NextResponse.json(
+        { error: 'Missing required fields: account_id, transaction_date, amount, description, type' },
+        { status: 400 }
+      )
     }
 
-    const body = await request.json()
-    const result = createTransaction(
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Create transaction in Supabase (cloud storage for multi-device sync)
+    const transaction = await createTransactionInSupabase(
       userId,
       body.account_id,
       body.transaction_date,
@@ -126,7 +129,14 @@ export async function POST(request: NextRequest) {
       body.category
     )
 
-    return NextResponse.json({ id: result.lastID })
+    if (!transaction) {
+      return NextResponse.json(
+        { error: 'Failed to create transaction in database' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ id: transaction.id })
   } catch (error) {
     console.error('Error creating transaction:', error)
     return NextResponse.json({ error: 'Failed to create transaction' }, { status: 500 })
