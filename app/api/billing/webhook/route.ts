@@ -70,6 +70,25 @@ export async function POST(request: NextRequest) {
       const userUuid = emailToUuid(customerEmail)
       console.log(`[WEBHOOK] Generated UUID from email: ${userUuid}`)
 
+      // Verify user exists in Supabase before saving subscription
+      try {
+        const { data: user, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('id', userUuid)
+          .single()
+
+        if (userError || !user) {
+          console.error('[WEBHOOK] User not found in Supabase:', { userUuid, email: customerEmail, error: userError })
+          // Don't fail the webhook - user might be created later
+          // Just log it for debugging
+          return NextResponse.json({ warning: 'User not found, skipping subscription save' }, { status: 202 })
+        }
+      } catch (userLookupError) {
+        console.error('[WEBHOOK] User lookup error:', userLookupError)
+        return NextResponse.json({ error: 'User lookup failed' }, { status: 500 })
+      }
+
       // Save to Supabase
       const { error } = await supabase.from('subscriptions').upsert({
         user_id: userUuid,
@@ -83,8 +102,8 @@ export async function POST(request: NextRequest) {
       }, { onConflict: 'stripe_subscription_id' })
 
       if (error) {
-        console.error('[WEBHOOK] Failed to save subscription:', error)
-        return NextResponse.json({ error: 'Failed to save subscription' }, { status: 500 })
+        console.error('[WEBHOOK] Failed to save subscription:', { error, userUuid, planKey, subscriptionId: subscription.id })
+        return NextResponse.json({ error: `Failed to save subscription: ${error.message}` }, { status: 500 })
       }
 
       console.log(`[WEBHOOK] ✅ Subscription saved: ${subscription.id} (${planKey})`)
