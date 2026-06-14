@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     let subscription = null
     if (subscriptions && subscriptions.length > 0) {
       const validStatuses = ['active', 'past_due', 'trialing', 'incomplete']
-      subscription = subscriptions.find(sub => validStatuses.includes(sub.status)) || null
+      subscription = subscriptions.find((sub: any) => validStatuses.includes(sub.status)) || null
     }
 
     // If no subscription in Supabase, check Stripe directly by customer ID
