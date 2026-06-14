@@ -123,38 +123,6 @@ export async function POST(request: NextRequest) {
       body.category
     )
 
-    // Track first receipt scanned for email sequence
-    try {
-      const { data: user } = await supabase!
-        .from('users')
-        .select('first_receipt_scanned_at')
-        .eq('id', userId)
-        .single()
-
-      // If this is the user's first transaction, mark it
-      if (user && !user.first_receipt_scanned_at) {
-        await supabase!
-          .from('users')
-          .update({
-            first_receipt_scanned_at: new Date().toISOString(),
-            receipt_count: 1,
-          })
-          .eq('id', userId)
-      } else if (user) {
-        // Increment receipt count
-        const currentCount = (user as any).receipt_count || 0
-        await supabase!
-          .from('users')
-          .update({
-            receipt_count: currentCount + 1,
-          })
-          .eq('id', userId)
-      }
-    } catch (trackingError) {
-      // Don't fail transaction if tracking fails
-      console.warn('Failed to track receipt:', trackingError)
-    }
-
     return NextResponse.json({ id: result.lastID })
   } catch (error) {
     console.error('Error creating transaction:', error)
