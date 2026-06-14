@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       limit: 1,
     })
 
-    const existingStripeSubscription = stripeSubscriptions.data.length > 0 ? stripeSubscriptions.data[0] : null
+    const existingStripeSubscription = stripeSubscriptions.data.length > 0 ? (stripeSubscriptions.data[0] as Stripe.Subscription) : null
 
     if (existingStripeSubscription) {
       // Get current plan from Stripe
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 
       if (!movingToAnnual && newTierLevel < currentTierLevel) {
         // Block downgrades (within same billing period or annual→monthly) until billing cycle ends
-        const periodEndDate = new Date(existingStripeSubscription.current_period_end * 1000)
+        const periodEndDate = new Date((existingStripeSubscription.current_period_end as number) * 1000)
         const formattedDate = periodEndDate.toLocaleDateString()
         return NextResponse.json(
           { error: `Downgrades can only be made after your billing cycle ends on ${formattedDate}. You can upgrade or move to annual anytime.` },
