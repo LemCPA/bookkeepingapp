@@ -93,15 +93,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check transaction limits
-    const db = getDb()
-    const user = db.users.find(u => u.id === userId)
-    const limitCheck = canCreateTransaction(userId, user?.plan, user?.created_at)
-    if (!limitCheck.allowed) {
-      return NextResponse.json(
-        { error: limitCheck.reason },
-        { status: 403 }
-      )
+    // Check transaction limits (skip on Vercel since local DB is ephemeral)
+    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || process.env.NODE_ENV === 'production'
+    if (!isVercel) {
+      const db = getDb()
+      const user = db.users.find(u => u.id === userId)
+      const limitCheck = canCreateTransaction(userId, user?.plan, user?.created_at)
+      if (!limitCheck.allowed) {
+        return NextResponse.json(
+          { error: limitCheck.reason },
+          { status: 403 }
+        )
+      }
     }
 
     const body = await request.json()
