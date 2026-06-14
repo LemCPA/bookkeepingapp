@@ -194,8 +194,8 @@ export async function GET(request: NextRequest) {
               stripe_subscription_id: stripeSub.id,
               plan: mappedPlan,
               status: stripeSub.status,
-              current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+              current_period_start: new Date((stripeSub as any).current_period_start * 1000).toISOString(),
+              current_period_end: new Date((stripeSub as any).current_period_end * 1000).toISOString(),
               created_at: new Date().toISOString(),
             })
             .select()
@@ -219,8 +219,8 @@ export async function GET(request: NextRequest) {
                 .update({
                   plan: mappedPlan,
                   status: stripeSub.status,
-                  current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
-                  current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+                  current_period_start: new Date((stripeSub as any).current_period_start * 1000).toISOString(),
+                  current_period_end: new Date((stripeSub as any).current_period_end * 1000).toISOString(),
                   updated_at: now,
                 })
                 .eq('id', subscription.id)
@@ -242,8 +242,8 @@ export async function GET(request: NextRequest) {
         if (subscription) {
           subscription.plan = mappedPlan
           subscription.status = stripeSub.status
-          subscription.current_period_start = new Date(stripeSub.current_period_start * 1000).toISOString()
-          subscription.current_period_end = new Date(stripeSub.current_period_end * 1000).toISOString()
+          subscription.current_period_start = new Date((stripeSub as any).current_period_start * 1000).toISOString()
+          subscription.current_period_end = new Date((stripeSub as any).current_period_end * 1000).toISOString()
         }
       }
     }
