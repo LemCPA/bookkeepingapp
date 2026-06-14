@@ -99,17 +99,25 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
 
-    const { tripDate, kilometers, destination, purpose, businessPercentage, notes } = body
+    const { tripDate, kilometers, destination, businessPercentage, notes } = body
 
     console.log('POST /api/mileage/trips - Creating trip')
     console.log('  userId from JWT:', userId, 'type:', typeof userId)
 
     // Validation
-    if (!tripDate || kilometers === undefined || !destination || !purpose) {
+    if (!tripDate || kilometers === undefined || !destination) {
       return NextResponse.json(
-        { error: 'Missing required fields: tripDate, kilometers, destination, purpose' },
+        { error: 'Missing required fields: tripDate, kilometers, destination' },
         { status: 400 }
       )
+    }
+
+    // Derive purpose from businessPercentage
+    let purpose = 'business'
+    if (businessPercentage === 0) {
+      purpose = 'personal'
+    } else if (businessPercentage && businessPercentage < 100) {
+      purpose = 'mixed'
     }
 
     if (kilometers < 0) {
