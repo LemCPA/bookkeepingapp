@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
       if (pendingUpgradePlan && pendingUpgradeInvoiceId) {
         // Check if the upgrade invoice was paid
         const invoice = await stripeInstance.invoices.retrieve(pendingUpgradeInvoiceId)
-        if (invoice.status === 'paid' || invoice.paid) {
+        if (invoice.status === 'paid' || (invoice as any).paid) {
           console.log(`[BILLING] Pending upgrade found and invoice paid, completing upgrade to ${pendingUpgradePlan}`)
           console.log(`[BILLING] ✅ Webhook should have already updated this, but proceeding with safety check`)
 
