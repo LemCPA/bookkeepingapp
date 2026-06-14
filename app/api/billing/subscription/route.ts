@@ -143,8 +143,8 @@ export async function GET(request: NextRequest) {
               stripe_subscription_id: updatedSub.id,
               plan: pendingUpgradePlan,
               status: updatedSub.status,
-              current_period_start: new Date(updatedSub.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(updatedSub.current_period_end * 1000).toISOString(),
+              current_period_start: new Date(((updatedSub as any).current_period_start * 1000)).toISOString(),
+              current_period_end: new Date(((updatedSub as any).current_period_end * 1000)).toISOString(),
               created_at: new Date().toISOString(),
               trial_end_date: null,
             } as any
