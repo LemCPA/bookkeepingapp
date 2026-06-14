@@ -9,7 +9,7 @@ import { syncUserToSupabase, updateUserStripeCustomerId } from '@/lib/supabase-d
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, name } = body
+    let { email, password, name } = body
 
     // Validate input
     if (!email || !password || !name) {
@@ -18,6 +18,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // CRITICAL: Normalize email immediately for consistent Supabase lookups
+    email = email.toLowerCase().trim()
+    console.log('[SIGNUP] Normalized email:', email)
 
     // Validate password strength
     const passwordValidation = isValidPassword(password)
@@ -57,7 +61,17 @@ export async function POST(request: NextRequest) {
 
     // CRITICAL: Sync user to Supabase immediately after creation
     // This ensures webhook can find the user later
-    const syncSuccess = await syncUserToSupabase(newUser.id, email, name)
+    let syncSuccess = false
+    try {
+      syncSuccess = await syncUserToSupabase(newUser.id, email, name)
+    } catch (syncError) {
+      console.error(`[SIGNUP] ❌ EXCEPTION syncing user ${newUser.id} (${email}):`, syncError)
+      return NextResponse.json(
+        { error: 'Failed to create account in database. Please try again.', debug: syncError },
+        { status: 500 }
+      )
+    }
+
     if (!syncSuccess) {
       console.error(`[SIGNUP] ❌ FAILED to sync user ${newUser.id} (${email}) to Supabase`)
       return NextResponse.json(

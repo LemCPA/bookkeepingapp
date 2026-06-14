@@ -57,6 +57,7 @@ export function getUserIdFromRequest(request: NextRequest): number | null {
 /**
  * Get user email from Authorization header (server-side only)
  * Use this in API routes to get the email for Supabase lookup
+ * CRITICAL: Normalizes email (lowercase, trim) for consistent Supabase lookups
  */
 export function getUserEmailFromRequest(request: NextRequest): string | null {
   try {
@@ -67,7 +68,14 @@ export function getUserEmailFromRequest(request: NextRequest): string | null {
 
     const token = authHeader.substring('Bearer '.length)
     const payload = verifyJWTToken(token)
-    return payload?.email || null
+    const email = payload?.email
+
+    if (!email) return null
+
+    // CRITICAL: Normalize email for consistent UUID generation
+    const normalizedEmail = email.toLowerCase().trim()
+    console.log('[AUTH-SERVER] Email normalized:', email, '→', normalizedEmail)
+    return normalizedEmail
   } catch (error) {
     console.error('[AUTH-SERVER] Error getting email from request:', error)
     return null

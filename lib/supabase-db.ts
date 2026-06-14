@@ -4,17 +4,29 @@ import { v5 as uuidv5 } from 'uuid'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_SECRET
 
+let supabase: any = null
+
 if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase environment variables')
+  console.error('[SUPABASE] ❌ Missing environment variables:')
+  console.error('  - NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✓ set' : '✗ missing')
+  console.error('  - SUPABASE_SERVICE_ROLE_SECRET:', supabaseServiceKey ? '✓ set' : '✗ missing')
+} else {
+  // Create Supabase client with service role key for server-side operations
+  try {
+    supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+    console.log('[SUPABASE] ✓ Client initialized successfully')
+  } catch (err) {
+    console.error('[SUPABASE] ❌ Failed to create client:', err)
+    supabase = null
+  }
 }
 
-// Create Supabase client with service role key for server-side operations
-export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-})
+export { supabase }
 
 /**
  * Convert numeric user ID to deterministic UUID for Supabase
@@ -31,9 +43,11 @@ export function numericIdToUuid(userId: number): string {
  * Convert email to deterministic UUID for Supabase
  * Uses UUID v5 with a fixed namespace
  * Email is unique per user, so this prevents UUID collisions
+ * CRITICAL: Always lowercases email for consistency
  */
 export function emailToUuid(email: string): string {
-  return uuidv5(email.toLowerCase(), USER_NAMESPACE)
+  const normalizedEmail = (email || '').toLowerCase().trim()
+  return uuidv5(normalizedEmail, USER_NAMESPACE)
 }
 
 /**
@@ -220,32 +234,76 @@ export async function syncUserToSupabase(userId: number, email: string, name: st
     const userUuid = emailToUuid(email)
     console.log(`[SUPABASE] Syncing user: ${userId} (${email}) → UUID: ${userUuid} (from email)`)
 
+    // Verify Supabase client is initialized
+    if (!supabase) {
+      console.error('[SUPABASE] Client not initialized - missing env vars')
+      return false
+    }
+
     // Upsert user (insert or update if exists)
-    // CRITICAL: Use 'email' for conflict resolution since email is the unique constraint
-    // Not 'id' - even though id is primary key, email uniqueness is what causes conflicts
-    const { data, error } = await supabase
+    // Try INSERT first, then UPDATE if it already exists
+    const { data: existingData, error: selectError } = await supabase
       .from('users')
-      .upsert([{
-        id: userUuid,
-        email,
-        name,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }], { onConflict: 'email' })
-      .select()
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .single()
 
-    if (error) {
-      console.error('[SUPABASE] Error syncing user:', error)
-      return false
+    console.log(`[SUPABASE] Lookup existing user by email: ${selectError ? 'not found (ok)' : 'found'}, error code: ${selectError?.code}`)
+
+    if (!selectError || selectError.code === 'PGRST116') {
+      // User doesn't exist (PGRST116 = no rows), do INSERT
+      if (!existingData) {
+        console.log(`[SUPABASE] Inserting new user with UUID: ${userUuid}`)
+        const { data: insertData, error: insertError } = await supabase
+          .from('users')
+          .insert([{
+            id: userUuid,
+            email: email.toLowerCase(),
+            name,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }])
+          .select()
+
+        if (insertError) {
+          console.error('[SUPABASE] Error inserting user:', insertError)
+          return false
+        }
+
+        if (!insertData || insertData.length === 0) {
+          console.error('[SUPABASE] Insert returned no rows for user', userId)
+          return false
+        }
+
+        console.log('[SUPABASE] User inserted successfully:', userId, '→', userUuid)
+        return true
+      }
     }
 
-    if (!data || data.length === 0) {
-      console.error('[SUPABASE] Upsert returned no rows for user', userId)
-      return false
+    // User exists, do UPDATE to sync latest data
+    if (existingData) {
+      console.log(`[SUPABASE] User exists, updating UUID: ${userUuid}`)
+      const { data: updateData, error: updateError } = await supabase
+        .from('users')
+        .update({
+          name,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('email', email.toLowerCase())
+        .select()
+
+      if (updateError) {
+        console.error('[SUPABASE] Error updating user:', updateError)
+        return false
+      }
+
+      console.log('[SUPABASE] User updated successfully:', userId, '→', userUuid)
+      return true
     }
 
-    console.log('[SUPABASE] User synced successfully:', userId, '→', userUuid, 'Data:', data[0])
-    return true
+    // Unexpected state
+    console.error('[SUPABASE] Unexpected state in sync: selectError code:', selectError?.code)
+    return false
   } catch (err) {
     console.error('[SUPABASE] Exception syncing user:', err)
     return false
