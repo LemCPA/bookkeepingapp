@@ -17,37 +17,41 @@ export async function GET(request: NextRequest) {
 
     // Try Supabase first (production)
     if (supabase) {
-      supabaseUser = await getUserFromSupabase(userId)
-      user = supabaseUser
+      try {
+        supabaseUser = await getUserFromSupabase(userId)
+        user = supabaseUser
+      } catch (supabaseError) {
+        console.warn('Supabase user lookup failed, falling back to JSON database')
+      }
     }
 
-    // Always check JSON database as primary source for profile fields
+    // Always check JSON database as primary source
     // (Supabase may not have all columns if table wasn't fully migrated)
-    let jsonUser = null
-    if (!user || !user.gst_number) {
-      const db = getDb()
-      jsonUser = db.users.find(u => u.id === userId)
-      if (!user) {
-        user = jsonUser
-      } else if (jsonUser && !user.gst_number) {
-        // Merge profile fields from JSON if Supabase is missing them
-        user = {
-          ...user,
-          gst_number: jsonUser.gst_number,
-          gst_registered: user.gst_registered ?? jsonUser.gst_registered,
-          business_name: user.business_name || jsonUser.business_name,
-          address_street: user.address_street || jsonUser.address_street,
-          city: user.city || jsonUser.city,
-          province: user.province || jsonUser.province,
-          postal_code: user.postal_code || jsonUser.postal_code,
-          phone: user.phone || jsonUser.phone,
-          business_email: user.business_email || jsonUser.business_email,
-          default_gst_hst_rate: user.default_gst_hst_rate ?? jsonUser.default_gst_hst_rate,
-        }
+    const db = getDb()
+    const jsonUser = db.users.find(u => u.id === userId)
+
+    if (!user && jsonUser) {
+      // Use JSON user if Supabase lookup failed
+      user = jsonUser
+    } else if (user && jsonUser) {
+      // Merge profile fields from JSON if Supabase is missing them
+      user = {
+        ...user,
+        gst_number: user.gst_number || jsonUser.gst_number,
+        gst_registered: user.gst_registered ?? jsonUser.gst_registered,
+        business_name: user.business_name || jsonUser.business_name,
+        address_street: user.address_street || jsonUser.address_street,
+        city: user.city || jsonUser.city,
+        province: user.province || jsonUser.province,
+        postal_code: user.postal_code || jsonUser.postal_code,
+        phone: user.phone || jsonUser.phone,
+        business_email: user.business_email || jsonUser.business_email,
+        default_gst_hst_rate: user.default_gst_hst_rate ?? jsonUser.default_gst_hst_rate,
       }
     }
 
     if (!user) {
+      console.error('User not found in Supabase or JSON database:', { userId })
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
