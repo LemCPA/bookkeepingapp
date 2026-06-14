@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserIdFromRequest } from '@/lib/auth-server'
+import { getUserIdFromRequest, getUserEmailFromRequest } from '@/lib/auth-server'
 import { isDemoAccount, checkDemoRateLimit } from '@/lib/demo-security'
 import { logDemoActivity } from '@/lib/demo-audit'
-import { supabase } from '@/lib/supabase-db'
+import { supabase, emailToUuid } from '@/lib/supabase-db'
 
 export async function GET(request: NextRequest) {
   try {
     const userId = getUserIdFromRequest(request)
-    if (!userId) {
+    const userEmail = getUserEmailFromRequest(request)
+
+    if (!userId || !userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -15,11 +17,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 503 })
     }
 
-    // Fetch user from Supabase (primary storage)
+    // Fetch user from Supabase using email-based UUID (how they were stored during signup)
+    const userUuid = emailToUuid(userEmail)
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', userId)
+      .eq('id', userUuid)
       .single()
 
     if (error) {
@@ -66,7 +69,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const userId = getUserIdFromRequest(request)
-    if (!userId) {
+    const userEmail = getUserEmailFromRequest(request)
+
+    if (!userId || !userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -155,10 +160,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No data to update' }, { status: 400 })
     }
 
+    // Use email-based UUID to match how user was created during signup
+    const userUuid = emailToUuid(userEmail)
     const { data: supabaseUser, error } = await supabase
       .from('users')
       .update(updateData)
-      .eq('id', userId)
+      .eq('id', userUuid)
       .select()
       .single()
 
