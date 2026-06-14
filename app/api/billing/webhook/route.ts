@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       let customerEmail: string | null = null
       try {
         const customer = await stripe.customers.retrieve(subscription.customer as string)
-        customerEmail = customer.email
+        customerEmail = (customer as any).email
         console.log(`[WEBHOOK] Customer: ${subscription.customer}, Email: ${customerEmail}`)
       } catch (error) {
         console.error('[WEBHOOK] Failed to fetch customer:', error)
