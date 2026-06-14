@@ -3,120 +3,152 @@
  * Provides plan configuration, pricing, and billing logic
  */
 
-export const SUBSCRIPTION_PLANS = {
-  free: {
-    id: 'free',
-    name: 'Free',
-    price: 0,
-    priceInCents: 0,
-    billingPeriod: 'monthly',
-    maxClients: 1,
-    features: [
-      '1 client account',
-      'Basic transaction tracking',
-      'Monthly reports',
-    ],
-  },
-  starter: {
-    id: 'starter',
-    name: 'Starter',
-    price: 12,
-    priceInCents: 1200,
-    billingPeriod: 'monthly',
-    maxClients: 1,
-    features: [
-      '1 client account',
-      'Transaction tracking and categorization',
-      'Monthly and annual reports',
-      'Basic bank reconciliation',
-      'GST/HST calculation',
-      '30 uploads per month',
-    ],
-  },
-  starter_annual: {
-    id: 'starter_annual',
-    name: 'Starter (Annual)',
-    price: 120,
-    priceInCents: 12000,
-    billingPeriod: 'annual',
-    maxClients: 1,
-    features: [
-      '1 client account',
-      'Transaction tracking and categorization',
-      'Monthly and annual reports',
-      'Basic bank reconciliation',
-      'GST/HST calculation',
-      '30 uploads per month',
-    ],
-  },
-  growth: {
-    id: 'growth',
-    name: 'Growth',
-    price: 24,
-    priceInCents: 2400,
-    billingPeriod: 'monthly',
-    maxClients: 1,
-    features: [
-      '1 client account',
-      'Advanced transaction management',
-      'Multi-month reporting and trends',
-      'Full bank reconciliation',
-      'GST/HST and tax filing support',
-      '200 uploads per month',
-    ],
-  },
-  growth_annual: {
-    id: 'growth_annual',
-    name: 'Growth (Annual)',
-    price: 240,
-    priceInCents: 24000,
-    billingPeriod: 'annual',
-    maxClients: 1,
-    features: [
-      '1 client account',
-      'Advanced transaction management',
-      'Multi-month reporting and trends',
-      'Full bank reconciliation',
-      'GST/HST and tax filing support',
-      '200 uploads per month',
-    ],
-  },
-  professional: {
-    id: 'professional',
-    name: 'Professional',
-    price: 29,
-    priceInCents: 2900,
-    billingPeriod: 'monthly',
-    maxClients: null, // unlimited
-    features: [
-      'Unlimited client accounts',
-      'Advanced transaction management',
-      'Multi-month reporting and trends',
-      'Full bank reconciliation',
-      'GST/HST and tax filing support',
-      'Advanced reporting and analytics',
-      'Audit trails and history',
-    ],
-  },
-  enterprise: {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 99,
-    priceInCents: 9900,
-    billingPeriod: 'monthly',
-    maxClients: null, // unlimited
-    features: [
-      'Unlimited client accounts',
-      'All Professional features',
-      'Custom integration support',
-      'Priority support',
-      'Custom reporting',
-      'Dedicated account management',
-    ],
-  },
+import { PRICING_PLANS as STRIPE_PRICING } from './stripe-utils'
+
+// Convert Stripe pricing to billing utility format
+const buildSubscriptionPlans = () => {
+  const plans: Record<string, any> = {
+    free: {
+      id: 'free',
+      name: 'Free',
+      price: 0,
+      priceInCents: 0,
+      billingPeriod: 'monthly',
+      maxClients: 1,
+      features: [
+        'Basic transaction tracking',
+        'Monthly reports',
+      ],
+    },
+  }
+
+  // Map Stripe plans to billing utility format
+  const planMap: Record<string, {name: string, billingPeriod: string, maxClients: number, features: string[]}> = {
+    starter: {
+      name: 'Starter',
+      billingPeriod: 'monthly',
+      maxClients: 1,
+      features: [
+        '100 uploads per month',
+      ],
+    },
+    starter_annual: {
+      name: 'Starter (Annual)',
+      billingPeriod: 'annual',
+      maxClients: 1,
+      features: [
+        '100 uploads per month',
+      ],
+    },
+    growth: {
+      name: 'Growth',
+      billingPeriod: 'monthly',
+      maxClients: 1,
+      features: [
+        'Everything in Starter',
+        '500 uploads per month',
+      ],
+    },
+    growth_annual: {
+      name: 'Growth (Annual)',
+      billingPeriod: 'annual',
+      maxClients: 1,
+      features: [
+        'Everything in Starter',
+        '500 uploads per month',
+      ],
+    },
+  }
+
+  // Build plans from Stripe pricing
+  for (const [planId, stripePlan] of Object.entries(STRIPE_PRICING)) {
+    if (planId === 'free') continue
+    const config = planMap[planId]
+    if (config) {
+      plans[planId] = {
+        id: planId,
+        name: config.name,
+        price: stripePlan.price,
+        priceInCents: Math.round(stripePlan.price * 100),
+        billingPeriod: config.billingPeriod,
+        maxClients: config.maxClients,
+        features: config.features,
+      }
+    }
+  }
+
+
+  return plans as Record<string, any>
 }
 
-export const TRIAL_DURATION_DAYS = 14
+export const SUBSCRIPTION_PLANS = buildSubscriptionPlans()
+
+// Keep individual plan exports for backward compatibility
+const starterPlan = SUBSCRIPTION_PLANS.starter || {
+  id: 'starter',
+  name: 'Starter',
+  price: 12,
+  priceInCents: 1200,
+  billingPeriod: 'monthly',
+  maxClients: 1,
+  features: [
+    '1 client account',
+    'Transaction tracking and categorization',
+    'Monthly and annual reports',
+    'Basic bank reconciliation',
+    'GST/HST calculation',
+    '30 uploads per month',
+  ],
+}
+
+const starterAnnualPlan = SUBSCRIPTION_PLANS.starter_annual || {
+  id: 'starter_annual',
+  name: 'Starter (Annual)',
+  price: 132,
+  priceInCents: 13200,
+  billingPeriod: 'annual',
+  maxClients: 1,
+  features: [
+    '1 client account',
+    'Transaction tracking and categorization',
+    'Monthly and annual reports',
+    'Basic bank reconciliation',
+    'GST/HST calculation',
+    '30 uploads per month',
+  ],
+}
+
+const growthPlan = SUBSCRIPTION_PLANS.growth || {
+  id: 'growth',
+  name: 'Growth',
+  price: 23,
+  priceInCents: 2300,
+  billingPeriod: 'monthly',
+  maxClients: 1,
+  features: [
+    'Everything in Starter',
+    '500 uploads per month',
+  ],
+}
+
+const growthAnnualPlan = SUBSCRIPTION_PLANS.growth_annual || {
+  id: 'growth_annual',
+  name: 'Growth (Annual)',
+  price: 252,
+  priceInCents: 25200,
+  billingPeriod: 'annual',
+  maxClients: 1,
+  features: [
+    '1 client account',
+    'Transaction tracking and categorization',
+    'Monthly and annual reports',
+    'Basic bank reconciliation',
+    'GST/HST calculation',
+    '500 uploads per month',
+  ],
+}
+
+export const TRIAL_DURATION_DAYS = parseInt(process.env.TRIAL_DURATION_DAYS || '14')
 
 export interface Plan {
   id: string

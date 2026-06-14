@@ -243,9 +243,12 @@ const menuItems: { id: MenuItem; label: string }[] = [
                         <div className="p-4">
                           {(() => {
                             const vehicleParent = accounts.find(a => a.code === '9281')
+                            console.log('[VEHICLE] Parent found:', vehicleParent?.id, vehicleParent?.code)
                             if (!vehicleParent) return <p className="text-gray-500 text-sm">No accounts</p>
 
-                            const vehicleChildren = accounts.filter(a => a.parent_account_id === vehicleParent.id && a.user_id === vehicleParent.user_id)
+                            const vehicleChildren = accounts.filter(a => a.parent_account_id === vehicleParent.id)
+                            console.log('[VEHICLE] Found children:', vehicleChildren.length, 'out of', accounts.length, 'total accounts')
+                            console.log('[VEHICLE] Sample accounts in array:', accounts.slice(0, 5).map(a => ({ code: a.code, id: a.id, parent: a.parent_account_id })))
                             return (
                               <div className="space-y-2">
                                 <div className="flex gap-2 text-sm">
@@ -277,7 +280,7 @@ const menuItems: { id: MenuItem; label: string }[] = [
                             const homeParent = accounts.find(a => a.code === '9945')
                             if (!homeParent) return <p className="text-gray-500 text-sm">No accounts</p>
 
-                            const homeChildren = accounts.filter(a => a.parent_account_id === homeParent.id && a.user_id === homeParent.user_id)
+                            const homeChildren = accounts.filter(a => a.parent_account_id === homeParent.id)
                             return (
                               <div className="space-y-2">
                                 <div className="flex gap-2 text-sm">

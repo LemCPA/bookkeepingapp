@@ -12,34 +12,34 @@ function getStripe(): Stripe {
   return stripe
 }
 
-// Pricing plans
+// Pricing plans - loaded from environment variables
 export const PRICING_PLANS = {
   starter: {
     name: 'Starter',
-    price: 12,
+    price: parseInt(process.env.STRIPE_STARTER_PRICE || '1200') / 100,
     interval: 'month',
-    uploads_limit: 30,
+    uploads_limit: parseInt(process.env.STRIPE_STARTER_UPLOADS || '30'),
     stripe_price_id: process.env.STRIPE_STARTER_PRICE_ID || '',
   },
   starter_annual: {
     name: 'Starter (Annual)',
-    price: 120,
+    price: parseInt(process.env.STRIPE_STARTER_ANNUAL_PRICE || '13200') / 100,
     interval: 'year',
-    uploads_limit: 30,
+    uploads_limit: parseInt(process.env.STRIPE_STARTER_UPLOADS || '30'),
     stripe_price_id: process.env.STRIPE_STARTER_ANNUAL_PRICE_ID || '',
   },
   growth: {
     name: 'Growth',
-    price: 24,
+    price: parseInt(process.env.STRIPE_GROWTH_PRICE || '2300') / 100,
     interval: 'month',
-    uploads_limit: 200,
+    uploads_limit: parseInt(process.env.STRIPE_GROWTH_UPLOADS || '500'),
     stripe_price_id: process.env.STRIPE_GROWTH_PRICE_ID || '',
   },
   growth_annual: {
     name: 'Growth (Annual)',
-    price: 240,
+    price: parseInt(process.env.STRIPE_GROWTH_ANNUAL_PRICE || '25200') / 100,
     interval: 'year',
-    uploads_limit: 200,
+    uploads_limit: parseInt(process.env.STRIPE_GROWTH_UPLOADS || '500'),
     stripe_price_id: process.env.STRIPE_GROWTH_ANNUAL_PRICE_ID || '',
   },
 }
@@ -47,12 +47,13 @@ export const PRICING_PLANS = {
 /**
  * Create a Stripe customer for a new user
  */
-export async function createStripeCustomer(email: string, name: string) {
+export async function createStripeCustomer(email: string, name: string, userId: string) {
   try {
     const customer = await getStripe().customers.create({
       email,
       name,
       metadata: {
+        user_id: userId,
         created_at: new Date().toISOString(),
       },
     })
@@ -166,7 +167,8 @@ export async function createCheckoutSession(
   customerId: string,
   planKey: keyof typeof PRICING_PLANS,
   successUrl: string,
-  cancelUrl: string
+  cancelUrl: string,
+  coupon?: string
 ) {
   try {
     const plan = PRICING_PLANS[planKey]
@@ -175,7 +177,7 @@ export async function createCheckoutSession(
       throw new Error(`Stripe price ID not configured for plan: ${planKey}`)
     }
 
-    const session = await getStripe().checkout.sessions.create({
+    const sessionParams: any = {
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [
@@ -190,15 +192,31 @@ export async function createCheckoutSession(
       metadata: {
         plan: planKey,
       },
-      // CRITICAL: Pass metadata to subscription at creation time (not after)
-      // This prevents the subscription.created webhook from canceling it
       subscription_data: {
         metadata: {
           plan: planKey,
-          source: 'checkout', // Mark as explicit checkout so webhook doesn't cancel it
+          source: 'checkout',
         },
       },
-    })
+    }
+
+    // Add promotion code if provided
+    // Map coupon code to promotion code ID
+    const promotionCodeMap: { [key: string]: string } = {
+      'BETATEST': 'promo_1Thr6rIQrnQfSGBfdwybA6kX',
+      'EARLYADOPTER': 'promo_1ThrI5IQrnQfSGBfkosn9cmA',
+      'FOUNDING50': 'promo_1ThrKvIQrnQfSGBfmndOiE00',
+    }
+
+    if (coupon) {
+      const promoId = promotionCodeMap[coupon.toUpperCase()]
+      if (promoId) {
+        sessionParams.discounts = [{ promotion_code: promoId }]
+        console.log(`[CHECKOUT] ✅ Promotion code applied: ${coupon}`)
+      }
+    }
+
+    const session = await getStripe().checkout.sessions.create(sessionParams)
 
     return session
   } catch (error) {
@@ -208,15 +226,10 @@ export async function createCheckoutSession(
 }
 
 /**
- * Upgrade subscription via cancel + create (atomic transaction)
- * ATOMIC FLOW:
- * 1. Cancel old subscription
- * 2. Issue credit memo (refund for unused time)
- * 3. Create new subscription
- * 4. Charge full new plan price
- * Result: User sees refund + new charge as one upgrade action
+ * Calculate upgrade amount (net charge for plan upgrade)
+ * Does NOT charge - just calculates what user will be charged
  */
-export async function upgradeSubscriptionViaCancel(
+export async function calculateUpgradeAmount(
   customerId: string,
   newPlanKey: keyof typeof PRICING_PLANS
 ) {
@@ -224,11 +237,11 @@ export async function upgradeSubscriptionViaCancel(
     const stripe = getStripe()
     const newPlan = PRICING_PLANS[newPlanKey]
 
-    if (!newPlan.stripe_price_id) {
-      throw new Error(`Stripe price ID not configured for plan: ${newPlanKey}`)
+    if (!newPlan || !newPlan.stripe_price_id) {
+      throw new Error(`Stripe configuration error for plan ${newPlanKey}`)
     }
 
-    // Step 1: Get existing active subscription
+    // Get existing active subscription
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: 'active',
@@ -241,226 +254,50 @@ export async function upgradeSubscriptionViaCancel(
 
     const oldSubscription = subscriptions.data[0] as any
     const oldItem = oldSubscription.items.data[0]
-    const oldPriceAmount = typeof oldItem.price === 'object' ? oldItem.price.unit_amount : 0 // in cents
-
-    // Step 2: Calculate prorated refund
-    const now = Math.floor(Date.now() / 1000)
-    const periodEnd = oldSubscription.current_period_end
+    const oldPriceAmountCents = typeof oldItem.price === 'object' ? oldItem.price.unit_amount : 0
+    const oldPlanKey = oldSubscription.metadata?.plan || 'unknown'
     const periodStart = oldSubscription.current_period_start
+    const periodEnd = oldSubscription.current_period_end
+
+    // Calculate days in period and days used
     const totalDaysInPeriod = (periodEnd - periodStart) / (24 * 60 * 60)
-    const daysRemaining = (periodEnd - now) / (24 * 60 * 60)
-    const refundAmount = Math.round(oldPriceAmount * (daysRemaining / totalDaysInPeriod))
-
-    console.log(`[STRIPE-UPGRADE] Plan: ${oldSubscription.metadata?.plan} → ${newPlanKey}`)
-    console.log(`[STRIPE-UPGRADE] Refund: ${refundAmount} cents (${daysRemaining.toFixed(1)}/${totalDaysInPeriod.toFixed(1)} days)`)
-
-    // Step 3: Cancel old subscription
-    const canceledSub = await stripe.subscriptions.cancel(oldSubscription.id)
-    console.log(`[STRIPE-UPGRADE] ✅ Canceled subscription ${oldSubscription.id}`)
-
-    // Step 4: Refund prorated amount for unused time
-    if (refundAmount > 0) {
-      const latestInvoice = (await stripe.invoices.retrieve(oldSubscription.latest_invoice as string)) as any
-      if (latestInvoice.payment_intent) {
-        const refund = await stripe.refunds.create({
-          payment_intent: latestInvoice.payment_intent as string,
-          amount: refundAmount,
-          metadata: {
-            upgrade_to_plan: newPlanKey,
-            old_subscription_id: oldSubscription.id,
-          },
-        })
-        console.log(`[STRIPE-UPGRADE] ✅ Refunded ${refundAmount} cents for unused time`)
-      }
-    }
-
-    // Step 5: Create new subscription at full price
-    // Accounting breakdown:
-    // - Customer was charged: ${oldPriceAmount} cents (Starter)
-    // - Refunded for unused time: -${refundAmount} cents
-    // - Charged for new plan: +${newPlan.price * 100} cents (Growth)
-    // - Net customer pays: ${newPlan.price * 100 - refundAmount} cents
-    const newPriceAmountCents = newPlan.price * 100
-    const netCharge = newPriceAmountCents - refundAmount
-
-    const newSubscription = await stripe.subscriptions.create({
-      customer: customerId,
-      items: [{ price: newPlan.stripe_price_id }],
-      metadata: {
-        plan: newPlanKey,
-        source: 'upgrade',
-        old_plan_refund: refundAmount.toString(),
-      },
-    })
-
-    console.log(`[STRIPE-UPGRADE] ✅ Created new subscription ${newSubscription.id} for plan ${newPlanKey}`)
-    console.log(`[STRIPE-UPGRADE] Accounting:`)
-    console.log(`  Old charge: $${(oldPriceAmount / 100).toFixed(2)} (Starter Annual)`)
-    console.log(`  Refund for unused time: -$${(refundAmount / 100).toFixed(2)}`)
-    console.log(`  New charge: +$${(newPriceAmountCents / 100).toFixed(2)} (Growth Annual)`)
-    console.log(`  Net customer owes: $${(netCharge / 100).toFixed(2)}`)
-
-    // Step 6: Update Supabase with new subscription
-    try {
-      const { saveSubscriptionToSupabase } = await import('@/lib/supabase-db')
-      const newSub = newSubscription as any
-      const supabaseData = {
-        user_id: oldSubscription.metadata?.user_id || '',
-        stripe_customer_id: customerId,
-        stripe_subscription_id: newSub.id,
-        plan: newPlanKey,
-        status: newSub.status,
-        trial_end_date: newSub.trial_end ? new Date(newSub.trial_end * 1000).toISOString() : null,
-        current_period_start: new Date(newSub.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(newSub.current_period_end * 1000).toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        canceled_at: null,
-      }
-
-      const saved = await saveSubscriptionToSupabase(supabaseData as any)
-      if (saved) {
-        console.log(`[STRIPE-UPGRADE] ✅ Updated Supabase with new subscription`)
-      }
-    } catch (err) {
-      console.error(`[STRIPE-UPGRADE] Warning: Failed to update Supabase (non-blocking):`, err)
-    }
-
-    return newSubscription
-  } catch (error) {
-    console.error('[STRIPE-UPGRADE] Error during upgrade:', error)
-    throw error
-  }
-}
-
-/**
- * Update subscription with proration
- * Calculates refund for unused time on old plan, charges full new plan
- * User only pays the difference
- */
-export async function updateSubscriptionWithProration(
-  customerId: string,
-  planKey: keyof typeof PRICING_PLANS
-) {
-  try {
-    const stripe = getStripe()
-    const newPlan = PRICING_PLANS[planKey]
-
-    if (!newPlan.stripe_price_id) {
-      throw new Error(`Stripe price ID not configured for plan: ${planKey}`)
-    }
-
-    // Get customer's active subscription
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: 'active',
-      limit: 1,
-    })
-
-    if (subscriptions.data.length === 0) {
-      throw new Error('No active subscription found')
-    }
-
-    const subscription = subscriptions.data[0] as any
-    const currentItem = subscription.items.data[0]
-
-    // Get old plan to calculate refund
-    const oldPrice = currentItem.price as any
-    const oldPlanPrice = oldPrice.unit_amount // in cents
-
-    // Calculate days/months remaining in billing cycle
     const now = Math.floor(Date.now() / 1000)
-    const periodEnd = subscription.current_period_end
-    const periodStart = subscription.current_period_start
-    const totalDaysInPeriod = (periodEnd - periodStart) / (24 * 60 * 60)
-    const daysRemaining = (periodEnd - now) / (24 * 60 * 60)
+    const daysUsed = Math.floor((now - periodStart) / (24 * 60 * 60))
 
-    // Calculate refund for unused time: old plan price × (days remaining / total days)
-    const refundAmount = Math.round(oldPlanPrice * (daysRemaining / totalDaysInPeriod))
+    // Correct calculation: newPrice - oldPrice + (oldPrice × daysUsed / daysInPeriod)
+    const newPriceAmountCents = newPlan.price * 100
+    const baseDifference = newPriceAmountCents - oldPriceAmountCents
+    const prorataChargeCents = Math.round(oldPriceAmountCents * (daysUsed / totalDaysInPeriod))
+    const netChargeCents = baseDifference + prorataChargeCents
 
-    console.log(`[STRIPE] Calculating upgrade refund: ${oldPlanPrice} × ${daysRemaining.toFixed(1)}/${totalDaysInPeriod.toFixed(1)} days = ${refundAmount} cents`)
+    console.log(`[UPGRADE] Calculating ${oldPlanKey} → ${newPlanKey}`)
+    console.log(`[UPGRADE] Days used: ${daysUsed}/${Math.ceil(totalDaysInPeriod)}`)
+    console.log(`[UPGRADE] Base difference: $${(baseDifference / 100).toFixed(2)}`)
+    console.log(`[UPGRADE] Pro-rata charge: $${(prorataChargeCents / 100).toFixed(2)}`)
+    console.log(`[UPGRADE] Net charge: $${(netChargeCents / 100).toFixed(2)}`)
 
-    // Issue refund for unused time (actual refund to card, not just credit)
-    if (refundAmount > 0) {
-      const latestInvoice = (await stripe.invoices.retrieve(subscription.latest_invoice as string)) as any
-
-      // Find the payment to refund
-      if (latestInvoice.payment_intent) {
-        const refund = await stripe.refunds.create({
-          payment_intent: latestInvoice.payment_intent as string,
-          amount: refundAmount,
-          metadata: {
-            upgrade_to_plan: planKey,
-            old_subscription_id: subscription.id,
-          },
-        })
-        console.log(`[STRIPE] Issued refund ${refund.id} of ${refundAmount} cents for unused time`)
-      } else {
-        console.warn('[STRIPE] ⚠️ No payment_intent found, creating credit memo instead')
-        const creditMemo = await stripe.creditNotes.create({
-          invoice: latestInvoice.id,
-          amount: refundAmount,
-        })
-        console.log(`[STRIPE] Issued credit memo ${creditMemo.id} for ${refundAmount} cents`)
-      }
+    return {
+      netChargeCents,
+      netChargeAmount: (netChargeCents / 100).toFixed(2),
+      subscriptionId: oldSubscription.id,
+      customerId,
+      oldPlanKey,
+      newPlanKey,
+      breakdown: {
+        oldPriceAmount: (oldPriceAmountCents / 100).toFixed(2),
+        newPriceAmount: (newPriceAmountCents / 100).toFixed(2),
+        baseDifferenceAmount: (baseDifference / 100).toFixed(2),
+        prorataChargeAmount: (prorataChargeCents / 100).toFixed(2),
+        daysUsed: Math.floor(daysUsed),
+        totalDaysInPeriod: Math.ceil(totalDaysInPeriod),
+      },
     }
-
-    // Update subscription with new price
-    const updated = (await stripe.subscriptions.update(
-      subscription.id,
-      {
-        items: [
-          {
-            id: currentItem.id,
-            price: newPlan.stripe_price_id,
-          },
-        ],
-        billing_cycle_anchor: now as any, // Reset billing cycle to today
-        proration_behavior: 'none', // Don't prorate again (we handle it manually)
-        metadata: {
-          plan: planKey,
-        },
-      } as any
-    )) as any
-
-    console.log(`[STRIPE] Upgraded subscription ${subscription.id} to plan ${planKey}`)
-    console.log(`[STRIPE] Refund: ${refundAmount} cents, New plan: ${newPlan.price * 100} cents`)
-
-    // CRITICAL: Also update the subscription in Supabase so dashboard reflects the change
-    // Otherwise dashboard reads old plan from Supabase even though Stripe is updated
-    try {
-      const { saveSubscriptionToSupabase } = await import('@/lib/supabase-db')
-      const supabaseData = {
-        user_id: subscription.metadata?.user_id || '',
-        stripe_customer_id: customerId,
-        stripe_subscription_id: subscription.id,
-        plan: planKey,
-        status: updated.status,
-        trial_end_date: updated.trial_end ? new Date(updated.trial_end * 1000).toISOString() : null,
-        current_period_start: new Date(updated.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(updated.current_period_end * 1000).toISOString(),
-        created_at: new Date(subscription.created * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-        canceled_at: updated.canceled_at ? new Date(updated.canceled_at * 1000).toISOString() : null,
-      }
-
-      const saved = await saveSubscriptionToSupabase(supabaseData as any)
-      if (saved) {
-        console.log(`[STRIPE] ✅ Updated subscription in Supabase to plan ${planKey}`)
-      } else {
-        console.error(`[STRIPE] ❌ Failed to update subscription in Supabase after upgrade`)
-      }
-    } catch (err) {
-      console.error(`[STRIPE] Error updating Supabase after upgrade (non-blocking):`, err)
-      // Don't throw - Stripe update succeeded, Supabase update is just for dashboard sync
-    }
-
-    return updated
   } catch (error) {
-    console.error('Error updating subscription with proration:', error)
+    console.error('[UPGRADE] Calculation error:', error)
     throw error
   }
 }
+
 
 /**
  * Get customer portal session
@@ -546,12 +383,12 @@ export async function createInvoicePaymentLink(
       line_items: [
         {
           price_data: {
-            currency: 'cad', // Canadian dollars for this app
+            currency: 'cad',
             product_data: {
               name: `Invoice #${invoiceId}`,
               description: invoiceDescription,
             },
-            unit_amount: Math.round(invoiceAmount * 100), // Convert to cents
+            unit_amount: Math.round(invoiceAmount * 100),
           },
           quantity: 1,
         },

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { formatDate } from '@/lib/utils'
 import { createAuthenticatedFetch, getStoredUser } from '@/lib/auth'
+import { SUBSCRIPTION_PLANS } from '@/lib/billing-utils'
 import TransactionUsage from '@/components/TransactionUsage'
 
 interface DashboardData {
@@ -94,7 +95,7 @@ function LandingPage() {
               Sign In
             </Link>
           </div>
-          <p className="text-sm mt-4 opacity-80">✅ 7-day free trial. Then $12-24/month based on what you need.</p>
+          <p className="text-sm mt-4 opacity-80">✅ 7-day free trial. Then ${SUBSCRIPTION_PLANS.starter?.price || 11}-{SUBSCRIPTION_PLANS.growth?.price || 21}/month based on what you need.</p>
         </div>
       </section>
 
@@ -249,8 +250,8 @@ function LandingPage() {
           <div className="bg-white rounded-lg shadow p-8 border border-gray-200">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
             <p className="text-gray-600 mb-6">Perfect for getting started</p>
-            <div className="text-4xl font-bold text-gray-900 mb-8">$0<span className="text-lg text-gray-600">/month</span></div>
-            <p className="text-sm text-gray-600 mb-8">7-day free trial with 20 transaction limit</p>
+            <div className="text-4xl font-bold text-gray-900 mb-8">${SUBSCRIPTION_PLANS.free?.price || 0}<span className="text-lg text-gray-600">/month</span></div>
+            <p className="text-sm text-gray-600 mb-8">10 uploads per month</p>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 text-xl">✓</span>
@@ -284,8 +285,8 @@ function LandingPage() {
             </div>
             <h3 className="text-2xl font-bold mb-2">Starter</h3>
             <p className="mb-6 opacity-90">Perfect for growing businesses</p>
-            <div className="text-4xl font-bold mb-8">$12<span className="text-lg opacity-90">/month</span></div>
-            <p className="text-sm opacity-90 mb-8">30 uploads per month, resets monthly</p>
+            <div className="text-4xl font-bold mb-8">${SUBSCRIPTION_PLANS.starter?.price || 11}<span className="text-lg opacity-90">/month</span></div>
+            <p className="text-sm opacity-90 mb-8">{SUBSCRIPTION_PLANS.starter?.features?.[0]?.match(/\d+/)?.[0] || 100} uploads per month, resets monthly</p>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
                 <span className="text-amber-400 mr-3 text-xl">✓</span>
@@ -316,8 +317,8 @@ function LandingPage() {
           <div className="bg-white rounded-lg shadow p-8 border border-gray-200">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Growth</h3>
             <p className="text-gray-600 mb-6">For active businesses</p>
-            <div className="text-4xl font-bold text-gray-900 mb-8">$24<span className="text-lg text-gray-600">/month</span></div>
-            <p className="text-sm text-gray-600 mb-8">200 uploads per month, resets monthly</p>
+            <div className="text-4xl font-bold text-gray-900 mb-8">${SUBSCRIPTION_PLANS.growth?.price || 21}<span className="text-lg text-gray-600">/month</span></div>
+            <p className="text-sm text-gray-600 mb-8">{SUBSCRIPTION_PLANS.growth?.features?.[1]?.match(/\d+/)?.[0] || 500} uploads per month, resets monthly</p>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 text-xl">✓</span>
@@ -329,11 +330,7 @@ function LandingPage() {
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-3 text-xl">✓</span>
-                <span className="text-gray-700">4x higher upload limit</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-600 mr-3 text-xl">✓</span>
-                <span className="text-gray-700">Priority support</span>
+                <span className="text-gray-700">5x higher upload limit</span>
               </li>
             </ul>
             <Link
@@ -395,7 +392,7 @@ function LandingPage() {
       <section className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg py-16 px-8 text-center mt-12">
         <h2 className="text-4xl font-bold mb-4">Stop Leaving Deductions on the Table</h2>
         <p className="text-xl mb-8 opacity-95">
-          Snap your receipts today. Track GST. Prepare your T2125 months early. Try it free for 7 days, then $12-24/month.
+          Snap your receipts today. Track GST. Prepare your T2125 months early. Try it free for 7 days, then ${SUBSCRIPTION_PLANS.starter?.price || 11}-{SUBSCRIPTION_PLANS.growth?.price || 21}/month.
         </p>
         <Link
           href="/signup"

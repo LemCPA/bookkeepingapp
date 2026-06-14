@@ -194,11 +194,27 @@ SUPABASE_SERVICE_ROLE_SECRET=...
 
 # Stripe
 STRIPE_SECRET_KEY=sk_live_...
-STRIPE_STARTER_PRICE_ID=price_...
-STRIPE_GROWTH_PRICE_ID=price_...
-STRIPE_STARTER_ANNUAL_PRICE_ID=price_...
-STRIPE_GROWTH_ANNUAL_PRICE_ID=price_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Stripe Price IDs (from Stripe dashboard)
+STRIPE_STARTER_PRICE_ID=price_...
+STRIPE_STARTER_ANNUAL_PRICE_ID=price_...
+STRIPE_GROWTH_PRICE_ID=price_...
+STRIPE_GROWTH_ANNUAL_PRICE_ID=price_...
+
+# Stripe Prices in cents (loaded into PRICING_PLANS)
+STRIPE_STARTER_PRICE=1200           # $12/month
+STRIPE_STARTER_ANNUAL_PRICE=13200   # $132/year ($11/month)
+STRIPE_GROWTH_PRICE=2300            # $23/month
+STRIPE_GROWTH_ANNUAL_PRICE=25200    # $252/year ($21/month)
+
+# Stripe Plan Features
+STRIPE_STARTER_UPLOADS=30           # Monthly uploads for Starter plan
+STRIPE_GROWTH_UPLOADS=200           # Monthly uploads for Growth plan
+
+# Business Rules
+TRIAL_DURATION_DAYS=14              # Free trial period for new accounts
+DEFAULT_PAYMENT_TERMS_DAYS=30       # Default due date for invoices
 
 # Claude API
 CLAUDE_API_KEY=sk-ant-...
@@ -208,6 +224,68 @@ SENDGRID_API_KEY=SG....
 ```
 
 **Important:** `.env.local` should NOT be committed. Delete it to prevent local values from overriding Vercel dashboard values.
+
+---
+
+## Pricing & Configuration
+
+**Subscription Plans:** Free, Starter, Growth (only)
+
+### Price Management
+
+Prices are **NOT hardcoded** in the code. All pricing and plan configuration is loaded from environment variables:
+
+**Plan Pricing (in cents):**
+- `STRIPE_STARTER_PRICE=1200` → Starter monthly: $12/month
+- `STRIPE_STARTER_ANNUAL_PRICE=13200` → Starter annual: $132/year
+- `STRIPE_GROWTH_PRICE=2300` → Growth monthly: $23/month
+- `STRIPE_GROWTH_ANNUAL_PRICE=25200` → Growth annual: $252/year
+
+**Plan Features:**
+- `STRIPE_STARTER_UPLOADS=30` → Monthly uploads for Starter
+- `STRIPE_GROWTH_UPLOADS=200` → Monthly uploads for Growth
+
+**Business Rules:**
+- `TRIAL_DURATION_DAYS=14` → Free trial period (in days)
+- `DEFAULT_PAYMENT_TERMS_DAYS=30` → Invoice due date (in days)
+
+### Why Environment Variables?
+
+These values are **business decisions**, not code decisions. They can change:
+- **Prices** change seasonally or strategically
+- **Upload limits** may be adjusted for different markets
+- **Trial duration** may be extended for promotions
+- **Payment terms** may vary by customer or region
+
+To update any configuration:
+1. Update the environment variable (in `.env` for local dev, in Vercel dashboard for production)
+2. Restart the dev server
+3. Changes take effect immediately (no code redeploy needed)
+
+**Rule:** If a non-developer (ops, product, finance) might change it, it must be configurable. Do NOT hardcode business rules in code.
+
+### Configuration Decision Matrix
+
+**Move to environment variables (configurable):**
+- ✅ Prices, fees, costs
+- ✅ Limits (uploads, storage, users, clients)
+- ✅ Trial periods, payment terms, billing cycles
+- ✅ Feature flags or toggles
+- ✅ API rate limits, timeouts
+- ✅ Email templates or contact information
+- ✅ Geographic or market-specific rules
+
+**Keep in code (not configurable):**
+- ❌ Algorithm logic (calculation methods, business logic)
+- ❌ System constants (max retry attempts = 3)
+- ❌ Technical implementation details
+- ❌ Error messages or user-facing copy (unless used in multiple places)
+
+**Test before deploying env var changes:**
+- [ ] Updated `.env` locally and verified the value loads correctly
+- [ ] Restarted dev server (env vars load once at startup)
+- [ ] Tested the feature that uses this value end-to-end
+- [ ] Documented the change (what changed, why) for future reference
 
 ---
 
