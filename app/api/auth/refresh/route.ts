@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyJWTToken, createJWTToken } from '@/lib/jwt-utils'
 import { getUser } from '@/lib/db'
+import { emailToUuid } from '@/lib/supabase-db'
 
 /**
  * Refresh access token using refresh token
+ * CRITICAL: Uses JWT payload email instead of local DB (which is ephemeral on Vercel)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -19,23 +21,20 @@ export async function POST(request: NextRequest) {
 
     // Verify refresh token
     const payload = verifyJWTToken(refreshToken)
-    if (!payload || !payload.userId) {
+    if (!payload || !payload.userId || !payload.email) {
       return NextResponse.json(
         { error: 'Invalid or expired refresh token' },
         { status: 401 }
       )
     }
 
-    // Get user and create new access token
-    const user = getUser(payload.userId)
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
-    }
+    // CRITICAL: Use email from JWT (source of truth) instead of local DB
+    // Local database is ephemeral on Vercel and won't have the user after redeploy
+    const userEmail = payload.email
+    const userId = payload.userId
 
-    const newAccessToken = createJWTToken(user.id, user.email)
+    // Create new access token using JWT payload (don't query local DB)
+    const newAccessToken = createJWTToken(userId, userEmail)
 
     return NextResponse.json({
       accessToken: newAccessToken,
