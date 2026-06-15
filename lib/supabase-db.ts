@@ -568,3 +568,31 @@ export async function createTransactionInSupabase(
     return null
   }
 }
+
+/**
+ * Get chart of accounts from Supabase
+ */
+export async function getChartOfAccountsFromSupabase() {
+  if (!supabase) {
+    console.error('[SUPABASE] Client not initialized, cannot fetch chart of accounts')
+    return []
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('chart_of_accounts')
+      .select('*')
+      .order('code', { ascending: true })
+
+    if (error) {
+      console.error('[SUPABASE] Error fetching chart of accounts:', error)
+      return []
+    }
+
+    console.log('[SUPABASE] Fetched', data?.length || 0, 'accounts from chart_of_accounts')
+    return data || []
+  } catch (error) {
+    console.error('[SUPABASE] Exception fetching chart of accounts:', error)
+    return []
+  }
+}

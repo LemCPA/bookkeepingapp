@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '@/lib/auth-server'
-import { getChartOfAccounts } from '@/lib/db'
+import { getChartOfAccountsFromSupabase } from '@/lib/supabase-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const accounts = getChartOfAccounts(userId)
+    // Fetch accounts from Supabase (cloud storage, not local ephemeral database)
+    const accounts = await getChartOfAccountsFromSupabase()
     return NextResponse.json(accounts)
   } catch (error: any) {
     console.error('Error fetching chart of accounts:', error)
