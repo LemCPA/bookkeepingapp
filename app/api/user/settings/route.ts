@@ -85,8 +85,14 @@ export async function POST(request: NextRequest) {
     const userId = getUserIdFromRequest(request)
     const userEmail = getUserEmailFromRequest(request)
 
+    console.log('[SETTINGS-POST] userId:', userId, 'userEmail:', userEmail)
+
     if (!userId || !userEmail) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.error('[SETTINGS-POST] Missing credentials:', { userId: !!userId, userEmail: !!userEmail })
+      return NextResponse.json({
+        error: 'Unauthorized',
+        debug: { userId: !!userId, userEmail: !!userEmail }
+      }, { status: 401 })
     }
 
     // Demo account security checks

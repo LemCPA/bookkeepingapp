@@ -29468,6 +29468,286 @@
       "type": "EXPENSE",
       "user_id": 421516,
       "parent_account_id": 4144
+    },
+    {
+      "id": 4161,
+      "code": "8000",
+      "name": "Gross Business Income",
+      "type": "INCOME",
+      "user_id": 479058
+    },
+    {
+      "id": 4162,
+      "code": "8230",
+      "name": "Other Income",
+      "type": "INCOME",
+      "user_id": 479058
+    },
+    {
+      "id": 4163,
+      "code": "8521",
+      "name": "Advertising",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4164,
+      "code": "8523",
+      "name": "Meals and Entertainment",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4165,
+      "code": "8590",
+      "name": "Bad Debts",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4166,
+      "code": "8690",
+      "name": "Insurance",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4167,
+      "code": "8710",
+      "name": "Interest and Bank Charges",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4168,
+      "code": "8760",
+      "name": "Business Taxes, Fees, Licenses, and Memberships",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4169,
+      "code": "8810",
+      "name": "Office Expenses",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4170,
+      "code": "8811",
+      "name": "Office Stationery and Supplies",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4171,
+      "code": "8860",
+      "name": "Professional Fees (Accounting, Legal)",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4172,
+      "code": "8871",
+      "name": "Management and Administration Fees",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4173,
+      "code": "8910",
+      "name": "Rent",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4174,
+      "code": "8960",
+      "name": "Repairs and Maintenance",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4175,
+      "code": "9060",
+      "name": "Salaries, Wages, and Benefits",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4176,
+      "code": "9180",
+      "name": "Property Taxes",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4177,
+      "code": "9200",
+      "name": "Travel Expenses",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4178,
+      "code": "9220",
+      "name": "Utilities",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4179,
+      "code": "9224",
+      "name": "Fuel Costs (Excluding Motor Vehicles)",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4180,
+      "code": "9270",
+      "name": "Other Expenses",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4181,
+      "code": "9275",
+      "name": "Delivery, Freight, and Express",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4182,
+      "code": "9936",
+      "name": "Capital Cost Allowance (CCA)",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4183,
+      "code": "9945",
+      "name": "Business-Use-of-Home Expenses",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4184,
+      "code": "9281",
+      "name": "Motor Vehicle Expenses",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4185,
+      "code": "9945-01",
+      "name": "Heat",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4186,
+      "code": "9945-02",
+      "name": "Electricity",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4187,
+      "code": "9945-03",
+      "name": "Insurance (Home)",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4188,
+      "code": "9945-04",
+      "name": "Property Tax",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4189,
+      "code": "9945-05",
+      "name": "Mortgage Interest",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4190,
+      "code": "9945-06",
+      "name": "Repairs and Maintenance (Home)",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4191,
+      "code": "9945-07",
+      "name": "Supplies (Home)",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4192,
+      "code": "9945-08",
+      "name": "Telephone",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4193,
+      "code": "9945-09",
+      "name": "Rent (Home)",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4194,
+      "code": "9281-01",
+      "name": "Fuel & Oil",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4195,
+      "code": "9281-02",
+      "name": "Interest",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4196,
+      "code": "9281-03",
+      "name": "Insurance (Vehicle)",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4197,
+      "code": "9281-04",
+      "name": "License & Registration",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4198,
+      "code": "9281-05",
+      "name": "Maintenance & Repairs",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4199,
+      "code": "9281-06",
+      "name": "Lease/Rental",
+      "type": "EXPENSE",
+      "user_id": 479058
+    },
+    {
+      "id": 4200,
+      "code": "9281-07",
+      "name": "Parking",
+      "type": "EXPENSE",
+      "user_id": 479058
     }
   ],
   "transactions": [
@@ -30467,7 +30747,7 @@
   "odometer_readings": [],
   "nextUserId": 4,
   "nextClientId": 3,
-  "nextAccountId": 4161,
+  "nextAccountId": 4201,
   "nextTransactionId": 63,
   "nextDocumentId": 62,
   "nextBankReconciliationId": 1,
